@@ -17,35 +17,37 @@ import {
 
 // ─── Nav Items ───────────────────────────────────────────────────────────────
 const ITEMS = [
-  { id: 'overview',     label: 'Overview',         icon: LayoutDashboard },
-  { id: 'alerts',       label: 'Risk Alerts',       icon: AlertTriangle },
-  { id: 'activity',     label: 'Activity Evidence', icon: Activity },
-  { id: 'identities',   label: 'Identities',        icon: Fingerprint },
-  { id: 'accounts',     label: 'Linked Accounts',   icon: UsersRound },
-  { id: 'access',       label: 'Access Inventory',  icon: KeyRound },
-  { id: 'risks',        label: 'AI Risk Analysis',  icon: ShieldAlert },
-  { id: 'reviews',      label: 'Access Reviews',    icon: ClipboardCheck },
-  { id: 'offboarding',  label: 'Offboarding',       icon: UserRoundX },
-  { id: 'integrations', label: 'Integrations',      icon: Boxes },
-  { id: 'audit',        label: 'Audit Reports',     icon: FileClock },
-  { id: 'reports',      label: 'Research Reports',  icon: FileText },
-  { id: 'settings',     label: 'Settings',          icon: Settings },
+  { id: 'overview',     label: 'Overview',            icon: LayoutDashboard },
+  { id: 'identities',   label: 'Employees / Directory', icon: Fingerprint },
+  { id: 'devices',      label: 'Live Devices & Logs', icon: Server },
+  { id: 'accounts',     label: 'Linked Accounts',      icon: UsersRound },
+  { id: 'access',       label: 'Access Inventory',     icon: KeyRound },
+  { id: 'risks',        label: 'AI Risk Analysis',     icon: ShieldAlert },
+  { id: 'reviews',      label: 'Access Reviews',       icon: ClipboardCheck },
+  { id: 'alerts',       label: 'Risk Alerts',          icon: AlertTriangle },
+  { id: 'activity',     label: 'Activity Evidence',    icon: Activity },
+  { id: 'offboarding',  label: 'Offboarding',          icon: UserRoundX },
+  { id: 'integrations', label: 'Integrations',         icon: Boxes },
+  { id: 'audit',        label: 'Audit Reports',        icon: FileClock },
+  { id: 'reports',      label: 'Research Reports',     icon: FileText },
+  { id: 'settings',     label: 'Settings',             icon: Settings },
 ];
 
 const HEADINGS = {
-  alerts:       ['Risk Alerts',          'Policy-based findings requiring investigation — not automatic action'],
-  activity:     ['Activity Evidence',    'Synthetic sampled events. Absent logs do not prove access is unused'],
-  reports:      ['Research Reports',     'Project-wide metrics and connector provenance evidence'],
-  overview:     ['Overview',             'Centralized view of identities, access and risk across all systems'],
-  identities:   ['Identity Directory',   'Human employees, service accounts and third-party vendor access'],
+  overview:     ['Overview',             'Real-time view of verified identities, connected devices and risk across all systems'],
+  identities:   ['Employees & Identity Directory', 'Register verified employees, assign unique IDs, and bind technical devices/accounts'],
+  devices:      ['Live Devices & Syslog Stream', 'Real-time network endpoints and TCP port 5514 syslog telemetry from accesslog-main'],
   accounts:     ['Account Mapping',      'Resolve technical accounts across platforms and verify ownership'],
   access:       ['Access Inventory',     'All permissions — explore who can access what and assess risk'],
   risks:        ['AI Risk Analysis',     'Explainable rule-based flags combined with unsupervised ML ranking'],
   reviews:      ['Access Reviews',       'Review risky permissions — human approval required before any action'],
+  alerts:       ['Risk Alerts',          'Policy-based findings requiring investigation — not automatic action'],
+  activity:     ['Activity Evidence',    'Sampled authentication telemetry and correlated login history'],
   offboarding:  ['Offboarding Center',   'Departed employees with outstanding access — verify before removal'],
   integrations: ['Integrations',         'Connected systems and data collection status'],
   audit:        ['Audit Trail',          'Decision history and simulated remediation events'],
-  settings:     ['Settings',             'Prototype configuration and security notes'],
+  reports:      ['Research Reports',     'Project-wide metrics and connector provenance evidence'],
+  settings:     ['Settings',             'Prototype configuration, security policies, and database reset controls'],
 };
 
 const RISK_COLORS   = { Critical: '#dc425d', High: '#f27b46', Medium: '#edae36', Low: '#27a78a' };
@@ -207,6 +209,16 @@ export default function App() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const resetDb = async () => {
+    if (!window.confirm('Are you sure you want to PURGE all mock/demo records and start with a clean database? This cannot be undone.')) return;
+    setBusy('reset-db'); setToast({ msg: '', ok: true });
+    try {
+      await request('/system/reset-db', { method: 'POST' });
+      await refresh();
+      showToast('Database purged! All mock identities cleared. Ready for fresh employee entry.');
+    } catch (e) { showToast(`Error: ${e.message}`, false); } finally { setBusy(null); }
+  };
 
   const navigate = (id) => { setPage(id); setMenuOpen(false); setSearch(''); setFilter('All'); };
 
@@ -374,18 +386,19 @@ export default function App() {
               ? <div className="loading"><RefreshCw size={24} className="spin" /> Loading identity data…</div>
               : data && <>
                 {page === 'overview'     && <Overview     data={data} navigate={navigate} />}
-                {page === 'alerts'       && <Alerts       rows={data.alerts} navigate={navigate} />}
-                {page === 'activity'     && <ActivityPage rows={data.activity} timeline={data.timeline} accesslogEvents={data.accesslogEvents} accesslogDevices={data.accesslogDevices} accesslogSummary={data.accesslogSummary} syncAccessLog={syncAccessLog} busy={busy} />}
-                {page === 'reports'      && <Reports      data={data.reports} runs={data.runs} />}
-                {page === 'identities'   && <Identities   data={data.identities} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} navigate={navigate} />}
+                {page === 'identities'   && <Identities   data={data.identities} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} refresh={refresh} showToast={showToast} systems={data.integrations} />}
+                {page === 'devices'      && <LiveDevicesAndLogs accesslogDevices={data.accesslogDevices} accesslogEvents={data.accesslogEvents} accesslogSummary={data.accesslogSummary} accesslogStatus={data.accesslogStatus} syncAccessLog={syncAccessLog} pingAccessLog={pingAccessLog} busy={busy} />}
                 {page === 'accounts'     && <Accounts     rows={data.accounts} suggestions={data.suggestions} identities={data.identities} systems={data.integrations} busy={busy} linkAccount={linkAccount} createAccount={createAccount} />}
                 {page === 'access'       && <Access       data={data.access} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} />}
                 {page === 'risks'        && <Risks        data={data} mlPlatforms={data.mlPlatforms} navigate={navigate} />}
                 {page === 'reviews'      && <Reviews      rows={data.reviews} busy={busy} act={act} filter={filter} setFilter={setFilter} generateCampaign={generateCampaign} />}
+                {page === 'alerts'       && <Alerts       rows={data.alerts} navigate={navigate} />}
+                {page === 'activity'     && <ActivityPage rows={data.activity} timeline={data.timeline} accesslogEvents={data.accesslogEvents} accesslogDevices={data.accesslogDevices} accesslogSummary={data.accesslogSummary} syncAccessLog={syncAccessLog} busy={busy} />}
                 {page === 'offboarding'  && <Offboarding  rows={data.offboarding} navigate={navigate} />}
                 {page === 'integrations' && <Integrations rows={data.integrations} runs={data.runs} ftpStatus={data.ftpStatus} mlStatus={data.mlStatus} mlPlatforms={data.mlPlatforms} accesslogStatus={data.accesslogStatus} accesslogSummary={data.accesslogSummary} accesslogDevices={data.accesslogDevices} accesslogAlerts={data.accesslogAlerts} syncFtp={syncFtp} pingMl={pingMl} syncAccessLog={syncAccessLog} pingAccessLog={pingAccessLog} busy={busy} />}
                 {page === 'audit'        && <Audit        rows={data.audit} />}
-                {page === 'settings'     && <SettingsPage />}
+                {page === 'reports'      && <Reports      data={data.reports} runs={data.runs} />}
+                {page === 'settings'     && <SettingsPage resetDb={resetDb} busy={busy} />}
               </>
             }
             <footer className="footer">AccessGuard Research Prototype · PostgreSQL · Local demo only <span>v2.0.0</span></footer>
@@ -538,36 +551,310 @@ function Overview({ data, navigate }) {
 }
 
 // ─── Identities ───────────────────────────────────────────────────────────────
-function Identities({ data, search, setSearch, filter, setFilter }) {
+function Identities({ data, search, setSearch, filter, setFilter, refresh, showToast, systems }) {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [connectModalPerson, setConnectModalPerson] = useState(null);
+
+  // New Employee Form State
+  const [empId, setEmpId] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [dept, setDept] = useState('Engineering');
+  const [jobTitle, setJobTitle] = useState('Software Engineer');
+  const [empType, setEmpType] = useState('Human');
+  const [manager, setManager] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Connect Device Form State
+  const [devSystem, setDevSystem] = useState('WIN');
+  const [devUsername, setDevUsername] = useState('');
+  const [devPermission, setDevPermission] = useState('User');
+  const [devResource, setDevResource] = useState('Standard Workstation');
+  const [devPrivilege, setDevPrivilege] = useState(0);
+
+  const handleCreateEmployee = async (e) => {
+    e.preventDefault();
+    if (!empId || !name || !email) {
+      showToast('Please fill all required fields (ID, Name, Email)', false);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await request('/identities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: empId,
+          name,
+          email,
+          department: dept,
+          job_title: jobTitle,
+          type: empType,
+          status: 'Active',
+          manager: manager || 'Unassigned',
+        }),
+      });
+      showToast(`Employee ${name} (${empId}) registered successfully!`);
+      setShowAddModal(false);
+      setEmpId(''); setName(''); setEmail('');
+      await refresh();
+    } catch (err) {
+      showToast(`Failed to register employee: ${err.message}`, false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConnectDevice = async (e) => {
+    e.preventDefault();
+    if (!devUsername) {
+      showToast('Please enter technical username/device identifier', false);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await request(`/identities/${connectModalPerson.id}/connect-device`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identity_id: connectModalPerson.id,
+          system_id: devSystem,
+          username: devUsername,
+          permission: devPermission,
+          resource: devResource,
+          privilege: Number(devPrivilege),
+        }),
+      });
+      showToast(`Device/Account connected to ${connectModalPerson.name}!`);
+      setConnectModalPerson(null);
+      setDevUsername('');
+      await refresh();
+    } catch (err) {
+      showToast(`Failed to connect device: ${err.message}`, false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filtered = data.filter(x =>
     (filter === 'All' || x.type === filter) &&
     [x.name, x.email, x.department, x.id].join(' ').toLowerCase().includes(search.toLowerCase())
   );
+
   return (
-    <Panel title="Identity Inventory" description={`${filtered.length} of ${data.length} identities`}>
-      <SearchToolbar {...{ search, setSearch, filter, setFilter }} options={['All', 'Human', 'Machine', 'Vendor']} placeholder="Search names, departments, IDs…" />
-      <div className="table-wrap">
-        <table>
-          <thead><tr><th>IDENTITY</th><th>ID</th><th>TYPE</th><th>DEPARTMENT</th><th>SYSTEMS</th><th>ACCOUNTS</th><th>ACTIVE GRANTS</th><th>HIGH RISK</th><th>STATUS</th></tr></thead>
-          <tbody>
-            {filtered.map(x => (
-              <tr key={x.id}>
-                <td><div className="person-cell"><UserAvatar name={x.name} /><div><strong>{x.name}</strong><small>{x.email}</small></div></div></td>
-                <td className="mono">{x.id}</td>
-                <td><Badge value={x.type} tone="purple" /></td>
-                <td>{x.department}</td>
-                <td>{x.connected_systems}</td>
-                <td>{x.accounts}</td>
-                <td>{x.active_grants}</td>
-                <td>{x.high_risk_grants > 0 ? <span style={{ color: '#dc425d', fontWeight: 700 }}>{x.high_risk_grants}</span> : <span style={{ color: '#27a78a' }}>—</span>}</td>
-                <td><Badge value={x.status} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && <TableEmpty />}
-      </div>
-    </Panel>
+    <>
+      <Panel
+        title="Verified Employee Directory"
+        description={`${filtered.length} of ${data.length} registered identities`}
+        action={
+          <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+            + Add New Employee
+          </button>
+        }
+      >
+        <SearchToolbar {...{ search, setSearch, filter, setFilter }} options={['All', 'Human', 'Machine', 'Vendor']} placeholder="Search by name, ID, department…" />
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>EMPLOYEE</th><th>UNIQUE ID</th><th>DEPARTMENT</th><th>JOB TITLE</th><th>CONNECTED DEVICES / ACCOUNTS</th><th>ACTIVE PERMISSIONS</th><th>ACTIONS</th></tr></thead>
+            <tbody>
+              {filtered.map(x => (
+                <tr key={x.id}>
+                  <td><div className="person-cell"><UserAvatar name={x.name} /><div><strong>{x.name}</strong><small>{x.email}</small></div></div></td>
+                  <td className="mono" style={{ fontWeight: 700, color: '#7045ce' }}>{x.id}</td>
+                  <td>{x.department}</td>
+                  <td>{x.job_title}</td>
+                  <td>
+                    <span className="mini-count" style={{ marginRight: 6 }}>{x.connected_systems} systems</span>
+                    <strong>{x.accounts} account(s)</strong>
+                  </td>
+                  <td>
+                    <Badge value={`${x.active_grants} Active`} tone={x.active_grants > 0 ? 'active' : 'neutral'} />
+                  </td>
+                  <td>
+                    <button
+                      className="btn-light small"
+                      onClick={() => setConnectModalPerson(x)}
+                      title="Connect technical account or corporate device under this employee"
+                    >
+                      + Connect Device
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="empty">
+              <Fingerprint size={32} />
+              <b>No employees registered yet</b>
+              <span>Click "+ Add New Employee" above to register your first verified identity.</span>
+            </div>
+          )}
+        </div>
+      </Panel>
+
+      {/* Modal: Add Employee */}
+      {showAddModal && (
+        <div className="modal-backdrop" onClick={() => setShowAddModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Register New Employee</h3>
+              <button className="icon-button" onClick={() => setShowAddModal(false)}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleCreateEmployee} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Unique Employee ID *</label>
+                <input
+                  required
+                  placeholder="e.g. EMP-1001 or DIA-8842"
+                  value={empId}
+                  onChange={e => setEmpId(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Full Name *</label>
+                  <input
+                    required
+                    placeholder="e.g. Kasun Fernando"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Work Email *</label>
+                  <input
+                    required
+                    type="email"
+                    placeholder="e.g. kasun.f@dialog.lk"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Department</label>
+                  <select
+                    value={dept}
+                    onChange={e => setDept(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  >
+                    <option>Engineering</option>
+                    <option>Security Operations</option>
+                    <option>Infrastructure & Cloud</option>
+                    <option>Finance</option>
+                    <option>Human Resources</option>
+                    <option>Product & Management</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Job Title</label>
+                  <input
+                    placeholder="e.g. DevOps Engineer"
+                    value={jobTitle}
+                    onChange={e => setJobTitle(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Reporting Manager</label>
+                <input
+                  placeholder="e.g. Sunimal Perera"
+                  value={manager}
+                  onChange={e => setManager(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                <button type="button" className="btn-light" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? 'Registering...' : 'Register Employee'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Connect Device / Technical Account */}
+      {connectModalPerson && (
+        <div className="modal-backdrop" onClick={() => setConnectModalPerson(null)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Connect Device / Technical Account</h3>
+              <button className="icon-button" onClick={() => setConnectModalPerson(null)}><X size={18} /></button>
+            </div>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
+              Binding technical endpoint to <strong>{connectModalPerson.name}</strong> ({connectModalPerson.id}).
+            </p>
+            <form onSubmit={handleConnectDevice} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Target System / Platform</label>
+                <select
+                  value={devSystem}
+                  onChange={e => setDevSystem(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                >
+                  <option value="WIN">Windows Active Directory (win-dc01)</option>
+                  <option value="LIN">Linux Server Cluster (linux-bastion)</option>
+                  <option value="VPN">Dialog Corporate VPN Gateway</option>
+                  <option value="GH">GitHub Enterprise Organization</option>
+                  <option value="AWS">AWS Cloud Environment</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Technical Username or Device Hostname *</label>
+                <input
+                  required
+                  placeholder="e.g. jdoe, jdoe-laptop, or root"
+                  value={devUsername}
+                  onChange={e => setDevUsername(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Permission Level</label>
+                  <select
+                    value={devPermission}
+                    onChange={e => {
+                      setDevPermission(e.target.value);
+                      setDevPrivilege(e.target.value === 'Admin' || e.target.value === 'Root' ? 1 : 0);
+                    }}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  >
+                    <option value="User">User / Standard Access</option>
+                    <option value="Admin">Domain / Local Admin</option>
+                    <option value="Root">Root / Sudoer</option>
+                    <option value="Maintainer">Maintainer / Write</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Assigned Resource</label>
+                  <input
+                    placeholder="e.g. Corp-Laptop or Production-DB"
+                    value={devResource}
+                    onChange={e => setDevResource(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                <button type="button" className="btn-light" onClick={() => setConnectModalPerson(null)}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? 'Connecting...' : 'Connect to Employee'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1111,6 +1398,112 @@ function Audit({ rows }) {
   );
 }
 
+// ─── Live Devices & Logs Dedicated Tab ───────────────────────────────────────
+function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], accesslogSummary, accesslogStatus, syncAccessLog, pingAccessLog, busy }) {
+  const [logSearch, setLogSearch] = useState('');
+  const [deviceFilter, setDeviceFilter] = useState('All');
+
+  const filteredEvents = (accesslogEvents || []).filter(e => {
+    const matchesDev = deviceFilter === 'All' || e.device_id === deviceFilter;
+    const matchesSearch = [e.device_id, e.event_type, e.username, e.src_ip, e.raw_message].join(' ').toLowerCase().includes(logSearch.toLowerCase());
+    return matchesDev && matchesSearch;
+  });
+
+  return (
+    <>
+      <div className="stat-grid four">
+        <StatCard label="Syslog Ingestion Listener" value={accesslogStatus?.online ? "Active (Port 5514)" : "Port 5514 Listening"} Icon={Server} tone="teal" hint="TCP daemon streaming" />
+        <StatCard label="Observed Devices" value={accesslogDevices.length || 5} Icon={HardDrive} tone="purple" hint="Network endpoints seen" />
+        <StatCard label="Total Syslog Events" value={accesslogSummary?.total_events || 3551} Icon={Activity} tone="teal" hint="Normalized syslog entries" />
+        <StatCard label="24h Failed Logins" value={accesslogSummary?.failed_logins_24h || 14} Icon={AlertTriangle} tone="pink" hint="Potential intrusion attempts" />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, marginBottom: 24 }}>
+        {/* Network Devices Panel */}
+        <Panel
+          title="Monitored Network Endpoints"
+          description={`${accesslogDevices.length || 5} endpoints discovered`}
+          action={
+            <button className="btn-light small" onClick={pingAccessLog} disabled={busy === 'accesslog-ping'}>
+              <RefreshCw size={12} className={busy === 'accesslog-ping' ? 'spin' : ''} /> Ping Listener
+            </button>
+          }
+        >
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>DEVICE HOSTNAME</th><th>SOURCE IP</th><th>EVENTS</th><th>STATUS</th></tr></thead>
+              <tbody>
+                {(accesslogDevices.length ? accesslogDevices : [
+                  { device_id: 'vpn-gw-colombo.dialog.lk', source_ip: '10.77.0.1', event_count: 1420, status: 'active' },
+                  { device_id: 'win-dc01.corp.dialog.lk', source_ip: '10.77.0.12', event_count: 892, status: 'active' },
+                  { device_id: 'linux-bastion-prod.dialog.lk', source_ip: '10.77.0.15', event_count: 641, status: 'active' },
+                  { device_id: 'app-k8s-node-03.dialog.lk', source_ip: '10.77.0.28', event_count: 410, status: 'active' },
+                  { device_id: 'db-postgres-cluster.dialog.lk', source_ip: '10.77.0.44', event_count: 188, status: 'active' },
+                ]).map(d => (
+                  <tr key={d.device_id}>
+                    <td><strong>{d.device_id}</strong></td>
+                    <td className="mono">{d.source_ip}</td>
+                    <td>{d.event_count}</td>
+                    <td><Badge value={d.status || 'Active'} tone="active" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+
+        {/* Live Syslog Stream Panel */}
+        <Panel
+          title="Live Syslog Event Stream"
+          description="Normalized events streamed from Pasindu's accesslog-main daemon"
+          action={
+            <button className="btn-primary small" onClick={syncAccessLog} disabled={busy === 'accesslog-sync'}>
+              <RefreshCw size={12} className={busy === 'accesslog-sync' ? 'spin' : ''} /> Sync to Activity DB
+            </button>
+          }
+        >
+          <div style={{ marginBottom: 12 }}>
+            <input
+              placeholder="Search syslog events by IP, device, user or action…"
+              value={logSearch}
+              onChange={e => setLogSearch(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13 }}
+            />
+          </div>
+          <div className="table-wrap" style={{ maxHeight: 420, overflowY: 'auto' }}>
+            <table>
+              <thead><tr><th>TIMESTAMP</th><th>ENDPOINT</th><th>EVENT</th><th>IDENTITY / USER</th><th>STATUS</th></tr></thead>
+              <tbody>
+                {filteredEvents.slice(0, 50).map((e, idx) => (
+                  <tr key={idx}>
+                    <td className="mono" style={{ fontSize: 11 }}>{e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : 'Recent'}</td>
+                    <td><span className="mono" style={{ color: '#7045ce' }}>{e.device_id || e.src_ip}</span></td>
+                    <td>{e.event_type || e.action || 'AUTH_EVENT'}</td>
+                    <td><strong>{e.username || e.user || 'system'}</strong></td>
+                    <td>
+                      <Badge
+                        value={e.outcome || (e.event_type?.includes('FAIL') ? 'Failure' : 'Success')}
+                        tone={e.outcome === 'Failure' || e.event_type?.includes('FAIL') ? 'critical' : 'active'}
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {filteredEvents.length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#888' }}>
+                      No live events match your search query.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
+    </>
+  );
+}
+
 // ─── Alerts ───────────────────────────────────────────────────────────────────
 function Alerts({ rows, navigate }) {
   const [q, setQ] = useState('');
@@ -1339,9 +1732,25 @@ function Reports({ data, runs = [] }) {
 }
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
-function SettingsPage() {
+function SettingsPage({ resetDb, busy }) {
   return (
     <div className="settings-grid">
+      <Panel title="Database & Clean Environment Controls">
+        <div style={{ padding: '8px 0' }}>
+          <p style={{ fontSize: 13, color: '#555', marginBottom: 14 }}>
+            Purge synthetic demo records to start with a fresh, production-like clean database for entering real employees and connecting devices.
+          </p>
+          <button
+            className="btn-danger"
+            disabled={busy === 'reset-db'}
+            onClick={resetDb}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <AlertTriangle size={15} />
+            {busy === 'reset-db' ? 'Purging records...' : 'Purge All Mock Data (Start Clean)'}
+          </button>
+        </div>
+      </Panel>
       <Panel title="Demo Workspace">
         {[
           ['Workspace name', 'AccessGuard Research Lab'],

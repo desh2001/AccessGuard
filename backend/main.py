@@ -176,6 +176,128 @@ def overview(db: Session = Depends(get_session)):
     }
 
 
+class CreateIdentityBody(BaseModel):
+    id: str = Field(min_length=2, max_length=32)
+    name: str = Field(min_length=2, max_length=160)
+    email: str = Field(min_length=5, max_length=255)
+    department: str = Field(min_length=2, max_length=100)
+    job_title: str = Field(min_length=2, max_length=120)
+    type: str = Field(default='Human')
+    status: str = Field(default='Active')
+    manager: str = Field(default='Unassigned', max_length=120)
+
+
+@app.post('/api/identities')
+def create_identity(body: CreateIdentityBody, db: Session = Depends(get_session)):
+    existing = db.get(Identity, body.id)
+    if existing:
+        raise HTTPException(409, f'Employee with ID "{body.id}" already exists')
+    
+    person = Identity(
+        id=body.id.strip(),
+        name=body.name.strip(),
+        email=body.email.strip().lower(),
+        department=body.department.strip(),
+        job_title=body.job_title.strip(),
+        type=body.type,
+        status=body.status,
+        manager=body.manager.strip() if body.manager else 'Unassigned',
+    )
+    db.add(person)
+    try:
+        db.flush()
+        _log(db, 'Security Administrator', 'IDENTITY_CREATED', f'Identity #{person.id}',
+             f'Registered new employee {person.name} ({person.email}) in department {person.department}')
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(400, f'Failed to create identity: {str(e)}')
+    return {'ok': True, 'identity': {'id': person.id, 'name': person.name, 'email': person.email}}
+
+
+class ConnectDeviceBody(BaseModel):
+    identity_id: str = Field(min_length=2, max_length=32)
+    system_id: str = Field(min_length=2, max_length=32)
+    username: str = Field(min_length=1, max_length=255)
+    external_account_id: str | None = None
+    account_email: str | None = None
+    permission: str = Field(default='User', max_length=80)
+    resource: str = Field(default='Standard Workspace', max_length=255)
+    privilege: int = Field(default=0)
+
+
+@app.post('/api/identities/{identity_id}/connect-device')
+def connect_device(identity_id: str, body: ConnectDeviceBody, db: Session = Depends(get_session)):
+    person = db.get(Identity, identity_id)
+    if not person:
+        raise HTTPException(404, 'Employee not found')
+    
+    system = db.get(System, body.system_id)
+    if not system:
+        raise HTTPException(404, f'System {body.system_id} does not exist')
+    
+    ext_id = body.external_account_id or f"{body.system_id.lower()}-{body.username}"
+    account = Account(
+        identity_id=person.id,
+        system_id=system.id,
+        external_account_id=ext_id,
+        username=body.username.strip(),
+        account_email=body.account_email or person.email,
+        status='Active',
+        source='ManualRegistration',
+        mapping_method='DirectDeviceConnection',
+        created_at=now_utc(),
+    )
+    db.add(account)
+    db.flush()
+
+    grant = AccessGrant(
+        account_id=account.id,
+        permission=body.permission,
+        resource=body.resource,
+        privilege=body.privilege,
+        cross_department=0,
+        status='Active',
+        last_verified_use=now_utc(),
+    )
+    db.add(grant)
+    db.flush()
+
+    _log(db, 'Security Administrator', 'DEVICE_ACCOUNT_CONNECTED', f'Account #{account.id}',
+         f'Connected device/account {account.username} on {system.name} for employee {person.name} ({person.id})')
+    db.commit()
+    return {'ok': True, 'account_id': account.id, 'username': account.username, 'grant_id': grant.id}
+
+
+@app.post('/api/system/reset-db')
+def reset_database(db: Session = Depends(get_session)):
+    """Clears all records to provide a clean state for live employee & device entry."""
+    db.query(Review).delete()
+    db.query(AccessGrant).delete()
+    db.query(ActivityEvent).delete()
+    db.query(AuditLog).delete()
+    db.query(Account).delete()
+    db.query(Identity).delete()
+    db.query(ConnectorRun).delete()
+
+    # Re-initialize basic enterprise systems if missing
+    default_systems = [
+        ('WIN', 'Windows Active Directory', 'Identity'),
+        ('LIN', 'Linux Server Cluster', 'Infrastructure'),
+        ('GH',  'GitHub Enterprise', 'Development'),
+        ('VPN', 'Dialog Corporate VPN Gateway', 'Network'),
+        ('AWS', 'AWS Cloud Environment', 'Cloud'),
+    ]
+    for sys_id, name, cat in default_systems:
+        if not db.get(System, sys_id):
+            db.add(System(id=sys_id, name=name, category=cat))
+
+    _log(db, 'Security Administrator', 'DATABASE_PURGED', 'System DB',
+         'All mock/demo identities and grants cleared. Initialized clean state.')
+    db.commit()
+    return {'ok': True, 'message': 'Database cleared successfully. Ready for fresh employee entry.'}
+
+
 # ─── Identities ───────────────────────────────────────────────────────────────
 
 @app.get('/api/identities')
