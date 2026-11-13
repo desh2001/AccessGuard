@@ -630,6 +630,50 @@ def ml_status():
     return check_external_ml_health()
 
 
+@app.get('/api/ml/platforms')
+def ml_platforms():
+    from ml_client import load_platform_metadata
+    return load_platform_metadata()
+
+
+# ─── Dialog Access Log Service (Pasindu) ──────────────────────────────────────
+
+@app.get('/api/accesslog/status')
+def accesslog_status():
+    from accesslog_client import check_accesslog_health
+    return check_accesslog_health()
+
+
+@app.get('/api/accesslog/summary')
+def accesslog_summary():
+    from accesslog_client import get_accesslog_summary
+    return get_accesslog_summary()
+
+
+@app.get('/api/accesslog/events')
+def accesslog_events(limit: int = Query(50, ge=1, le=200), device: str = '', event_type: str = ''):
+    from accesslog_client import get_accesslog_events
+    return get_accesslog_events(limit=limit, device=device, event_type=event_type)
+
+
+@app.get('/api/accesslog/devices')
+def accesslog_devices():
+    from accesslog_client import get_accesslog_devices
+    return get_accesslog_devices()
+
+
+@app.get('/api/accesslog/alerts')
+def accesslog_alerts():
+    from accesslog_client import get_accesslog_alerts
+    return get_accesslog_alerts()
+
+
+@app.post('/api/accesslog/sync')
+def accesslog_sync(db: Session = Depends(get_session)):
+    from accesslog_client import sync_accesslog_to_activity
+    return sync_accesslog_to_activity(db)
+
+
 # ─── FTP Connector (Dialog Access Log) ────────────────────────────────────────
 
 @app.post('/api/connectors/ftp/sync')

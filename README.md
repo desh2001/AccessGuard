@@ -90,18 +90,23 @@ The AccessGuard research suite integrates three specialized subsystems into a un
 
 ```text
 AccessGuard/
+├── start.bat                       # 🚀 ONE-CLICK Windows launcher (starts entire ecosystem)
+├── stop.bat                        # 🛑 ONE-CLICK Windows terminator (stops all services)
+├── start.sh                        # 🚀 ONE-CLICK Linux/macOS launcher
+├── stop.sh                         # 🛑 ONE-CLICK Linux/macOS terminator
 ├── backend/                        # AccessGuard Core FastAPI backend
 │   ├── alembic/                    # Database migration versions
 │   ├── connectors/                 # CSV, GitHub REST, and FTP connectors
 │   ├── sample_imports/             # Sample CSVs (Linux, Windows) and FTP spool logs
 │   ├── tests/                      # PyTest automated unit test suite
+│   ├── accesslog_client.py         # Client adapter for Dialog Access Log service (:8002 & :5514)
 │   ├── activity.py                 # Activity log heuristics & flag processing
 │   ├── ai_engine.py                # Local Isolation Forest anomaly scoring fallback
 │   ├── check_db.py                 # Database connectivity verification utility
 │   ├── database.py                 # SQLAlchemy session management & engine
 │   ├── main.py                     # FastAPI application router & API endpoints
 │   ├── ml_client.py                # HTTP client adapter for Dialog Final ML microservice
-│   ├── mock_ml_service.py          # Standalone simulation of external ML microservice
+│   ├── mock_ml_service.py          # Standalone simulation of external ML microservice (:8001)
 │   ├── models.py                   # Relational ORM models (Identity, Account, Review, etc.)
 │   ├── requirements.txt            # Python dependencies (FastAPI, Scikit-learn, etc.)
 │   ├── risk.py                     # Rule-based access risk scoring algorithms
@@ -115,18 +120,24 @@ AccessGuard/
 │   └── vite.config.js              # Vite configuration with /api reverse proxy to :8000
 ├── ml/                             # Dialog Final ML Service (Aegis V8 Multi-Platform)
 │   ├── backend/                    # ML microservice backend & quarterly training pipelines
+│   │   └── ml_artifacts/platforms/ # Trained Windows, Linux, and GitHub Isolation Forest models
 │   ├── frontend/                   # ML specific inspection UI (React / TypeScript)
 │   ├── sample-data/                # Synthetic enterprise access & training datasets
 │   └── docker-compose.yml          # Container configuration for standalone ML stack
 ├── accesslog-main/                 # Dialog Access Log Ingestion Service
+│   ├── standalone_api.py           # Standalone runner for Dialog Access Log API (:8002)
 │   ├── api/                        # FastAPI log explorer API
 │   ├── collector/                  # TCP Syslog listener daemon (port 5514)
 │   ├── frontend/                   # Syslog live event viewer
 │   └── docker-compose.yml          # Stack orchestration for collector and database
-├── scripts/                        # Automation & startup scripts for Windows PowerShell
+├── scripts/                        # Automation & startup scripts
+│   ├── start-all.ps1               # Master PowerShell orchestrator for all 4 services
+│   ├── stop-all.ps1                # Clean process terminator for ports 8000, 8001, 8002, 5173
 │   ├── setup-windows.ps1           # Full automated installer (Docker, venv, DB, seed, npm)
 │   ├── start-backend.ps1           # Launch script for backend API (:8000)
-│   └── start-frontend.ps1          # Launch script for frontend UI (:5173)
+│   ├── start-frontend.ps1          # Launch script for frontend UI (:5173)
+│   ├── start-ml.ps1                # Launch script for Dialog Final ML (:8001)
+│   └── start-accesslog.ps1         # Launch script for Dialog Access Log (:8002)
 ├── docs/                           # Extended research documentation
 │   ├── RESEARCH_METHODOLOGY.md     # Academic methodology, validation, and metrics
 │   └── SINHALA_GUIDE.md            # Sinhala language operations guide
@@ -169,30 +180,56 @@ Before starting, ensure you have the following installed on your machine:
 
 ## Quick Setup
 
-### 1. Automated Windows Setup (PowerShell)
+### 🚀 1. One-Click Easy Startup (Recommended)
 
-An automated script is provided in `scripts/setup-windows.ps1` that spins up PostgreSQL, sets up the Python virtual environment, runs database migrations, seeds demo data, executes unit tests, and installs frontend dependencies.
+You can launch the **entire ecosystem with all 4 services and the database** in a single click:
 
-Open PowerShell in the repository root:
+#### On Windows:
+- Simply double-click **`start.bat`** in the repository root, or run in PowerShell:
+  ```powershell
+  .\scripts\start-all.ps1
+  ```
+- **What this does automatically:**
+  1. Starts the PostgreSQL container on port `5434`.
+  2. Verifies the Python `.venv` and database migrations (`alembic upgrade head`).
+  3. Launches **AccessGuard Core Backend** on `http://127.0.0.1:8000`.
+  4. Launches **Dialog Final ML Microservice** on `http://127.0.0.1:8001`.
+  5. Launches **Dialog Access Log & Syslog Service** on `http://127.0.0.1:8002` (Syslog TCP on `5514`).
+  6. Launches **AccessGuard React Dashboard** on `http://127.0.0.1:5173`.
+  7. Opens `http://127.0.0.1:5173` directly in your default web browser!
+
+- **To cleanly stop all services at any time:**
+  - Double-click **`stop.bat`** or run `.\scripts\stop-all.ps1`.
+
+#### On Linux / macOS:
+```bash
+chmod +x start.sh stop.sh
+./start.sh
+```
+To stop all services:
+```bash
+./stop.sh
+```
+
+---
+
+### 2. First-Time Setup & Dependency Installer (Optional)
+
+If you are cloning for the first time and want to run the installer step-by-step:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1
 ```
 
-Once the setup completes, open two separate PowerShell windows to start the services:
-
-* **Terminal 1 (Backend):**
-  ```powershell
-  .\scripts\start-backend.ps1
-  ```
-* **Terminal 2 (Frontend):**
-  ```powershell
-  .\scripts\start-frontend.ps1
-  ```
+Once installed, use `start.bat` or individual service launchers:
+* **Backend API (:8000):** `.\scripts\start-backend.ps1`
+* **Dialog Final ML (:8001):** `.\scripts\start-ml.ps1`
+* **Dialog Access Log (:8002):** `.\scripts\start-accesslog.ps1`
+* **Frontend UI (:5173):** `.\scripts\start-frontend.ps1`
 
 ---
 
-### 2. Manual Step-by-Step Setup
+### 3. Manual Step-by-Step Setup
 
 If you prefer to configure each component manually or are running on Linux/macOS:
 
