@@ -1,0 +1,5 @@
+employee_code,snapshot_at,reporting_manager,org_unit,ad_department,groups_complete,transfer_history_complete,source
+E501,2026-11-05T10:00:00Z,CN=EngineeringLead,OU=Engineering,Engineering,true,true,ad-export
+E502,2026-11-05T10:00:00Z,CN=FinanceLead,OU=Finance,Finance,true,true,ad-export
+E503,2026-11-05T10:00:00Z,CN=ITLead,OU=IT,IT,true,true,ad-export
+E504,2026-11-05T10:00:00Z,CN=OpsLead,OU=Operations,Operations,true,true,ad-export

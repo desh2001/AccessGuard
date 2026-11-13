@@ -1,0 +1,4 @@
+external_account_id,username,account_email,permission,resource
+linux-user-2201,ops-lab,,sudo,/etc/sudoers.d/ops-lab
+linux-user-2202,backup-svc,,read,/var/log/sample
+linux-user-2203,former-user,,Admin,/opt/demo-secrets

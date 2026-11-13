@@ -1,0 +1,5 @@
+platform,username,resource,permission,sensitivity,source,active,last_used_at,evidence_source
+GitLab,e501_demo,repo:deployment,maintainer,high,gitlab-export,true,,
+GitHub,e502_demo,repo:finance-dashboard,write,medium,github-export,true,,
+Linux,e503_demo,linux:dev-vm,sudo,high,linux-permissions-export,true,,
+Windows,e504_demo,ad:finance-share,read,high,ad-entitlement-export,true,,

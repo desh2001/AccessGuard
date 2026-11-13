@@ -1,0 +1,2 @@
+employee_code,occurred_at,from_department,to_department,from_manager,to_manager,source,from_org_unit,to_org_unit
+E501,2026-10-12T08:30:00Z,Finance,Engineering,FinanceLead,EngineeringLead,hr-transfer-export,OU=Finance,OU=Engineering

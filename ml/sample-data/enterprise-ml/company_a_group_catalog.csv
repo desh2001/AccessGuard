@@ -1,0 +1,4 @@
+organization_key,directory_key,group_key,display_name,group_kind,access_relevance,privilege_tier,risk_tier,approved_by,source,policy_version,resource_scope,allowed_departments
+company-a,ad-prod,S-1-5-21-1001,Finance-ERP-Admins,security,access,privileged,critical,identity-governance,AD-policy-approved,v1,ERP production,Finance|IT
+company-a,ad-prod,S-1-5-21-1002,All-Employees-Newsletter,distribution,non_access,standard,low,identity-governance,AD-policy-approved,v1,mail,
+company-a,ad-prod,S-1-5-21-1003,Legacy-Shared-Files,security,unknown,unknown,unknown,identity-governance,AD-export,v1,,

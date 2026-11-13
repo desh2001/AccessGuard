@@ -1,0 +1,4 @@
+platform,username,resource,event_type,occurred_at,source
+GitLab,e501_demo,repo:deployment,resource_use,2026-11-01T11:10:00Z,gitlab-audit-export
+GitHub,e502_demo,repo:finance-dashboard,resource_use,2026-11-02T10:00:00Z,github-audit-export
+Linux,e503_demo,linux:dev-vm,login_success,2026-10-20T07:45:00Z,linux-auth-export

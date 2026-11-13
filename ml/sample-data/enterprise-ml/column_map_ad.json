@@ -1,0 +1,9 @@
+{
+  "employeeNumber": "employee_code",
+  "cn": "group_name",
+  "objectSid": "group_key",
+  "domain": "directory_key",
+  "companyId": "organization_key",
+  "enabled": "active",
+  "observedAt": "synced_at"
+}

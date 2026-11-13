@@ -1,0 +1,6 @@
+employee_code,group_name,active,source,privileged
+E501,AD-Engineers,true,ad-export,false
+E501,AD-Deployment-Maintainers,true,ad-governance-map,true
+E502,AD-Finance-Readers,true,ad-export,false
+E503,AD-IT-Sudo,true,ad-governance-map,true
+E504,AD-Former-Staff,true,ad-export,false

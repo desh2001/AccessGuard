@@ -1,0 +1,1251 @@
+department,platform,permission_class,sensitivity,employee_status,account_status,unmapped,outside_role,resource_use_observed,last_used_days,last_login_observed,last_login_days,label,scenario,group_id
+Finance,Windows AD,privileged,critical,active,active,0,0,1,259,1,262,1,stale_privileged_access,demo-employee-00367
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,0,0,1,32,1,unmapped_privileged,demo-employee-00349
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,6,1,35,1,unmapped_privileged,demo-employee-00369
+Sales,GitHub,read,medium,active,active,0,0,1,43,1,6,0,routine_entitlement,demo-employee-00217
+IT,Linux,read,high,active,active,0,0,1,30,1,48,0,routine_entitlement,demo-employee-00093
+Engineering,GitHub,privileged,critical,active,active,0,0,1,187,1,251,1,stale_privileged_access,demo-employee-00350
+IT,GitHub,privileged,high,active,active,0,1,1,0,1,36,1,outside_department_privileged,demo-employee-00338
+IT,Linux,privileged,critical,active,active,0,0,1,253,1,164,1,stale_privileged_access,demo-employee-00362
+Sales,Windows AD,read,low,active,active,0,0,0,0,1,26,0,routine_entitlement,demo-employee-00226
+IT,Linux,read,medium,active,active,0,0,1,15,1,25,0,routine_entitlement,demo-employee-00102
+Sales,Windows AD,write,medium,active,active,0,0,1,39,1,25,0,routine_entitlement,demo-employee-00019
+Sales,Linux,read,low,active,active,0,0,0,0,1,13,0,routine_entitlement,demo-employee-00182
+Engineering,Windows AD,write,high,active,active,0,0,1,6,1,14,0,routine_entitlement,demo-employee-00021
+IT,GitHub,read,high,active,active,0,0,1,20,1,53,0,routine_entitlement,demo-employee-00029
+Sales,Linux,write,medium,active,active,0,0,0,0,1,3,0,routine_entitlement,demo-employee-00033
+Engineering,Windows AD,privileged,low,active,active,0,0,1,10,1,54,0,routine_entitlement,demo-employee-00295
+HR,Windows AD,read,medium,active,active,0,0,1,36,1,12,0,routine_entitlement,demo-employee-00149
+IT,GitHub,read,low,active,active,0,0,1,24,1,20,0,routine_entitlement,demo-employee-00216
+IT,Windows AD,write,medium,active,active,0,0,1,34,1,54,0,routine_entitlement,demo-employee-00186
+Sales,GitHub,write,medium,active,active,0,0,1,49,1,59,0,routine_entitlement,demo-employee-00325
+Finance,Linux,write,high,inactive,active,0,0,1,34,1,23,1,terminated_account,demo-employee-00375
+Engineering,GitHub,read,medium,active,active,0,0,1,17,0,0,0,routine_entitlement,demo-employee-00298
+HR,Linux,privileged,medium,active,active,0,0,1,48,1,37,0,routine_entitlement,demo-employee-00052
+IT,Linux,read,low,active,active,0,0,1,38,1,29,0,routine_entitlement,demo-employee-00020
+Sales,Linux,read,high,active,active,0,0,1,47,1,12,0,routine_entitlement,demo-employee-00018
+HR,Linux,read,medium,active,active,0,0,1,25,1,0,0,routine_entitlement,demo-employee-00165
+Finance,GitHub,read,medium,active,active,0,0,1,43,1,18,0,routine_entitlement,demo-employee-00320
+HR,Windows AD,write,high,active,active,0,0,1,36,1,8,0,routine_entitlement,demo-employee-00206
+Unknown,Linux,privileged,critical,unknown,active,1,0,0,0,1,20,1,unmapped_privileged,demo-employee-00410
+HR,GitHub,privileged,high,active,active,0,1,1,16,1,44,1,outside_department_privileged,demo-employee-00412
+Finance,Windows AD,read,low,active,active,0,0,1,31,1,5,0,routine_entitlement,demo-employee-00175
+IT,Windows AD,read,medium,active,active,0,0,1,9,1,47,0,routine_entitlement,demo-employee-00325
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,23,1,19,1,unmapped_privileged,demo-employee-00394
+Finance,Linux,read,medium,active,active,0,0,1,33,1,46,0,routine_entitlement,demo-employee-00253
+Finance,Windows AD,write,medium,active,active,0,0,1,14,1,26,0,routine_entitlement,demo-employee-00139
+Sales,Windows AD,read,high,active,active,0,0,1,50,0,0,0,routine_entitlement,demo-employee-00331
+Sales,Windows AD,write,medium,active,active,0,0,1,11,1,44,0,routine_entitlement,demo-employee-00280
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,38,1,39,1,unmapped_privileged,demo-employee-00370
+IT,Linux,read,medium,active,active,0,0,0,0,1,7,0,routine_entitlement,demo-employee-00132
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,28,0,routine_entitlement,demo-employee-00114
+Sales,Windows AD,read,medium,active,active,0,0,1,24,1,20,0,routine_entitlement,demo-employee-00041
+Sales,Linux,read,medium,active,active,0,0,1,46,1,2,0,routine_entitlement,demo-employee-00101
+Finance,Linux,privileged,medium,active,active,0,0,1,0,1,15,0,routine_entitlement,demo-employee-00096
+HR,Windows AD,read,medium,active,active,0,0,1,34,1,12,0,routine_entitlement,demo-employee-00105
+IT,Linux,read,high,active,active,0,0,1,24,1,22,0,routine_entitlement,demo-employee-00147
+Sales,Linux,read,medium,active,active,0,0,1,23,1,30,0,routine_entitlement,demo-employee-00208
+HR,Linux,read,medium,active,active,0,0,1,42,1,51,0,routine_entitlement,demo-employee-00275
+Finance,Windows AD,privileged,critical,active,active,0,0,1,97,1,198,1,stale_privileged_access,demo-employee-00416
+Finance,Windows AD,read,low,active,active,0,0,1,7,1,7,0,routine_entitlement,demo-employee-00039
+Finance,Windows AD,write,medium,active,active,0,0,1,13,1,18,0,routine_entitlement,demo-employee-00295
+IT,Windows AD,read,high,active,active,0,0,0,0,1,11,0,routine_entitlement,demo-employee-00255
+Unknown,Linux,privileged,critical,unknown,active,1,0,0,0,1,10,1,unmapped_privileged,demo-employee-00386
+HR,Linux,read,low,active,active,0,0,1,13,1,41,0,routine_entitlement,demo-employee-00164
+IT,Linux,privileged,high,active,active,0,1,1,32,1,7,1,outside_department_privileged,demo-employee-00355
+IT,Windows AD,write,low,active,active,0,0,1,44,1,6,0,routine_entitlement,demo-employee-00316
+Finance,Linux,write,medium,active,active,0,0,1,37,1,52,0,routine_entitlement,demo-employee-00112
+Sales,Windows AD,read,low,active,active,0,0,1,46,1,6,0,routine_entitlement,demo-employee-00132
+Engineering,GitHub,write,low,active,active,0,0,1,34,1,21,0,routine_entitlement,demo-employee-00303
+Finance,GitHub,write,critical,active,active,0,0,1,27,1,29,0,routine_entitlement,demo-employee-00045
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,27,1,39,1,unmapped_privileged,demo-employee-00390
+IT,Windows AD,privileged,critical,active,active,0,0,1,183,1,202,1,stale_privileged_access,demo-employee-00346
+IT,Windows AD,read,high,active,active,0,0,1,33,1,29,0,routine_entitlement,demo-employee-00250
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,42,1,21,1,unmapped_privileged,demo-employee-00389
+Engineering,GitHub,read,high,inactive,active,0,0,1,8,1,36,1,terminated_account,demo-employee-00415
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,25,1,48,1,unmapped_privileged,demo-employee-00378
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,42,1,57,1,unmapped_privileged,demo-employee-00336
+Engineering,Windows AD,read,low,active,active,0,0,1,16,1,39,0,routine_entitlement,demo-employee-00243
+IT,Linux,read,medium,active,active,0,0,1,8,1,54,0,routine_entitlement,demo-employee-00189
+IT,Windows AD,read,medium,active,active,0,0,1,9,1,0,0,routine_entitlement,demo-employee-00072
+Finance,Linux,write,low,active,active,0,0,1,3,1,52,0,routine_entitlement,demo-employee-00286
+Engineering,Windows AD,privileged,high,active,active,0,1,1,39,1,35,1,outside_department_privileged,demo-employee-00348
+IT,Linux,read,high,active,active,0,0,1,33,1,56,0,routine_entitlement,demo-employee-00328
+IT,Windows AD,privileged,critical,active,active,0,0,1,161,1,131,1,stale_privileged_access,demo-employee-00337
+HR,Linux,read,low,active,active,0,0,1,13,1,17,0,routine_entitlement,demo-employee-00214
+IT,Linux,privileged,critical,active,active,0,0,1,144,1,191,1,stale_privileged_access,demo-employee-00385
+Sales,GitHub,write,medium,active,active,0,0,0,0,1,57,0,routine_entitlement,demo-employee-00179
+Finance,Windows AD,read,medium,active,active,0,0,1,45,1,54,0,routine_entitlement,demo-employee-00070
+Engineering,Windows AD,read,low,active,active,0,0,1,51,0,0,0,routine_entitlement,demo-employee-00099
+Finance,Linux,privileged,critical,active,active,0,0,1,241,1,130,1,stale_privileged_access,demo-employee-00376
+HR,Windows AD,read,critical,active,active,0,0,1,45,1,20,0,routine_entitlement,demo-employee-00244
+Finance,Linux,read,medium,active,active,0,0,0,0,1,31,0,routine_entitlement,demo-employee-00032
+Sales,Linux,write,medium,active,active,0,0,1,34,1,9,0,routine_entitlement,demo-employee-00023
+HR,GitHub,write,medium,active,active,0,0,1,47,1,10,0,routine_entitlement,demo-employee-00108
+HR,Linux,read,high,inactive,active,0,0,0,0,1,12,1,terminated_account,demo-employee-00378
+Sales,Windows AD,write,medium,active,active,0,0,1,49,1,52,0,routine_entitlement,demo-employee-00262
+HR,Windows AD,privileged,medium,active,active,0,0,1,39,1,6,0,routine_entitlement,demo-employee-00034
+HR,Linux,read,medium,active,active,0,0,1,3,1,59,0,routine_entitlement,demo-employee-00196
+Finance,Windows AD,write,medium,active,active,0,0,1,17,1,21,0,routine_entitlement,demo-employee-00005
+HR,Linux,read,high,inactive,active,0,0,1,0,1,42,1,terminated_account,demo-employee-00380
+HR,GitHub,read,high,active,active,0,0,1,34,1,49,0,routine_entitlement,demo-employee-00118
+Unknown,Linux,privileged,critical,unknown,active,1,0,0,0,1,4,1,unmapped_privileged,demo-employee-00357
+HR,Windows AD,read,low,active,active,0,0,1,44,1,26,0,routine_entitlement,demo-employee-00049
+IT,Windows AD,write,medium,active,active,0,0,1,37,0,0,0,routine_entitlement,demo-employee-00322
+IT,Windows AD,write,low,active,active,0,0,0,0,1,37,0,routine_entitlement,demo-employee-00160
+Engineering,GitHub,write,medium,active,active,0,0,1,6,1,19,0,routine_entitlement,demo-employee-00238
+Engineering,Windows AD,read,low,active,active,0,0,1,29,1,25,0,routine_entitlement,demo-employee-00122
+Engineering,Windows AD,read,high,active,active,0,0,1,4,1,35,0,routine_entitlement,demo-employee-00159
+IT,Windows AD,read,medium,active,active,0,0,1,7,1,20,0,routine_entitlement,demo-employee-00319
+Finance,Linux,write,high,active,active,0,0,1,26,0,0,0,routine_entitlement,demo-employee-00070
+Finance,Linux,privileged,critical,active,active,0,0,1,288,1,176,1,stale_privileged_access,demo-employee-00399
+Sales,Linux,write,low,active,active,0,0,1,29,1,38,0,routine_entitlement,demo-employee-00084
+Sales,Linux,read,high,active,active,0,0,1,47,1,41,0,routine_entitlement,demo-employee-00192
+Sales,Windows AD,read,low,active,active,0,0,1,2,1,8,0,routine_entitlement,demo-employee-00232
+IT,Linux,write,low,active,active,0,0,1,14,1,18,0,routine_entitlement,demo-employee-00175
+Sales,GitHub,read,high,active,active,0,0,1,50,0,0,0,routine_entitlement,demo-employee-00283
+IT,Windows AD,read,medium,active,active,0,0,1,50,1,37,0,routine_entitlement,demo-employee-00300
+IT,Linux,read,low,active,active,0,0,1,21,1,15,0,routine_entitlement,demo-employee-00152
+Finance,Linux,read,high,active,active,0,0,1,2,1,25,0,routine_entitlement,demo-employee-00094
+Sales,GitHub,privileged,medium,active,active,0,0,0,0,1,32,0,routine_entitlement,demo-employee-00120
+Engineering,Windows AD,write,medium,active,active,0,0,0,0,1,41,0,routine_entitlement,demo-employee-00077
+HR,GitHub,read,medium,active,active,0,0,1,47,1,24,0,routine_entitlement,demo-employee-00075
+Engineering,Windows AD,read,low,active,active,0,0,1,3,1,34,0,routine_entitlement,demo-employee-00127
+IT,Windows AD,read,medium,active,active,0,0,1,0,1,50,0,routine_entitlement,demo-employee-00197
+Engineering,GitHub,read,high,inactive,active,0,0,0,0,1,26,1,terminated_account,demo-employee-00391
+HR,Windows AD,read,high,active,active,0,0,1,15,1,27,0,routine_entitlement,demo-employee-00137
+HR,Linux,privileged,critical,active,active,0,0,1,237,1,227,1,stale_privileged_access,demo-employee-00409
+Finance,Windows AD,privileged,critical,active,active,0,0,1,275,1,166,1,stale_privileged_access,demo-employee-00343
+Finance,Linux,privileged,high,active,active,0,1,1,44,0,0,1,outside_department_privileged,demo-employee-00369
+Finance,GitHub,write,medium,active,active,0,0,1,30,1,15,0,routine_entitlement,demo-employee-00158
+Engineering,Linux,privileged,low,active,active,0,0,1,18,1,45,0,routine_entitlement,demo-employee-00226
+HR,GitHub,read,medium,active,active,0,0,1,48,1,54,0,routine_entitlement,demo-employee-00217
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,11,1,24,1,unmapped_privileged,demo-employee-00408
+Engineering,GitHub,write,medium,active,active,0,0,1,24,1,27,0,routine_entitlement,demo-employee-00271
+Sales,Linux,write,medium,active,active,0,0,1,1,0,0,0,routine_entitlement,demo-employee-00051
+Sales,GitHub,privileged,medium,active,active,0,0,0,0,1,44,0,routine_entitlement,demo-employee-00184
+Engineering,Windows AD,privileged,low,active,active,0,0,0,0,1,7,0,routine_entitlement,demo-employee-00172
+HR,GitHub,read,medium,active,active,0,0,1,13,0,0,0,routine_entitlement,demo-employee-00249
+Finance,Linux,write,medium,active,active,0,0,1,14,1,24,0,routine_entitlement,demo-employee-00002
+HR,Windows AD,read,medium,active,active,0,0,1,37,1,53,0,routine_entitlement,demo-employee-00203
+Sales,Windows AD,read,medium,active,active,0,0,1,15,1,49,0,routine_entitlement,demo-employee-00250
+Engineering,GitHub,read,low,active,active,0,0,1,17,1,16,0,routine_entitlement,demo-employee-00329
+HR,Windows AD,write,low,active,active,0,0,1,22,1,29,0,routine_entitlement,demo-employee-00231
+Finance,Windows AD,read,medium,active,active,0,0,1,36,1,4,0,routine_entitlement,demo-employee-00189
+HR,GitHub,read,medium,active,active,0,0,0,0,1,36,0,routine_entitlement,demo-employee-00140
+HR,Linux,read,high,active,active,0,0,1,22,1,31,0,routine_entitlement,demo-employee-00125
+IT,Linux,read,high,inactive,active,0,0,1,44,1,45,1,terminated_account,demo-employee-00412
+Engineering,Linux,read,low,active,active,0,0,0,0,1,58,0,routine_entitlement,demo-employee-00222
+Sales,GitHub,read,high,active,active,0,0,0,0,1,3,0,routine_entitlement,demo-employee-00177
+IT,Windows AD,write,medium,active,active,0,0,1,38,1,5,0,routine_entitlement,demo-employee-00098
+HR,Linux,read,medium,active,active,0,0,1,36,1,46,0,routine_entitlement,demo-employee-00146
+HR,GitHub,write,high,active,active,0,0,1,37,0,0,0,routine_entitlement,demo-employee-00270
+Finance,GitHub,write,medium,active,active,0,0,0,0,1,47,0,routine_entitlement,demo-employee-00328
+HR,GitHub,read,low,active,active,0,0,0,0,1,42,0,routine_entitlement,demo-employee-00280
+IT,Linux,write,low,active,active,0,0,1,4,1,43,0,routine_entitlement,demo-employee-00269
+Sales,Linux,privileged,high,active,active,0,1,1,24,1,47,1,outside_department_privileged,demo-employee-00352
+HR,GitHub,read,high,active,active,0,0,1,5,1,42,0,routine_entitlement,demo-employee-00100
+Finance,Linux,privileged,high,active,active,0,1,1,33,1,17,1,outside_department_privileged,demo-employee-00366
+IT,Linux,read,medium,active,active,0,0,1,4,1,24,0,routine_entitlement,demo-employee-00201
+Engineering,GitHub,read,medium,active,active,0,0,1,2,1,14,0,routine_entitlement,demo-employee-00016
+Engineering,Windows AD,read,high,inactive,active,0,0,1,15,1,10,1,terminated_account,demo-employee-00384
+Engineering,Windows AD,read,medium,active,active,0,0,1,29,1,36,0,routine_entitlement,demo-employee-00180
+HR,Windows AD,read,medium,active,active,0,0,0,0,1,40,0,routine_entitlement,demo-employee-00209
+Sales,GitHub,write,medium,active,active,0,0,1,40,1,47,0,routine_entitlement,demo-employee-00228
+Sales,GitHub,privileged,high,active,active,0,1,1,50,1,54,1,outside_department_privileged,demo-employee-00347
+Engineering,Windows AD,privileged,medium,active,active,0,0,0,0,1,46,0,routine_entitlement,demo-employee-00018
+Engineering,GitHub,privileged,high,active,active,0,1,1,5,1,29,1,outside_department_privileged,demo-employee-00345
+Sales,Windows AD,read,medium,active,active,0,0,1,39,1,7,0,routine_entitlement,demo-employee-00087
+Finance,Windows AD,read,medium,active,active,0,0,1,29,1,59,0,routine_entitlement,demo-employee-00002
+Sales,Windows AD,read,high,active,active,0,0,1,42,1,15,0,routine_entitlement,demo-employee-00155
+HR,GitHub,write,low,active,active,0,0,1,15,1,31,0,routine_entitlement,demo-employee-00147
+Sales,GitHub,privileged,critical,active,active,0,0,1,100,1,205,1,stale_privileged_access,demo-employee-00345
+Engineering,GitHub,read,medium,active,active,0,0,0,0,1,31,0,routine_entitlement,demo-employee-00072
+IT,Windows AD,write,low,active,active,0,0,1,26,1,17,0,routine_entitlement,demo-employee-00128
+HR,Windows AD,read,low,active,active,0,0,0,0,1,26,0,routine_entitlement,demo-employee-00190
+HR,GitHub,read,medium,active,active,0,0,1,25,1,10,0,routine_entitlement,demo-employee-00218
+Engineering,Windows AD,read,high,active,active,0,0,1,35,1,48,0,routine_entitlement,demo-employee-00057
+Engineering,Windows AD,write,high,active,active,0,0,1,33,1,42,0,routine_entitlement,demo-employee-00067
+Finance,Windows AD,privileged,medium,active,active,0,0,1,42,1,3,0,routine_entitlement,demo-employee-00330
+HR,Linux,write,medium,active,active,0,0,1,13,1,20,0,routine_entitlement,demo-employee-00130
+Finance,Linux,write,medium,active,active,0,0,1,25,1,32,0,routine_entitlement,demo-employee-00283
+Sales,GitHub,read,medium,active,active,0,0,0,0,1,20,0,routine_entitlement,demo-employee-00178
+Sales,GitHub,read,medium,active,active,0,0,1,16,1,2,0,routine_entitlement,demo-employee-00200
+Sales,GitHub,read,low,active,active,0,0,1,49,1,45,0,routine_entitlement,demo-employee-00319
+Finance,GitHub,read,medium,active,active,0,0,1,13,1,46,0,routine_entitlement,demo-employee-00008
+IT,Windows AD,read,medium,active,active,0,0,1,32,1,51,0,routine_entitlement,demo-employee-00136
+Finance,GitHub,privileged,critical,active,active,0,0,1,172,1,248,1,stale_privileged_access,demo-employee-00344
+IT,GitHub,privileged,high,active,active,0,1,1,50,1,48,1,outside_department_privileged,demo-employee-00409
+Sales,Linux,read,low,active,active,0,0,1,27,1,45,0,routine_entitlement,demo-employee-00061
+Engineering,GitHub,privileged,critical,active,active,0,0,1,258,1,239,1,stale_privileged_access,demo-employee-00376
+HR,Linux,read,medium,active,active,0,0,1,36,1,56,0,routine_entitlement,demo-employee-00058
+HR,Linux,read,medium,active,active,0,0,1,34,1,3,0,routine_entitlement,demo-employee-00108
+Sales,Linux,read,medium,active,active,0,0,1,18,1,2,0,routine_entitlement,demo-employee-00315
+Finance,Windows AD,privileged,high,active,active,0,1,0,0,1,35,1,outside_department_privileged,demo-employee-00392
+Finance,GitHub,write,low,active,active,0,0,1,29,1,24,0,routine_entitlement,demo-employee-00177
+Finance,Linux,privileged,high,active,active,0,1,1,34,0,0,1,outside_department_privileged,demo-employee-00391
+HR,GitHub,write,medium,active,active,0,0,1,50,1,24,0,routine_entitlement,demo-employee-00117
+HR,GitHub,read,high,inactive,active,0,0,1,43,1,20,1,terminated_account,demo-employee-00333
+IT,GitHub,read,medium,active,active,0,0,1,26,1,29,0,routine_entitlement,demo-employee-00306
+Sales,Windows AD,read,low,active,active,0,0,1,26,1,56,0,routine_entitlement,demo-employee-00147
+IT,Linux,write,medium,active,active,0,0,1,24,1,23,0,routine_entitlement,demo-employee-00271
+Sales,Linux,write,high,inactive,active,0,0,1,9,1,11,1,terminated_account,demo-employee-00393
+Unknown,GitHub,privileged,critical,unknown,active,1,0,0,0,1,0,1,unmapped_privileged,demo-employee-00398
+Finance,Windows AD,write,medium,active,active,0,0,1,46,0,0,0,routine_entitlement,demo-employee-00232
+Engineering,Windows AD,read,low,active,active,0,0,1,3,1,27,0,routine_entitlement,demo-employee-00216
+IT,Windows AD,read,high,active,active,0,0,1,38,1,29,0,routine_entitlement,demo-employee-00212
+IT,GitHub,write,high,active,active,0,0,0,0,1,3,0,routine_entitlement,demo-employee-00270
+Engineering,GitHub,read,medium,active,active,0,0,1,42,1,9,0,routine_entitlement,demo-employee-00305
+HR,GitHub,read,low,active,active,0,0,1,41,1,34,0,routine_entitlement,demo-employee-00094
+Sales,GitHub,privileged,high,active,active,0,1,1,49,1,17,1,outside_department_privileged,demo-employee-00348
+HR,Windows AD,privileged,medium,active,active,0,0,1,24,1,29,0,routine_entitlement,demo-employee-00165
+HR,Linux,privileged,medium,active,active,0,0,1,35,1,41,0,routine_entitlement,demo-employee-00190
+HR,Linux,read,medium,active,active,0,0,1,10,1,39,0,routine_entitlement,demo-employee-00196
+Finance,GitHub,write,medium,active,active,0,0,1,23,1,1,0,routine_entitlement,demo-employee-00244
+Finance,Windows AD,write,medium,active,active,0,0,0,0,1,39,0,routine_entitlement,demo-employee-00038
+Engineering,Linux,read,medium,active,active,0,0,1,3,1,0,0,routine_entitlement,demo-employee-00243
+Finance,GitHub,write,medium,active,active,0,0,0,0,1,36,0,routine_entitlement,demo-employee-00138
+HR,Windows AD,write,medium,active,active,0,0,1,2,1,38,0,routine_entitlement,demo-employee-00059
+Engineering,Linux,read,high,inactive,active,0,0,1,16,1,24,1,terminated_account,demo-employee-00362
+Engineering,Linux,read,medium,active,active,0,0,1,7,1,59,0,routine_entitlement,demo-employee-00283
+Finance,Linux,write,medium,active,active,0,0,1,18,1,51,0,routine_entitlement,demo-employee-00289
+Engineering,Linux,read,medium,active,active,0,0,1,27,1,52,0,routine_entitlement,demo-employee-00159
+IT,Linux,read,medium,active,active,0,0,1,30,1,25,0,routine_entitlement,demo-employee-00117
+Finance,Linux,read,medium,active,active,0,0,1,42,1,30,0,routine_entitlement,demo-employee-00031
+Sales,GitHub,read,medium,active,active,0,0,1,2,1,25,0,routine_entitlement,demo-employee-00160
+Sales,Windows AD,privileged,high,active,active,0,1,1,11,1,17,1,outside_department_privileged,demo-employee-00359
+Sales,Linux,read,medium,active,active,0,0,1,7,1,31,0,routine_entitlement,demo-employee-00308
+Sales,Linux,read,medium,active,active,0,0,1,34,1,55,0,routine_entitlement,demo-employee-00319
+Finance,GitHub,read,critical,active,active,0,0,1,16,1,4,0,routine_entitlement,demo-employee-00281
+Engineering,Linux,read,high,active,active,0,0,1,5,1,25,0,routine_entitlement,demo-employee-00304
+HR,Linux,write,medium,active,active,0,0,1,29,1,19,0,routine_entitlement,demo-employee-00116
+Engineering,Windows AD,write,medium,active,active,0,0,0,0,1,22,0,routine_entitlement,demo-employee-00235
+IT,Linux,privileged,high,active,active,0,1,1,46,1,11,1,outside_department_privileged,demo-employee-00371
+Engineering,Linux,read,medium,active,active,0,0,1,48,1,18,0,routine_entitlement,demo-employee-00032
+Sales,Linux,read,high,inactive,active,0,0,0,0,1,28,1,terminated_account,demo-employee-00381
+HR,Windows AD,read,high,active,active,0,0,1,39,1,8,0,routine_entitlement,demo-employee-00097
+HR,Windows AD,write,medium,active,active,0,0,0,0,1,18,0,routine_entitlement,demo-employee-00231
+IT,GitHub,privileged,medium,active,active,0,0,1,42,1,0,0,routine_entitlement,demo-employee-00046
+Finance,Windows AD,read,low,active,active,0,0,1,42,1,24,0,routine_entitlement,demo-employee-00090
+Engineering,GitHub,read,low,active,active,0,0,0,0,1,9,0,routine_entitlement,demo-employee-00035
+IT,Linux,write,medium,active,active,0,0,1,3,1,9,0,routine_entitlement,demo-employee-00169
+HR,Windows AD,read,medium,active,active,0,0,1,40,1,17,0,routine_entitlement,demo-employee-00063
+Engineering,Linux,read,high,active,active,0,0,1,39,1,54,0,routine_entitlement,demo-employee-00220
+Sales,GitHub,read,medium,active,active,0,0,1,40,1,57,0,routine_entitlement,demo-employee-00254
+IT,GitHub,read,medium,active,active,0,0,1,38,1,37,0,routine_entitlement,demo-employee-00276
+Engineering,GitHub,privileged,medium,active,active,0,0,1,17,1,38,0,routine_entitlement,demo-employee-00162
+Finance,GitHub,read,high,inactive,active,0,0,1,23,1,23,1,terminated_account,demo-employee-00356
+IT,Linux,read,medium,active,active,0,0,0,0,1,55,0,routine_entitlement,demo-employee-00205
+IT,Windows AD,read,medium,active,active,0,0,0,0,1,26,0,routine_entitlement,demo-employee-00120
+HR,Linux,read,medium,active,active,0,0,1,9,1,38,0,routine_entitlement,demo-employee-00189
+IT,Linux,read,low,active,active,0,0,1,5,1,21,0,routine_entitlement,demo-employee-00229
+IT,GitHub,read,critical,active,active,0,0,1,1,1,6,0,routine_entitlement,demo-employee-00071
+HR,Linux,privileged,high,active,active,0,1,1,27,1,23,1,outside_department_privileged,demo-employee-00404
+Finance,Windows AD,write,medium,active,active,0,0,1,47,1,40,0,routine_entitlement,demo-employee-00222
+Finance,Linux,write,medium,active,active,0,0,0,0,1,47,0,routine_entitlement,demo-employee-00000
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,31,0,0,1,unmapped_privileged,demo-employee-00397
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,51,0,0,1,unmapped_privileged,demo-employee-00340
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,38,0,routine_entitlement,demo-employee-00184
+IT,Linux,read,medium,active,active,0,0,1,23,1,28,0,routine_entitlement,demo-employee-00236
+HR,Windows AD,read,medium,active,active,0,0,1,49,1,39,0,routine_entitlement,demo-employee-00057
+IT,Linux,privileged,critical,active,active,0,0,1,131,1,156,1,stale_privileged_access,demo-employee-00336
+Sales,Windows AD,read,medium,active,active,0,0,1,13,1,49,0,routine_entitlement,demo-employee-00067
+Sales,Linux,privileged,high,active,active,0,1,1,7,1,59,1,outside_department_privileged,demo-employee-00365
+Finance,GitHub,read,medium,active,active,0,0,1,35,1,15,0,routine_entitlement,demo-employee-00115
+IT,GitHub,read,high,active,active,0,0,1,17,1,36,0,routine_entitlement,demo-employee-00112
+Sales,Linux,read,high,active,active,0,0,1,6,1,28,0,routine_entitlement,demo-employee-00042
+Finance,GitHub,write,low,active,active,0,0,1,16,1,40,0,routine_entitlement,demo-employee-00198
+HR,GitHub,read,medium,active,active,0,0,1,43,1,23,0,routine_entitlement,demo-employee-00078
+HR,Windows AD,read,high,active,active,0,0,1,36,1,43,0,routine_entitlement,demo-employee-00154
+Finance,Windows AD,read,medium,active,active,0,0,1,51,1,45,0,routine_entitlement,demo-employee-00150
+HR,Linux,read,medium,active,active,0,0,1,15,1,41,0,routine_entitlement,demo-employee-00107
+Sales,Linux,write,low,active,active,0,0,1,49,1,55,0,routine_entitlement,demo-employee-00055
+HR,GitHub,write,medium,active,active,0,0,0,0,1,3,0,routine_entitlement,demo-employee-00140
+Finance,Linux,read,medium,active,active,0,0,0,0,1,4,0,routine_entitlement,demo-employee-00013
+HR,Windows AD,privileged,critical,active,active,0,0,1,2,1,57,0,routine_entitlement,demo-employee-00111
+Finance,GitHub,read,medium,active,active,0,0,1,23,1,45,0,routine_entitlement,demo-employee-00001
+Engineering,Linux,read,medium,active,active,0,0,1,43,1,39,0,routine_entitlement,demo-employee-00177
+Finance,Windows AD,write,medium,active,active,0,0,0,0,1,41,0,routine_entitlement,demo-employee-00282
+IT,Linux,read,high,active,active,0,0,1,31,0,0,0,routine_entitlement,demo-employee-00307
+Sales,GitHub,read,medium,active,active,0,0,1,24,1,5,0,routine_entitlement,demo-employee-00225
+Sales,Linux,read,high,inactive,active,0,0,0,0,0,0,1,terminated_account,demo-employee-00373
+Finance,Windows AD,read,medium,active,active,0,0,1,22,1,6,0,routine_entitlement,demo-employee-00171
+Engineering,Windows AD,write,low,active,active,0,0,1,5,1,47,0,routine_entitlement,demo-employee-00313
+IT,GitHub,privileged,high,active,active,0,1,1,17,1,39,1,outside_department_privileged,demo-employee-00352
+Engineering,Linux,privileged,critical,active,active,0,0,1,267,1,216,1,stale_privileged_access,demo-employee-00334
+Engineering,Linux,read,high,active,active,0,0,1,44,1,54,0,routine_entitlement,demo-employee-00028
+Finance,Windows AD,read,low,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00285
+IT,Linux,write,low,active,active,0,0,1,37,1,26,0,routine_entitlement,demo-employee-00107
+IT,Linux,privileged,critical,active,active,0,0,1,245,1,168,1,stale_privileged_access,demo-employee-00396
+HR,Linux,read,medium,active,active,0,0,0,0,1,39,0,routine_entitlement,demo-employee-00113
+Finance,Linux,privileged,high,active,active,0,1,1,11,1,5,1,outside_department_privileged,demo-employee-00360
+IT,GitHub,read,medium,active,active,0,0,1,44,1,17,0,routine_entitlement,demo-employee-00184
+IT,GitHub,read,high,inactive,active,0,0,1,13,1,13,1,terminated_account,demo-employee-00382
+Finance,Linux,read,medium,active,active,0,0,1,3,1,27,0,routine_entitlement,demo-employee-00156
+Sales,GitHub,privileged,medium,active,active,0,0,1,36,1,3,0,routine_entitlement,demo-employee-00089
+HR,Linux,read,medium,active,active,0,0,1,44,1,48,0,routine_entitlement,demo-employee-00071
+Sales,GitHub,read,high,inactive,active,0,0,1,39,1,44,1,terminated_account,demo-employee-00352
+Sales,Windows AD,read,medium,active,active,0,0,1,51,1,17,0,routine_entitlement,demo-employee-00225
+IT,Linux,write,medium,active,active,0,0,1,6,1,8,0,routine_entitlement,demo-employee-00013
+HR,Windows AD,write,medium,active,active,0,0,1,29,1,28,0,routine_entitlement,demo-employee-00251
+HR,Linux,privileged,medium,active,active,0,0,0,0,1,40,0,routine_entitlement,demo-employee-00261
+Finance,Linux,read,low,active,active,0,0,1,25,1,56,0,routine_entitlement,demo-employee-00011
+Engineering,Linux,write,low,active,active,0,0,1,8,1,5,0,routine_entitlement,demo-employee-00312
+HR,Windows AD,read,critical,active,active,0,0,1,22,1,35,0,routine_entitlement,demo-employee-00235
+Finance,GitHub,write,low,active,active,0,0,1,51,1,17,0,routine_entitlement,demo-employee-00030
+Finance,GitHub,write,medium,active,active,0,0,1,25,1,54,0,routine_entitlement,demo-employee-00043
+HR,Linux,privileged,high,active,active,0,0,0,0,1,22,0,routine_entitlement,demo-employee-00046
+Finance,Windows AD,privileged,medium,active,active,0,0,1,1,0,0,0,routine_entitlement,demo-employee-00173
+HR,Windows AD,write,low,active,active,0,0,1,16,1,39,0,routine_entitlement,demo-employee-00173
+Sales,Windows AD,read,low,active,active,0,0,1,17,1,51,0,routine_entitlement,demo-employee-00122
+IT,GitHub,privileged,high,active,active,0,1,1,51,1,8,1,outside_department_privileged,demo-employee-00344
+Finance,GitHub,read,medium,active,active,0,0,1,36,1,10,0,routine_entitlement,demo-employee-00138
+Sales,GitHub,read,medium,active,active,0,0,1,24,1,40,0,routine_entitlement,demo-employee-00129
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,22,1,18,1,unmapped_privileged,demo-employee-00377
+IT,GitHub,privileged,critical,active,active,0,0,1,256,1,145,1,stale_privileged_access,demo-employee-00405
+Engineering,Linux,read,medium,active,active,0,0,1,3,1,0,0,routine_entitlement,demo-employee-00010
+Finance,Linux,privileged,critical,active,active,0,0,1,192,1,123,1,stale_privileged_access,demo-employee-00334
+HR,GitHub,write,medium,active,active,0,0,1,41,1,34,0,routine_entitlement,demo-employee-00284
+HR,Linux,write,medium,active,active,0,0,0,0,1,0,0,routine_entitlement,demo-employee-00139
+HR,GitHub,privileged,high,active,active,0,0,1,41,1,18,0,routine_entitlement,demo-employee-00307
+Finance,GitHub,read,low,active,active,0,0,1,39,1,8,0,routine_entitlement,demo-employee-00174
+Sales,Windows AD,write,medium,active,active,0,0,1,14,1,17,0,routine_entitlement,demo-employee-00024
+Finance,Linux,write,medium,active,active,0,0,1,5,0,0,0,routine_entitlement,demo-employee-00209
+Finance,Linux,privileged,critical,active,active,0,0,1,284,1,174,1,stale_privileged_access,demo-employee-00390
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,20,1,40,1,unmapped_privileged,demo-employee-00416
+HR,Linux,write,low,active,active,0,0,1,6,1,43,0,routine_entitlement,demo-employee-00187
+Engineering,Linux,read,medium,active,active,0,0,1,26,1,58,0,routine_entitlement,demo-employee-00310
+HR,Windows AD,write,low,active,active,0,0,1,17,1,39,0,routine_entitlement,demo-employee-00217
+Sales,GitHub,read,medium,active,active,0,0,1,20,1,50,0,routine_entitlement,demo-employee-00287
+HR,GitHub,read,medium,active,active,0,0,1,30,1,43,0,routine_entitlement,demo-employee-00298
+Sales,Windows AD,read,low,active,active,0,0,1,34,1,49,0,routine_entitlement,demo-employee-00199
+Sales,Linux,read,low,active,active,0,0,1,8,1,2,0,routine_entitlement,demo-employee-00203
+Engineering,Windows AD,read,medium,active,active,0,0,1,20,1,56,0,routine_entitlement,demo-employee-00103
+IT,Linux,read,high,active,active,0,0,1,26,1,18,0,routine_entitlement,demo-employee-00305
+Finance,Linux,privileged,high,active,active,0,0,1,6,1,58,0,routine_entitlement,demo-employee-00054
+Engineering,GitHub,read,critical,active,active,0,0,0,0,1,47,0,routine_entitlement,demo-employee-00188
+HR,GitHub,write,high,active,active,0,0,1,36,1,51,0,routine_entitlement,demo-employee-00303
+Engineering,Linux,write,high,active,active,0,0,1,31,1,31,0,routine_entitlement,demo-employee-00125
+IT,Windows AD,privileged,critical,active,active,0,0,1,283,1,161,1,stale_privileged_access,demo-employee-00358
+Finance,Windows AD,read,medium,active,active,0,0,1,22,1,22,0,routine_entitlement,demo-employee-00073
+Finance,GitHub,write,medium,active,active,0,0,1,0,1,38,0,routine_entitlement,demo-employee-00165
+Sales,GitHub,read,medium,active,active,0,0,1,13,1,17,0,routine_entitlement,demo-employee-00146
+Finance,Linux,read,low,active,active,0,0,1,18,1,38,0,routine_entitlement,demo-employee-00220
+Finance,Linux,privileged,high,active,active,0,1,1,46,1,54,1,outside_department_privileged,demo-employee-00374
+Finance,Linux,privileged,high,active,active,0,1,1,6,1,50,1,outside_department_privileged,demo-employee-00389
+Sales,Linux,read,medium,active,active,0,0,1,24,1,34,0,routine_entitlement,demo-employee-00112
+HR,Windows AD,read,medium,active,active,0,0,1,15,1,53,0,routine_entitlement,demo-employee-00261
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,28,1,35,1,unmapped_privileged,demo-employee-00379
+HR,Windows AD,read,low,active,active,0,0,1,19,1,45,0,routine_entitlement,demo-employee-00079
+Finance,GitHub,read,medium,active,active,0,0,1,51,1,54,0,routine_entitlement,demo-employee-00079
+HR,Windows AD,privileged,critical,active,active,0,0,1,209,1,189,1,stale_privileged_access,demo-employee-00341
+HR,Windows AD,privileged,critical,active,active,0,0,1,283,1,153,1,stale_privileged_access,demo-employee-00395
+Engineering,Linux,read,low,active,active,0,0,1,35,1,49,0,routine_entitlement,demo-employee-00078
+Engineering,Windows AD,write,medium,active,active,0,0,1,0,1,1,0,routine_entitlement,demo-employee-00141
+HR,Windows AD,read,low,active,active,0,0,1,31,1,25,0,routine_entitlement,demo-employee-00038
+IT,GitHub,write,low,active,active,0,0,1,15,1,8,0,routine_entitlement,demo-employee-00012
+IT,Windows AD,write,high,active,active,0,0,0,0,1,49,0,routine_entitlement,demo-employee-00068
+Engineering,GitHub,privileged,high,active,active,0,1,1,43,0,0,1,outside_department_privileged,demo-employee-00395
+Sales,Windows AD,read,high,active,active,0,0,1,16,1,10,0,routine_entitlement,demo-employee-00027
+Sales,GitHub,write,low,active,active,0,0,1,51,1,14,0,routine_entitlement,demo-employee-00172
+HR,Linux,read,medium,active,active,0,0,1,5,1,43,0,routine_entitlement,demo-employee-00144
+Sales,Windows AD,privileged,medium,active,active,0,0,1,7,1,16,0,routine_entitlement,demo-employee-00017
+HR,GitHub,write,low,active,active,0,0,1,2,0,0,0,routine_entitlement,demo-employee-00176
+Finance,Windows AD,privileged,high,active,active,0,1,1,19,1,13,1,outside_department_privileged,demo-employee-00411
+HR,Windows AD,read,medium,active,active,0,0,1,36,1,12,0,routine_entitlement,demo-employee-00095
+IT,GitHub,privileged,critical,active,active,0,0,1,136,1,126,1,stale_privileged_access,demo-employee-00355
+Sales,Linux,read,medium,active,active,0,0,1,4,1,55,0,routine_entitlement,demo-employee-00009
+IT,Windows AD,read,low,active,active,0,0,1,34,1,1,0,routine_entitlement,demo-employee-00109
+Finance,Linux,write,high,active,active,0,0,1,12,0,0,0,routine_entitlement,demo-employee-00210
+IT,Windows AD,write,medium,active,active,0,0,1,46,1,2,0,routine_entitlement,demo-employee-00303
+Engineering,Windows AD,read,low,active,active,0,0,1,33,1,57,0,routine_entitlement,demo-employee-00142
+IT,GitHub,read,high,active,active,0,0,1,5,1,24,0,routine_entitlement,demo-employee-00044
+HR,Windows AD,read,medium,active,active,0,0,1,10,1,22,0,routine_entitlement,demo-employee-00076
+Sales,GitHub,read,high,active,active,0,0,1,16,1,48,0,routine_entitlement,demo-employee-00086
+Finance,GitHub,read,high,active,active,0,0,0,0,1,7,0,routine_entitlement,demo-employee-00287
+Engineering,Windows AD,write,low,active,active,0,0,1,42,1,16,0,routine_entitlement,demo-employee-00243
+Finance,Windows AD,privileged,high,active,active,0,1,0,0,1,11,1,outside_department_privileged,demo-employee-00338
+IT,Linux,read,low,active,active,0,0,1,2,0,0,0,routine_entitlement,demo-employee-00063
+HR,Windows AD,write,medium,active,active,0,0,1,28,1,1,0,routine_entitlement,demo-employee-00230
+Finance,Linux,privileged,critical,active,active,0,0,1,229,1,251,1,stale_privileged_access,demo-employee-00341
+HR,Linux,write,medium,active,active,0,0,1,12,1,2,0,routine_entitlement,demo-employee-00284
+IT,Linux,write,medium,active,active,0,0,1,41,1,15,0,routine_entitlement,demo-employee-00062
+Sales,GitHub,read,high,active,active,0,0,1,14,1,45,0,routine_entitlement,demo-employee-00277
+Engineering,GitHub,privileged,critical,active,active,0,0,1,148,1,110,1,stale_privileged_access,demo-employee-00375
+Sales,Windows AD,read,medium,active,active,0,0,0,0,1,14,0,routine_entitlement,demo-employee-00150
+HR,GitHub,read,low,active,active,0,0,0,0,1,54,0,routine_entitlement,demo-employee-00267
+IT,Windows AD,read,low,active,active,0,0,1,38,1,16,0,routine_entitlement,demo-employee-00069
+IT,Linux,read,low,active,active,0,0,1,44,1,51,0,routine_entitlement,demo-employee-00068
+HR,Linux,write,medium,active,active,0,0,1,47,1,34,0,routine_entitlement,demo-employee-00201
+HR,Windows AD,write,low,active,active,0,0,1,19,1,48,0,routine_entitlement,demo-employee-00131
+Finance,Linux,write,medium,active,active,0,0,1,48,1,2,0,routine_entitlement,demo-employee-00215
+Engineering,Linux,read,low,active,active,0,0,1,39,1,36,0,routine_entitlement,demo-employee-00248
+Engineering,Linux,write,medium,active,active,0,0,1,43,1,57,0,routine_entitlement,demo-employee-00097
+Engineering,Linux,read,low,active,active,0,0,1,39,1,4,0,routine_entitlement,demo-employee-00021
+IT,GitHub,read,medium,active,active,0,0,1,51,1,15,0,routine_entitlement,demo-employee-00264
+HR,Linux,read,medium,active,active,0,0,0,0,1,25,0,routine_entitlement,demo-employee-00277
+Sales,Windows AD,privileged,critical,active,active,0,0,1,165,1,141,1,stale_privileged_access,demo-employee-00382
+IT,Linux,read,medium,active,active,0,0,1,18,1,47,0,routine_entitlement,demo-employee-00043
+Finance,Linux,read,critical,active,active,0,0,1,33,1,26,0,routine_entitlement,demo-employee-00080
+Sales,Linux,read,medium,active,active,0,0,1,8,0,0,0,routine_entitlement,demo-employee-00318
+HR,GitHub,write,high,active,active,0,0,1,34,1,36,0,routine_entitlement,demo-employee-00212
+Finance,Linux,write,medium,active,active,0,0,1,21,1,13,0,routine_entitlement,demo-employee-00121
+IT,Windows AD,write,medium,active,active,0,0,1,12,1,46,0,routine_entitlement,demo-employee-00030
+Engineering,Windows AD,privileged,critical,active,active,0,0,1,245,1,101,1,stale_privileged_access,demo-employee-00359
+Engineering,Linux,read,medium,active,active,0,0,1,11,1,53,0,routine_entitlement,demo-employee-00227
+IT,Windows AD,read,low,active,active,0,0,1,19,1,58,0,routine_entitlement,demo-employee-00270
+HR,Windows AD,read,medium,active,active,0,0,1,1,1,9,0,routine_entitlement,demo-employee-00307
+IT,GitHub,read,medium,active,active,0,0,1,7,0,0,0,routine_entitlement,demo-employee-00098
+Engineering,GitHub,read,medium,active,active,0,0,1,16,1,28,0,routine_entitlement,demo-employee-00193
+Finance,Windows AD,read,low,active,active,0,0,1,33,1,32,0,routine_entitlement,demo-employee-00011
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,25,1,50,1,unmapped_privileged,demo-employee-00400
+Sales,Windows AD,privileged,high,active,active,0,1,1,11,1,45,1,outside_department_privileged,demo-employee-00397
+Engineering,GitHub,privileged,high,active,active,0,1,1,13,1,3,1,outside_department_privileged,demo-employee-00397
+Sales,GitHub,privileged,critical,active,active,0,0,1,276,1,258,1,stale_privileged_access,demo-employee-00339
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,25,1,50,1,unmapped_privileged,demo-employee-00364
+Sales,Windows AD,write,high,active,active,0,0,1,10,1,51,0,routine_entitlement,demo-employee-00016
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,18,1,38,1,unmapped_privileged,demo-employee-00414
+Sales,GitHub,write,low,active,active,0,0,1,47,1,38,0,routine_entitlement,demo-employee-00239
+Engineering,Linux,read,low,active,active,0,0,1,28,1,13,0,routine_entitlement,demo-employee-00133
+HR,Windows AD,read,medium,active,active,0,0,1,33,1,50,0,routine_entitlement,demo-employee-00318
+IT,GitHub,write,medium,active,active,0,0,1,41,1,18,0,routine_entitlement,demo-employee-00167
+Unknown,GitHub,privileged,critical,unknown,active,1,0,0,0,0,0,1,unmapped_privileged,demo-employee-00387
+Engineering,GitHub,read,medium,active,active,0,0,1,49,1,7,0,routine_entitlement,demo-employee-00264
+HR,GitHub,read,medium,active,active,0,0,1,13,1,44,0,routine_entitlement,demo-employee-00002
+Finance,GitHub,read,high,active,active,0,0,1,9,1,59,0,routine_entitlement,demo-employee-00262
+Finance,Linux,privileged,high,active,active,0,1,1,27,1,12,1,outside_department_privileged,demo-employee-00372
+Sales,Windows AD,read,high,active,active,0,0,0,0,1,23,0,routine_entitlement,demo-employee-00256
+Finance,Windows AD,read,high,active,active,0,0,1,23,1,2,0,routine_entitlement,demo-employee-00107
+Sales,GitHub,privileged,medium,active,active,0,0,1,0,1,23,0,routine_entitlement,demo-employee-00096
+IT,GitHub,read,high,active,active,0,0,1,47,1,46,0,routine_entitlement,demo-employee-00195
+HR,GitHub,read,medium,active,active,0,0,0,0,1,36,0,routine_entitlement,demo-employee-00012
+Engineering,Linux,privileged,critical,active,active,0,0,1,300,1,200,1,stale_privileged_access,demo-employee-00340
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,26,1,20,1,unmapped_privileged,demo-employee-00367
+Engineering,Windows AD,read,medium,active,active,0,0,1,39,1,46,0,routine_entitlement,demo-employee-00176
+Finance,GitHub,write,high,active,active,0,0,1,50,1,52,0,routine_entitlement,demo-employee-00040
+Finance,Linux,privileged,high,active,active,0,1,1,1,1,41,1,outside_department_privileged,demo-employee-00344
+Finance,Linux,read,medium,active,active,0,0,1,26,1,24,0,routine_entitlement,demo-employee-00153
+Sales,GitHub,read,high,active,active,0,0,1,32,1,33,0,routine_entitlement,demo-employee-00158
+IT,GitHub,write,high,active,active,0,0,1,47,1,59,0,routine_entitlement,demo-employee-00286
+Engineering,Windows AD,write,low,active,active,0,0,1,4,1,34,0,routine_entitlement,demo-employee-00006
+Engineering,Linux,privileged,critical,active,active,0,0,1,262,1,118,1,stale_privileged_access,demo-employee-00374
+Engineering,Windows AD,read,low,active,active,0,0,1,35,1,18,0,routine_entitlement,demo-employee-00106
+IT,GitHub,write,medium,active,active,0,0,1,34,1,11,0,routine_entitlement,demo-employee-00268
+HR,Linux,read,low,active,active,0,0,1,46,0,0,0,routine_entitlement,demo-employee-00154
+HR,Windows AD,read,medium,active,active,0,0,1,6,0,0,0,routine_entitlement,demo-employee-00237
+Sales,Windows AD,read,medium,active,active,0,0,1,48,1,39,0,routine_entitlement,demo-employee-00022
+IT,Windows AD,read,high,active,active,0,0,1,8,1,41,0,routine_entitlement,demo-employee-00134
+Engineering,Linux,read,medium,active,active,0,0,1,42,1,51,0,routine_entitlement,demo-employee-00202
+HR,GitHub,read,low,active,active,0,0,0,0,1,4,0,routine_entitlement,demo-employee-00058
+Engineering,GitHub,read,high,active,active,0,0,1,48,1,14,0,routine_entitlement,demo-employee-00149
+Sales,Windows AD,read,high,active,active,0,0,1,40,0,0,0,routine_entitlement,demo-employee-00089
+Finance,Windows AD,privileged,medium,active,active,0,0,0,0,1,24,0,routine_entitlement,demo-employee-00111
+Engineering,Windows AD,write,medium,active,active,0,0,0,0,1,41,0,routine_entitlement,demo-employee-00103
+Sales,Windows AD,privileged,high,active,active,0,1,0,0,1,49,1,outside_department_privileged,demo-employee-00387
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,16,1,52,1,unmapped_privileged,demo-employee-00360
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,55,0,routine_entitlement,demo-employee-00321
+HR,Linux,privileged,high,active,active,0,1,1,43,1,49,1,outside_department_privileged,demo-employee-00389
+HR,Linux,write,medium,active,active,0,0,1,39,1,14,0,routine_entitlement,demo-employee-00151
+Sales,Windows AD,read,low,active,active,0,0,1,35,0,0,0,routine_entitlement,demo-employee-00212
+Finance,GitHub,privileged,high,active,active,0,1,0,0,1,25,1,outside_department_privileged,demo-employee-00399
+IT,GitHub,read,low,active,active,0,0,1,31,1,41,0,routine_entitlement,demo-employee-00111
+IT,Windows AD,read,medium,active,active,0,0,0,0,1,31,0,routine_entitlement,demo-employee-00116
+IT,Windows AD,privileged,low,active,active,0,0,1,28,1,10,0,routine_entitlement,demo-employee-00158
+Finance,Windows AD,read,medium,active,active,0,0,1,16,0,0,0,routine_entitlement,demo-employee-00036
+HR,GitHub,read,medium,active,active,0,0,1,48,1,7,0,routine_entitlement,demo-employee-00315
+IT,Linux,read,medium,active,active,0,0,1,26,1,31,0,routine_entitlement,demo-employee-00293
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,12,0,routine_entitlement,demo-employee-00122
+Finance,Linux,read,medium,active,active,0,0,1,21,0,0,0,routine_entitlement,demo-employee-00306
+Engineering,Linux,read,low,active,active,0,0,1,25,1,53,0,routine_entitlement,demo-employee-00317
+IT,GitHub,privileged,medium,active,active,0,0,1,25,1,21,0,routine_entitlement,demo-employee-00151
+Sales,Windows AD,write,medium,active,active,0,0,1,13,1,48,0,routine_entitlement,demo-employee-00298
+IT,GitHub,read,low,active,active,0,0,1,5,1,40,0,routine_entitlement,demo-employee-00274
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,22,1,25,1,unmapped_privileged,demo-employee-00406
+Finance,Windows AD,read,high,active,active,0,0,1,16,1,13,0,routine_entitlement,demo-employee-00025
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,14,1,33,1,unmapped_privileged,demo-employee-00381
+Engineering,Windows AD,read,low,active,active,0,0,1,4,1,52,0,routine_entitlement,demo-employee-00268
+HR,GitHub,read,high,active,active,0,0,1,51,1,3,0,routine_entitlement,demo-employee-00006
+Sales,Linux,read,medium,active,active,0,0,1,1,1,19,0,routine_entitlement,demo-employee-00263
+Sales,Windows AD,write,medium,active,active,0,0,1,27,1,36,0,routine_entitlement,demo-employee-00273
+Engineering,GitHub,read,medium,active,active,0,0,1,17,1,9,0,routine_entitlement,demo-employee-00157
+HR,Linux,write,medium,active,active,0,0,1,11,1,8,0,routine_entitlement,demo-employee-00081
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,15,1,22,1,unmapped_privileged,demo-employee-00336
+IT,Windows AD,read,medium,active,active,0,0,1,43,1,11,0,routine_entitlement,demo-employee-00314
+HR,Windows AD,read,critical,active,active,0,0,1,4,1,30,0,routine_entitlement,demo-employee-00100
+HR,Linux,read,medium,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00195
+Finance,Linux,read,high,active,active,0,0,1,3,1,58,0,routine_entitlement,demo-employee-00312
+Engineering,GitHub,write,medium,active,active,0,0,0,0,1,8,0,routine_entitlement,demo-employee-00132
+Finance,Windows AD,read,low,active,active,0,0,1,22,1,50,0,routine_entitlement,demo-employee-00137
+Finance,GitHub,privileged,high,inactive,active,0,0,1,20,1,49,1,terminated_account,demo-employee-00402
+Engineering,GitHub,read,high,active,active,0,0,1,14,0,0,0,routine_entitlement,demo-employee-00017
+Sales,GitHub,write,medium,active,active,0,0,0,0,1,29,0,routine_entitlement,demo-employee-00085
+Sales,Windows AD,read,medium,active,active,0,0,1,34,1,23,0,routine_entitlement,demo-employee-00126
+IT,Linux,read,medium,active,active,0,0,1,33,1,13,0,routine_entitlement,demo-employee-00324
+HR,GitHub,read,high,active,active,0,0,1,40,1,26,0,routine_entitlement,demo-employee-00326
+Sales,Windows AD,write,low,active,active,0,0,0,0,1,27,0,routine_entitlement,demo-employee-00312
+Engineering,GitHub,read,medium,active,active,0,0,1,26,1,55,0,routine_entitlement,demo-employee-00016
+HR,GitHub,read,medium,active,active,0,0,0,0,1,44,0,routine_entitlement,demo-employee-00322
+Finance,Linux,write,medium,active,active,0,0,1,41,1,36,0,routine_entitlement,demo-employee-00119
+IT,GitHub,privileged,high,active,active,0,1,1,47,1,48,1,outside_department_privileged,demo-employee-00337
+Finance,GitHub,read,critical,active,active,0,0,1,17,1,45,0,routine_entitlement,demo-employee-00166
+HR,GitHub,read,high,active,active,0,0,1,18,1,43,0,routine_entitlement,demo-employee-00176
+Engineering,Windows AD,write,low,active,active,0,0,1,41,1,52,0,routine_entitlement,demo-employee-00066
+IT,Windows AD,privileged,high,active,active,0,0,1,38,1,19,0,routine_entitlement,demo-employee-00166
+Finance,Linux,read,low,active,active,0,0,0,0,1,14,0,routine_entitlement,demo-employee-00279
+Finance,Linux,read,medium,active,active,0,0,1,11,1,16,0,routine_entitlement,demo-employee-00033
+Engineering,GitHub,write,medium,active,active,0,0,1,10,1,32,0,routine_entitlement,demo-employee-00085
+Sales,Linux,read,low,active,active,0,0,0,0,1,6,0,routine_entitlement,demo-employee-00067
+HR,Linux,privileged,high,active,active,0,1,0,0,0,0,1,outside_department_privileged,demo-employee-00361
+IT,GitHub,read,low,active,active,0,0,1,16,1,46,0,routine_entitlement,demo-employee-00196
+HR,Windows AD,read,medium,active,active,0,0,1,18,1,54,0,routine_entitlement,demo-employee-00128
+IT,GitHub,read,medium,active,active,0,0,1,9,1,20,0,routine_entitlement,demo-employee-00232
+Engineering,GitHub,privileged,high,active,active,0,1,1,35,1,29,1,outside_department_privileged,demo-employee-00401
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,42,1,57,1,unmapped_privileged,demo-employee-00401
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,21,0,routine_entitlement,demo-employee-00161
+HR,Linux,write,low,active,active,0,0,1,6,1,35,0,routine_entitlement,demo-employee-00015
+Engineering,Windows AD,read,medium,active,active,0,0,1,35,1,53,0,routine_entitlement,demo-employee-00211
+Sales,Linux,privileged,high,inactive,active,0,0,1,10,1,27,1,terminated_account,demo-employee-00394
+HR,GitHub,write,medium,active,active,0,0,1,4,1,37,0,routine_entitlement,demo-employee-00007
+Finance,GitHub,read,high,active,active,0,0,1,40,1,34,0,routine_entitlement,demo-employee-00082
+HR,GitHub,read,medium,active,active,0,0,1,19,1,36,0,routine_entitlement,demo-employee-00275
+Finance,Windows AD,privileged,critical,active,active,0,0,1,253,1,265,1,stale_privileged_access,demo-employee-00400
+IT,Linux,write,high,active,active,0,0,1,22,1,18,0,routine_entitlement,demo-employee-00174
+HR,Windows AD,read,medium,active,active,0,0,1,32,1,3,0,routine_entitlement,demo-employee-00245
+Finance,Windows AD,read,low,active,active,0,0,1,44,1,25,0,routine_entitlement,demo-employee-00252
+Sales,GitHub,write,medium,active,active,0,0,1,40,1,36,0,routine_entitlement,demo-employee-00277
+HR,Windows AD,read,high,inactive,active,0,0,1,13,1,9,1,terminated_account,demo-employee-00362
+IT,Windows AD,write,low,active,active,0,0,1,3,1,34,0,routine_entitlement,demo-employee-00011
+HR,GitHub,read,high,active,active,0,0,1,13,1,10,0,routine_entitlement,demo-employee-00331
+Engineering,Linux,read,high,active,active,0,0,1,3,1,30,0,routine_entitlement,demo-employee-00265
+Finance,GitHub,read,medium,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00105
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,36,1,45,1,unmapped_privileged,demo-employee-00401
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,37,0,routine_entitlement,demo-employee-00229
+Engineering,Windows AD,read,low,active,active,0,0,1,7,1,51,0,routine_entitlement,demo-employee-00022
+Finance,GitHub,write,medium,active,active,0,0,1,32,1,28,0,routine_entitlement,demo-employee-00036
+IT,GitHub,write,medium,active,active,0,0,1,42,1,55,0,routine_entitlement,demo-employee-00266
+Finance,Linux,write,medium,active,active,0,0,1,38,1,35,0,routine_entitlement,demo-employee-00332
+Sales,Windows AD,write,low,active,active,0,0,0,0,1,10,0,routine_entitlement,demo-employee-00081
+Unknown,GitHub,privileged,critical,unknown,active,1,0,0,0,1,17,1,unmapped_privileged,demo-employee-00413
+IT,GitHub,write,medium,active,active,0,0,0,0,1,45,0,routine_entitlement,demo-employee-00114
+Sales,Windows AD,read,high,inactive,active,0,0,1,20,0,0,1,terminated_account,demo-employee-00400
+HR,Windows AD,read,low,active,active,0,0,1,24,1,56,0,routine_entitlement,demo-employee-00231
+IT,Linux,privileged,critical,active,active,0,0,1,201,1,216,1,stale_privileged_access,demo-employee-00345
+Engineering,Windows AD,write,medium,active,active,0,0,1,48,1,17,0,routine_entitlement,demo-employee-00037
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,6,1,43,1,unmapped_privileged,demo-employee-00370
+Finance,Windows AD,write,high,active,active,0,0,1,41,1,25,0,routine_entitlement,demo-employee-00066
+Engineering,Windows AD,privileged,critical,active,active,0,0,1,118,1,267,1,stale_privileged_access,demo-employee-00402
+HR,GitHub,privileged,high,active,active,0,1,0,0,1,22,1,outside_department_privileged,demo-employee-00377
+Engineering,GitHub,read,high,active,active,0,0,1,18,1,32,0,routine_entitlement,demo-employee-00199
+Finance,Linux,write,low,active,active,0,0,0,0,1,51,0,routine_entitlement,demo-employee-00056
+IT,Linux,read,high,inactive,active,0,0,0,0,1,4,1,terminated_account,demo-employee-00413
+HR,Linux,read,medium,active,active,0,0,1,46,1,49,0,routine_entitlement,demo-employee-00138
+Sales,GitHub,read,medium,active,active,0,0,1,32,1,29,0,routine_entitlement,demo-employee-00106
+Engineering,Windows AD,read,high,active,active,0,0,1,6,0,0,0,routine_entitlement,demo-employee-00282
+Sales,Windows AD,read,medium,active,active,0,0,1,0,1,39,0,routine_entitlement,demo-employee-00159
+Sales,Linux,write,low,active,active,0,0,1,14,1,49,0,routine_entitlement,demo-employee-00026
+Finance,Windows AD,write,medium,active,active,0,0,1,16,1,30,0,routine_entitlement,demo-employee-00308
+Engineering,GitHub,read,medium,active,active,0,0,1,6,1,7,0,routine_entitlement,demo-employee-00133
+HR,Windows AD,privileged,low,active,active,0,0,1,11,1,28,0,routine_entitlement,demo-employee-00210
+Finance,Windows AD,write,medium,active,active,0,0,1,32,1,13,0,routine_entitlement,demo-employee-00202
+Engineering,Linux,read,low,active,active,0,0,1,20,1,43,0,routine_entitlement,demo-employee-00309
+IT,Windows AD,read,medium,active,active,0,0,1,15,1,3,0,routine_entitlement,demo-employee-00072
+Finance,Windows AD,write,low,active,active,0,0,0,0,1,9,0,routine_entitlement,demo-employee-00042
+Engineering,Windows AD,write,medium,active,active,0,0,1,29,1,2,0,routine_entitlement,demo-employee-00201
+Sales,GitHub,read,high,active,active,0,0,1,46,1,8,0,routine_entitlement,demo-employee-00178
+IT,Windows AD,read,critical,active,active,0,0,1,22,1,17,0,routine_entitlement,demo-employee-00031
+HR,GitHub,write,low,active,active,0,0,1,17,1,40,0,routine_entitlement,demo-employee-00309
+Finance,Windows AD,read,medium,active,active,0,0,1,37,1,32,0,routine_entitlement,demo-employee-00053
+HR,Linux,read,high,active,active,0,0,1,22,1,6,0,routine_entitlement,demo-employee-00215
+HR,Linux,read,critical,active,active,0,0,1,3,1,18,0,routine_entitlement,demo-employee-00301
+IT,GitHub,read,low,active,active,0,0,1,9,1,58,0,routine_entitlement,demo-employee-00104
+IT,Linux,write,high,active,active,0,0,1,48,1,12,0,routine_entitlement,demo-employee-00171
+Sales,Windows AD,read,medium,active,active,0,0,1,20,1,20,0,routine_entitlement,demo-employee-00088
+IT,Windows AD,privileged,low,active,active,0,0,0,0,1,55,0,routine_entitlement,demo-employee-00263
+HR,Windows AD,write,low,active,active,0,0,1,20,1,45,0,routine_entitlement,demo-employee-00144
+Engineering,GitHub,read,medium,active,active,0,0,1,4,1,0,0,routine_entitlement,demo-employee-00135
+Sales,Windows AD,privileged,critical,active,active,0,0,1,212,1,188,1,stale_privileged_access,demo-employee-00383
+IT,Windows AD,write,medium,active,active,0,0,1,18,1,38,0,routine_entitlement,demo-employee-00054
+HR,Linux,read,low,active,active,0,0,1,50,1,17,0,routine_entitlement,demo-employee-00304
+Finance,Linux,read,medium,active,active,0,0,1,17,1,27,0,routine_entitlement,demo-employee-00059
+Sales,GitHub,write,medium,active,active,0,0,1,44,1,50,0,routine_entitlement,demo-employee-00010
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,53,0,routine_entitlement,demo-employee-00233
+Finance,GitHub,read,high,active,active,0,0,1,21,1,51,0,routine_entitlement,demo-employee-00274
+IT,GitHub,read,medium,active,active,0,0,0,0,1,21,0,routine_entitlement,demo-employee-00037
+IT,Windows AD,read,medium,active,active,0,0,1,23,1,55,0,routine_entitlement,demo-employee-00228
+Sales,Windows AD,write,medium,active,active,0,0,1,10,1,17,0,routine_entitlement,demo-employee-00281
+Sales,Windows AD,privileged,critical,active,active,0,0,1,165,1,267,1,stale_privileged_access,demo-employee-00408
+Unknown,Linux,privileged,critical,unknown,active,1,0,0,0,1,48,1,unmapped_privileged,demo-employee-00410
+Engineering,Linux,write,critical,active,active,0,0,1,4,1,55,0,routine_entitlement,demo-employee-00140
+Sales,GitHub,read,medium,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00193
+Sales,Windows AD,write,high,active,active,0,0,0,0,1,6,0,routine_entitlement,demo-employee-00102
+Engineering,Linux,write,medium,active,active,0,0,1,17,0,0,0,routine_entitlement,demo-employee-00180
+IT,GitHub,write,low,active,active,0,0,1,47,1,12,0,routine_entitlement,demo-employee-00047
+Finance,Linux,read,low,active,active,0,0,1,34,1,56,0,routine_entitlement,demo-employee-00160
+IT,Windows AD,privileged,medium,active,active,0,0,0,0,1,38,0,routine_entitlement,demo-employee-00257
+Finance,Linux,read,low,active,active,0,0,1,6,1,14,0,routine_entitlement,demo-employee-00230
+Sales,Windows AD,write,low,active,active,0,0,1,15,1,3,0,routine_entitlement,demo-employee-00142
+IT,Linux,write,medium,active,active,0,0,1,4,1,32,0,routine_entitlement,demo-employee-00194
+Sales,GitHub,write,medium,active,active,0,0,1,40,1,55,0,routine_entitlement,demo-employee-00260
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,43,1,34,1,unmapped_privileged,demo-employee-00343
+IT,GitHub,write,medium,active,active,0,0,1,40,0,0,0,routine_entitlement,demo-employee-00083
+Finance,Linux,write,low,active,active,0,0,0,0,1,8,0,routine_entitlement,demo-employee-00026
+Engineering,Windows AD,write,medium,active,active,0,0,1,17,1,16,0,routine_entitlement,demo-employee-00048
+HR,Linux,write,medium,active,active,0,0,1,27,1,20,0,routine_entitlement,demo-employee-00324
+Sales,GitHub,read,high,active,active,0,0,1,12,1,35,0,routine_entitlement,demo-employee-00224
+IT,Linux,read,critical,active,active,0,0,1,5,1,54,0,routine_entitlement,demo-employee-00010
+Engineering,Windows AD,read,medium,active,active,0,0,1,33,1,41,0,routine_entitlement,demo-employee-00053
+HR,Linux,read,low,active,active,0,0,1,32,1,49,0,routine_entitlement,demo-employee-00162
+Sales,GitHub,read,medium,active,active,0,0,1,25,1,53,0,routine_entitlement,demo-employee-00025
+Engineering,Windows AD,read,high,active,active,0,0,1,44,1,11,0,routine_entitlement,demo-employee-00276
+HR,Windows AD,read,high,inactive,active,0,0,1,15,1,20,1,terminated_account,demo-employee-00363
+HR,GitHub,read,medium,active,active,0,0,1,36,1,2,0,routine_entitlement,demo-employee-00018
+IT,Linux,write,medium,active,active,0,0,1,27,1,53,0,routine_entitlement,demo-employee-00126
+IT,Windows AD,read,medium,active,active,0,0,1,21,1,7,0,routine_entitlement,demo-employee-00297
+IT,Windows AD,read,medium,active,active,0,0,1,12,1,42,0,routine_entitlement,demo-employee-00008
+Engineering,Linux,read,high,active,active,0,0,1,35,1,27,0,routine_entitlement,demo-employee-00326
+IT,GitHub,privileged,critical,active,active,0,0,1,262,1,170,1,stale_privileged_access,demo-employee-00388
+Engineering,GitHub,read,high,active,active,0,0,1,10,1,23,0,routine_entitlement,demo-employee-00323
+Engineering,Windows AD,read,medium,active,active,0,0,1,35,0,0,0,routine_entitlement,demo-employee-00279
+IT,Windows AD,write,medium,active,active,0,0,0,0,1,21,0,routine_entitlement,demo-employee-00260
+IT,GitHub,privileged,critical,active,active,0,0,1,191,1,246,1,stale_privileged_access,demo-employee-00399
+Engineering,Linux,read,medium,active,active,0,0,1,37,1,58,0,routine_entitlement,demo-employee-00294
+Finance,Windows AD,read,medium,active,active,0,0,1,10,1,46,0,routine_entitlement,demo-employee-00082
+Finance,Linux,read,medium,active,active,0,0,1,42,1,37,0,routine_entitlement,demo-employee-00211
+HR,GitHub,read,medium,active,active,0,0,1,17,1,6,0,routine_entitlement,demo-employee-00278
+Sales,Linux,read,low,active,active,0,0,1,47,1,37,0,routine_entitlement,demo-employee-00049
+Sales,Windows AD,read,medium,active,active,0,0,1,23,1,23,0,routine_entitlement,demo-employee-00157
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,23,1,36,1,unmapped_privileged,demo-employee-00407
+Finance,Linux,read,medium,active,active,0,0,1,18,1,27,0,routine_entitlement,demo-employee-00251
+Finance,GitHub,read,high,active,active,0,0,1,23,1,3,0,routine_entitlement,demo-employee-00234
+Sales,GitHub,read,critical,active,active,0,0,1,25,1,59,0,routine_entitlement,demo-employee-00119
+Sales,GitHub,write,medium,active,active,0,0,1,50,1,42,0,routine_entitlement,demo-employee-00020
+HR,Linux,read,low,active,active,0,0,1,1,1,44,0,routine_entitlement,demo-employee-00237
+Sales,Windows AD,read,low,active,active,0,0,1,28,1,11,0,routine_entitlement,demo-employee-00289
+HR,Windows AD,privileged,critical,active,active,0,0,1,243,1,121,1,stale_privileged_access,demo-employee-00369
+IT,Windows AD,read,medium,active,active,0,0,1,42,1,23,0,routine_entitlement,demo-employee-00190
+Finance,Linux,privileged,critical,active,active,0,0,1,217,1,241,1,stale_privileged_access,demo-employee-00414
+Engineering,Windows AD,write,high,active,active,0,0,1,40,1,12,0,routine_entitlement,demo-employee-00005
+Finance,GitHub,privileged,high,inactive,active,0,0,1,50,1,11,1,terminated_account,demo-employee-00414
+HR,GitHub,privileged,medium,active,active,0,0,1,21,1,48,0,routine_entitlement,demo-employee-00227
+HR,Windows AD,write,medium,active,active,0,0,1,38,1,25,0,routine_entitlement,demo-employee-00123
+Engineering,GitHub,read,low,active,active,0,0,1,8,1,31,0,routine_entitlement,demo-employee-00080
+Finance,GitHub,write,medium,active,active,0,0,1,39,1,21,0,routine_entitlement,demo-employee-00029
+Sales,Linux,read,low,active,active,0,0,1,2,1,13,0,routine_entitlement,demo-employee-00285
+Finance,Linux,write,medium,active,active,0,0,1,6,1,9,0,routine_entitlement,demo-employee-00222
+IT,Linux,read,medium,active,active,0,0,1,50,1,45,0,routine_entitlement,demo-employee-00261
+Engineering,Windows AD,read,low,active,active,0,0,1,20,1,34,0,routine_entitlement,demo-employee-00143
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,20,1,36,1,unmapped_privileged,demo-employee-00403
+IT,GitHub,read,high,active,active,0,0,1,3,1,19,0,routine_entitlement,demo-employee-00260
+HR,Windows AD,privileged,high,active,active,0,1,1,38,1,42,1,outside_department_privileged,demo-employee-00395
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,42,1,57,1,unmapped_privileged,demo-employee-00386
+Sales,Linux,write,low,active,active,0,0,1,40,1,37,0,routine_entitlement,demo-employee-00183
+HR,Windows AD,read,low,active,active,0,0,1,46,1,32,0,routine_entitlement,demo-employee-00313
+Engineering,Windows AD,write,low,active,active,0,0,0,0,1,16,0,routine_entitlement,demo-employee-00168
+IT,GitHub,read,medium,active,active,0,0,1,44,1,56,0,routine_entitlement,demo-employee-00299
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,49,1,27,1,unmapped_privileged,demo-employee-00353
+Engineering,Linux,read,critical,active,active,0,0,1,29,1,55,0,routine_entitlement,demo-employee-00169
+HR,Windows AD,read,medium,active,active,0,0,1,13,1,12,0,routine_entitlement,demo-employee-00290
+Finance,Linux,read,medium,active,active,0,0,1,37,1,51,0,routine_entitlement,demo-employee-00328
+Finance,Linux,read,medium,active,active,0,0,1,7,1,10,0,routine_entitlement,demo-employee-00130
+IT,Linux,read,high,active,active,0,0,1,38,1,21,0,routine_entitlement,demo-employee-00263
+HR,Linux,read,medium,active,active,0,0,1,39,1,48,0,routine_entitlement,demo-employee-00047
+Finance,Linux,write,medium,active,active,0,0,0,0,1,39,0,routine_entitlement,demo-employee-00286
+Unknown,Linux,privileged,critical,unknown,active,1,0,0,0,1,18,1,unmapped_privileged,demo-employee-00339
+HR,Windows AD,read,medium,active,active,0,0,1,31,1,49,0,routine_entitlement,demo-employee-00141
+IT,Windows AD,read,low,active,active,0,0,1,47,1,5,0,routine_entitlement,demo-employee-00164
+Finance,GitHub,read,high,inactive,active,0,0,1,43,1,31,1,terminated_account,demo-employee-00367
+HR,Linux,write,medium,active,active,0,0,1,6,1,58,0,routine_entitlement,demo-employee-00314
+IT,Linux,write,low,active,active,0,0,1,3,1,26,0,routine_entitlement,demo-employee-00108
+IT,Linux,privileged,critical,active,active,0,0,1,124,1,216,1,stale_privileged_access,demo-employee-00346
+Finance,Linux,privileged,high,active,active,0,1,1,9,1,25,1,outside_department_privileged,demo-employee-00407
+IT,Linux,privileged,high,active,active,0,1,1,3,1,33,1,outside_department_privileged,demo-employee-00358
+IT,Linux,read,medium,active,active,0,0,1,20,1,30,0,routine_entitlement,demo-employee-00329
+IT,Windows AD,write,high,active,active,0,0,1,6,1,33,0,routine_entitlement,demo-employee-00110
+Sales,GitHub,read,medium,active,active,0,0,1,45,1,50,0,routine_entitlement,demo-employee-00030
+Sales,Windows AD,write,low,active,active,0,0,1,1,1,35,0,routine_entitlement,demo-employee-00049
+IT,Windows AD,read,critical,active,active,0,0,1,41,1,31,0,routine_entitlement,demo-employee-00095
+Sales,GitHub,read,low,active,active,0,0,1,45,1,56,0,routine_entitlement,demo-employee-00252
+IT,GitHub,privileged,medium,active,active,0,0,1,15,1,39,0,routine_entitlement,demo-employee-00197
+Finance,Windows AD,read,high,active,active,0,0,1,46,1,30,0,routine_entitlement,demo-employee-00238
+IT,GitHub,write,medium,active,active,0,0,1,47,1,28,0,routine_entitlement,demo-employee-00022
+IT,Windows AD,read,low,active,active,0,0,1,3,1,29,0,routine_entitlement,demo-employee-00163
+IT,GitHub,write,medium,active,active,0,0,1,11,1,58,0,routine_entitlement,demo-employee-00152
+HR,GitHub,write,medium,active,active,0,0,0,0,1,52,0,routine_entitlement,demo-employee-00310
+Finance,Linux,write,medium,active,active,0,0,1,8,1,41,0,routine_entitlement,demo-employee-00272
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,23,0,routine_entitlement,demo-employee-00109
+Engineering,Linux,read,low,active,active,0,0,1,22,1,28,0,routine_entitlement,demo-employee-00302
+Sales,Windows AD,read,low,active,active,0,0,1,50,1,8,0,routine_entitlement,demo-employee-00240
+IT,Windows AD,write,high,active,active,0,0,1,31,1,17,0,routine_entitlement,demo-employee-00050
+Finance,Windows AD,read,medium,active,active,0,0,1,14,1,17,0,routine_entitlement,demo-employee-00000
+IT,Windows AD,read,high,inactive,active,0,0,0,0,1,4,1,terminated_account,demo-employee-00412
+Sales,Windows AD,read,medium,active,active,0,0,1,30,1,47,0,routine_entitlement,demo-employee-00090
+Sales,Windows AD,privileged,critical,active,active,0,0,1,227,1,208,1,stale_privileged_access,demo-employee-00376
+HR,Windows AD,write,high,active,active,0,0,1,4,1,18,0,routine_entitlement,demo-employee-00225
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,9,1,54,1,unmapped_privileged,demo-employee-00404
+Engineering,GitHub,read,high,active,active,0,0,0,0,1,41,0,routine_entitlement,demo-employee-00092
+Engineering,Windows AD,privileged,critical,active,active,0,0,1,282,1,115,1,stale_privileged_access,demo-employee-00349
+Finance,GitHub,write,low,active,active,0,0,1,16,1,45,0,routine_entitlement,demo-employee-00118
+Engineering,GitHub,read,low,active,active,0,0,0,0,1,25,0,routine_entitlement,demo-employee-00239
+HR,Windows AD,read,medium,active,active,0,0,1,15,1,49,0,routine_entitlement,demo-employee-00213
+HR,GitHub,write,medium,active,active,0,0,1,11,1,50,0,routine_entitlement,demo-employee-00332
+HR,GitHub,write,low,active,active,0,0,1,15,1,28,0,routine_entitlement,demo-employee-00227
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,27,1,8,1,unmapped_privileged,demo-employee-00409
+Sales,GitHub,read,medium,active,active,0,0,0,0,1,50,0,routine_entitlement,demo-employee-00145
+Sales,Windows AD,read,low,active,active,0,0,1,43,1,28,0,routine_entitlement,demo-employee-00316
+Engineering,Windows AD,privileged,high,active,active,0,1,1,31,1,19,1,outside_department_privileged,demo-employee-00405
+Engineering,GitHub,read,medium,active,active,0,0,1,37,1,5,0,routine_entitlement,demo-employee-00114
+Finance,Linux,read,low,active,active,0,0,1,5,1,39,0,routine_entitlement,demo-employee-00181
+Finance,Linux,read,medium,active,active,0,0,1,5,1,53,0,routine_entitlement,demo-employee-00146
+IT,Windows AD,write,high,active,active,0,0,0,0,1,2,0,routine_entitlement,demo-employee-00060
+HR,Windows AD,write,medium,active,active,0,0,0,0,1,7,0,routine_entitlement,demo-employee-00051
+HR,Linux,write,medium,active,active,0,0,0,0,1,55,0,routine_entitlement,demo-employee-00292
+HR,GitHub,read,medium,active,active,0,0,1,39,0,0,0,routine_entitlement,demo-employee-00257
+Engineering,GitHub,privileged,high,active,active,0,1,1,18,1,28,1,outside_department_privileged,demo-employee-00411
+Finance,Windows AD,read,high,active,active,0,0,1,20,1,7,0,routine_entitlement,demo-employee-00123
+Sales,Windows AD,read,medium,active,active,0,0,0,0,1,14,0,routine_entitlement,demo-employee-00300
+IT,GitHub,privileged,medium,active,active,0,0,1,50,1,31,0,routine_entitlement,demo-employee-00113
+Engineering,GitHub,read,low,active,active,0,0,1,25,1,33,0,routine_entitlement,demo-employee-00210
+Engineering,Windows AD,privileged,high,active,active,0,1,1,46,1,27,1,outside_department_privileged,demo-employee-00392
+Finance,Windows AD,read,high,active,active,0,0,1,43,1,59,0,routine_entitlement,demo-employee-00121
+Finance,GitHub,read,low,active,active,0,0,1,29,1,26,0,routine_entitlement,demo-employee-00267
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,45,1,41,1,unmapped_privileged,demo-employee-00358
+Finance,Linux,write,medium,active,active,0,0,1,9,1,52,0,routine_entitlement,demo-employee-00242
+IT,Windows AD,read,medium,active,active,0,0,1,51,1,39,0,routine_entitlement,demo-employee-00258
+IT,Linux,privileged,critical,active,active,0,0,1,115,1,182,1,stale_privileged_access,demo-employee-00392
+Engineering,Windows AD,read,medium,active,active,0,0,1,42,1,19,0,routine_entitlement,demo-employee-00167
+IT,Linux,read,medium,active,active,0,0,1,49,1,32,0,routine_entitlement,demo-employee-00038
+Sales,Windows AD,read,medium,active,active,0,0,1,48,1,34,0,routine_entitlement,demo-employee-00265
+IT,Windows AD,read,high,inactive,active,0,0,1,35,1,8,1,terminated_account,demo-employee-00406
+Engineering,Linux,privileged,high,active,active,0,1,1,41,1,19,1,outside_department_privileged,demo-employee-00371
+Sales,GitHub,privileged,high,active,active,0,1,1,21,1,45,1,outside_department_privileged,demo-employee-00405
+Sales,Linux,read,critical,active,active,0,0,1,44,1,30,0,routine_entitlement,demo-employee-00097
+IT,GitHub,write,medium,active,active,0,0,1,5,1,23,0,routine_entitlement,demo-employee-00223
+IT,Windows AD,read,medium,active,active,0,0,1,25,1,43,0,routine_entitlement,demo-employee-00120
+Finance,Linux,read,low,active,active,0,0,1,7,1,56,0,routine_entitlement,demo-employee-00050
+HR,Linux,write,high,active,active,0,0,0,0,1,5,0,routine_entitlement,demo-employee-00131
+HR,Windows AD,read,medium,active,active,0,0,1,16,1,4,0,routine_entitlement,demo-employee-00145
+Finance,Linux,write,medium,active,active,0,0,1,47,1,1,0,routine_entitlement,demo-employee-00077
+IT,Linux,read,low,active,active,0,0,1,3,1,57,0,routine_entitlement,demo-employee-00008
+Finance,Linux,privileged,critical,active,active,0,0,1,213,1,107,1,stale_privileged_access,demo-employee-00385
+Sales,GitHub,read,medium,active,active,0,0,1,18,1,50,0,routine_entitlement,demo-employee-00293
+Sales,GitHub,write,medium,active,active,0,0,0,0,1,9,0,routine_entitlement,demo-employee-00048
+Engineering,Windows AD,read,high,active,active,0,0,1,21,0,0,0,routine_entitlement,demo-employee-00141
+Sales,Linux,read,medium,active,active,0,0,1,50,1,12,0,routine_entitlement,demo-employee-00174
+IT,Linux,write,high,inactive,active,0,0,1,29,1,53,1,terminated_account,demo-employee-00383
+Finance,GitHub,privileged,critical,active,active,0,0,1,167,1,157,1,stale_privileged_access,demo-employee-00337
+Engineering,Windows AD,read,medium,active,active,0,0,1,48,1,30,0,routine_entitlement,demo-employee-00185
+HR,GitHub,privileged,high,active,active,0,1,1,43,1,24,1,outside_department_privileged,demo-employee-00354
+HR,Linux,write,medium,active,active,0,0,1,0,1,56,0,routine_entitlement,demo-employee-00015
+Engineering,Windows AD,read,low,active,active,0,0,0,0,1,50,0,routine_entitlement,demo-employee-00258
+Sales,Windows AD,write,medium,active,active,0,0,1,50,1,9,0,routine_entitlement,demo-employee-00042
+Sales,Windows AD,read,medium,active,active,0,0,1,34,1,2,0,routine_entitlement,demo-employee-00273
+Sales,Linux,read,low,active,active,0,0,1,17,1,35,0,routine_entitlement,demo-employee-00255
+Unknown,Linux,privileged,critical,unknown,active,1,0,0,0,1,31,1,unmapped_privileged,demo-employee-00381
+HR,GitHub,read,medium,active,active,0,0,1,20,1,36,0,routine_entitlement,demo-employee-00236
+Engineering,Linux,read,medium,active,active,0,0,1,43,1,45,0,routine_entitlement,demo-employee-00185
+HR,GitHub,read,medium,active,active,0,0,1,20,1,7,0,routine_entitlement,demo-employee-00019
+IT,GitHub,write,medium,active,active,0,0,1,1,1,41,0,routine_entitlement,demo-employee-00083
+Engineering,Windows AD,read,low,active,active,0,0,1,1,1,22,0,routine_entitlement,demo-employee-00052
+Sales,Linux,read,high,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00272
+HR,GitHub,write,low,active,active,0,0,1,46,0,0,0,routine_entitlement,demo-employee-00113
+Engineering,Windows AD,privileged,critical,active,active,0,0,1,112,1,139,1,stale_privileged_access,demo-employee-00391
+Finance,GitHub,read,medium,active,active,0,0,1,9,1,30,0,routine_entitlement,demo-employee-00055
+HR,GitHub,read,high,inactive,active,0,0,1,26,0,0,1,terminated_account,demo-employee-00356
+Finance,GitHub,write,low,active,active,0,0,1,6,1,49,0,routine_entitlement,demo-employee-00192
+Finance,Windows AD,read,medium,active,active,0,0,1,11,1,30,0,routine_entitlement,demo-employee-00163
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,2,0,routine_entitlement,demo-employee-00047
+Sales,Linux,read,high,inactive,active,0,0,0,0,1,46,1,terminated_account,demo-employee-00394
+Sales,Windows AD,read,low,active,active,0,0,1,41,1,51,0,routine_entitlement,demo-employee-00029
+HR,GitHub,privileged,high,active,active,0,1,1,45,1,52,1,outside_department_privileged,demo-employee-00415
+Finance,Linux,read,medium,active,active,0,0,1,50,1,24,0,routine_entitlement,demo-employee-00115
+Finance,Linux,read,medium,active,active,0,0,1,35,1,48,0,routine_entitlement,demo-employee-00251
+IT,GitHub,write,medium,active,active,0,0,1,47,1,40,0,routine_entitlement,demo-employee-00185
+Sales,Linux,read,low,active,active,0,0,1,9,1,27,0,routine_entitlement,demo-employee-00282
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,27,1,42,1,unmapped_privileged,demo-employee-00410
+HR,GitHub,read,medium,active,active,0,0,1,39,1,8,0,routine_entitlement,demo-employee-00257
+Engineering,Windows AD,write,medium,active,active,0,0,1,21,1,38,0,routine_entitlement,demo-employee-00204
+IT,Windows AD,read,high,active,active,0,0,1,5,1,47,0,routine_entitlement,demo-employee-00214
+HR,Linux,read,low,active,active,0,0,1,35,1,13,0,routine_entitlement,demo-employee-00264
+IT,Windows AD,read,medium,active,active,0,0,0,0,1,10,0,routine_entitlement,demo-employee-00301
+HR,GitHub,read,medium,active,active,0,0,1,25,1,9,0,routine_entitlement,demo-employee-00326
+Sales,Windows AD,read,high,active,active,0,0,1,6,1,15,0,routine_entitlement,demo-employee-00295
+IT,Windows AD,read,high,active,active,0,0,0,0,1,16,0,routine_entitlement,demo-employee-00045
+HR,Linux,privileged,critical,active,active,0,0,1,262,1,254,1,stale_privileged_access,demo-employee-00403
+IT,Linux,read,medium,active,active,0,0,1,49,1,20,0,routine_entitlement,demo-employee-00219
+IT,GitHub,read,low,active,active,0,0,0,0,1,50,0,routine_entitlement,demo-employee-00004
+IT,Linux,write,low,active,active,0,0,1,28,1,11,0,routine_entitlement,demo-employee-00037
+Engineering,GitHub,write,medium,active,active,0,0,0,0,1,52,0,routine_entitlement,demo-employee-00267
+IT,Windows AD,write,medium,active,active,0,0,1,26,1,4,0,routine_entitlement,demo-employee-00311
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,34,1,19,1,unmapped_privileged,demo-employee-00363
+IT,GitHub,privileged,high,active,active,0,1,1,50,1,31,1,outside_department_privileged,demo-employee-00372
+IT,Linux,write,medium,active,active,0,0,1,5,1,8,0,routine_entitlement,demo-employee-00205
+Engineering,GitHub,privileged,high,active,active,0,1,1,39,1,40,1,outside_department_privileged,demo-employee-00398
+IT,Windows AD,write,medium,active,active,0,0,1,1,1,7,0,routine_entitlement,demo-employee-00311
+IT,Windows AD,privileged,critical,active,active,0,0,1,154,1,105,1,stale_privileged_access,demo-employee-00346
+IT,Windows AD,write,critical,active,active,0,0,1,47,1,57,0,routine_entitlement,demo-employee-00046
+Engineering,Linux,privileged,high,active,active,0,1,0,0,1,45,1,outside_department_privileged,demo-employee-00365
+Engineering,Linux,read,medium,active,active,0,0,1,8,1,58,0,routine_entitlement,demo-employee-00247
+Sales,Windows AD,read,medium,active,active,0,0,1,24,1,28,0,routine_entitlement,demo-employee-00034
+Finance,GitHub,read,low,active,active,0,0,1,42,1,7,0,routine_entitlement,demo-employee-00137
+IT,GitHub,write,medium,active,active,0,0,0,0,1,29,0,routine_entitlement,demo-employee-00220
+Finance,GitHub,read,medium,active,active,0,0,1,1,1,41,0,routine_entitlement,demo-employee-00155
+IT,GitHub,read,medium,active,active,0,0,1,51,1,19,0,routine_entitlement,demo-employee-00083
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,10,1,42,1,unmapped_privileged,demo-employee-00402
+Finance,Windows AD,read,low,active,active,0,0,1,48,1,57,0,routine_entitlement,demo-employee-00024
+Engineering,Windows AD,write,critical,active,active,0,0,1,51,1,5,0,routine_entitlement,demo-employee-00048
+Engineering,GitHub,write,medium,active,active,0,0,0,0,1,34,0,routine_entitlement,demo-employee-00023
+HR,Linux,read,critical,active,active,0,0,0,0,1,24,0,routine_entitlement,demo-employee-00064
+Sales,GitHub,read,medium,active,active,0,0,1,36,1,33,0,routine_entitlement,demo-employee-00207
+IT,GitHub,read,medium,active,active,0,0,1,4,1,33,0,routine_entitlement,demo-employee-00234
+Finance,Linux,read,medium,active,active,0,0,1,49,1,1,0,routine_entitlement,demo-employee-00134
+Finance,Linux,read,medium,active,active,0,0,0,0,1,14,0,routine_entitlement,demo-employee-00060
+Engineering,GitHub,read,low,active,active,0,0,1,29,1,46,0,routine_entitlement,demo-employee-00055
+IT,Windows AD,write,low,active,active,0,0,1,21,1,58,0,routine_entitlement,demo-employee-00105
+Engineering,Linux,write,high,active,active,0,0,1,33,1,27,0,routine_entitlement,demo-employee-00007
+Engineering,Windows AD,write,high,active,active,0,0,1,32,1,25,0,routine_entitlement,demo-employee-00096
+Sales,GitHub,write,medium,active,active,0,0,1,47,1,28,0,routine_entitlement,demo-employee-00221
+Sales,GitHub,read,low,active,active,0,0,1,51,1,29,0,routine_entitlement,demo-employee-00061
+HR,Linux,privileged,high,active,active,0,1,1,6,1,53,1,outside_department_privileged,demo-employee-00387
+HR,GitHub,read,medium,active,active,0,0,1,36,1,21,0,routine_entitlement,demo-employee-00167
+Sales,Linux,privileged,high,active,active,0,1,1,26,1,7,1,outside_department_privileged,demo-employee-00382
+Sales,Windows AD,read,high,active,active,0,0,1,28,1,36,0,routine_entitlement,demo-employee-00064
+Sales,Windows AD,read,medium,active,active,0,0,1,40,1,31,0,routine_entitlement,demo-employee-00284
+Sales,GitHub,write,medium,active,active,0,0,1,36,1,39,0,routine_entitlement,demo-employee-00063
+Engineering,Windows AD,read,low,active,active,0,0,1,19,1,30,0,routine_entitlement,demo-employee-00156
+HR,Linux,read,low,active,active,0,0,1,25,1,25,0,routine_entitlement,demo-employee-00061
+IT,Windows AD,privileged,high,active,active,0,1,1,34,1,20,1,outside_department_privileged,demo-employee-00404
+HR,GitHub,read,medium,active,active,0,0,1,47,1,48,0,routine_entitlement,demo-employee-00031
+Finance,GitHub,write,medium,active,active,0,0,1,32,1,59,0,routine_entitlement,demo-employee-00163
+HR,Linux,read,medium,active,active,0,0,1,23,1,41,0,routine_entitlement,demo-employee-00297
+IT,Linux,read,medium,active,active,0,0,1,37,1,12,0,routine_entitlement,demo-employee-00291
+Sales,Windows AD,write,medium,active,active,0,0,1,20,1,11,0,routine_entitlement,demo-employee-00148
+Finance,Linux,read,high,active,active,0,0,1,48,1,26,0,routine_entitlement,demo-employee-00247
+Sales,Linux,read,medium,active,active,0,0,1,23,1,24,0,routine_entitlement,demo-employee-00249
+HR,Windows AD,read,critical,active,active,0,0,1,31,1,8,0,routine_entitlement,demo-employee-00079
+Sales,Linux,privileged,critical,active,active,0,0,1,297,1,127,1,stale_privileged_access,demo-employee-00335
+Engineering,Windows AD,read,low,active,active,0,0,0,0,1,33,0,routine_entitlement,demo-employee-00053
+Sales,GitHub,privileged,critical,active,active,0,0,1,100,1,187,1,stale_privileged_access,demo-employee-00393
+Sales,Linux,write,high,active,active,0,0,0,0,1,7,0,routine_entitlement,demo-employee-00256
+IT,Linux,read,low,active,active,0,0,1,50,1,8,0,routine_entitlement,demo-employee-00275
+Finance,GitHub,privileged,medium,active,active,0,0,1,47,1,45,0,routine_entitlement,demo-employee-00323
+Sales,GitHub,read,medium,active,active,0,0,1,6,1,38,0,routine_entitlement,demo-employee-00198
+Engineering,GitHub,write,medium,active,active,0,0,1,49,1,24,0,routine_entitlement,demo-employee-00069
+HR,Windows AD,read,medium,active,active,0,0,1,22,1,59,0,routine_entitlement,demo-employee-00091
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,26,0,routine_entitlement,demo-employee-00288
+Engineering,Linux,read,low,active,active,0,0,1,8,1,23,0,routine_entitlement,demo-employee-00302
+Engineering,GitHub,read,low,active,active,0,0,1,9,1,54,0,routine_entitlement,demo-employee-00150
+Finance,GitHub,read,medium,active,active,0,0,1,10,1,9,0,routine_entitlement,demo-employee-00308
+IT,Linux,read,medium,active,active,0,0,1,49,1,28,0,routine_entitlement,demo-employee-00188
+IT,Windows AD,write,high,active,active,0,0,1,41,1,26,0,routine_entitlement,demo-employee-00206
+Sales,Windows AD,read,medium,active,active,0,0,1,49,1,7,0,routine_entitlement,demo-employee-00216
+Sales,Windows AD,write,low,active,active,0,0,1,51,1,22,0,routine_entitlement,demo-employee-00213
+IT,Windows AD,read,low,active,active,0,0,0,0,1,51,0,routine_entitlement,demo-employee-00087
+HR,GitHub,read,high,active,active,0,0,1,35,1,44,0,routine_entitlement,demo-employee-00223
+HR,GitHub,read,low,active,active,0,0,1,50,1,43,0,routine_entitlement,demo-employee-00130
+Finance,Windows AD,read,high,inactive,active,0,0,1,15,1,49,1,terminated_account,demo-employee-00373
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,31,0,routine_entitlement,demo-employee-00254
+IT,Windows AD,read,low,active,active,0,0,1,5,1,50,0,routine_entitlement,demo-employee-00289
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,49,1,5,1,unmapped_privileged,demo-employee-00340
+Finance,Windows AD,read,low,active,active,0,0,1,1,1,37,0,routine_entitlement,demo-employee-00199
+HR,Windows AD,read,medium,active,active,0,0,1,14,1,57,0,routine_entitlement,demo-employee-00266
+IT,Linux,privileged,critical,active,active,0,0,1,176,1,159,1,stale_privileged_access,demo-employee-00377
+HR,GitHub,read,medium,active,active,0,0,1,48,1,0,0,routine_entitlement,demo-employee-00224
+Finance,GitHub,read,medium,active,active,0,0,1,31,0,0,0,routine_entitlement,demo-employee-00183
+Sales,Windows AD,privileged,high,active,active,0,1,0,0,1,4,1,outside_department_privileged,demo-employee-00370
+Engineering,Linux,read,high,active,active,0,0,1,23,1,12,0,routine_entitlement,demo-employee-00087
+Finance,Linux,read,high,active,active,0,0,1,48,1,20,0,routine_entitlement,demo-employee-00060
+HR,Linux,privileged,high,active,active,0,1,1,26,1,16,1,outside_department_privileged,demo-employee-00384
+Sales,GitHub,read,low,active,active,0,0,0,0,1,0,0,routine_entitlement,demo-employee-00249
+HR,Linux,privileged,critical,active,active,0,0,1,277,1,106,1,stale_privileged_access,demo-employee-00374
+IT,GitHub,read,low,active,active,0,0,1,28,1,19,0,routine_entitlement,demo-employee-00121
+IT,Linux,read,low,active,active,0,0,1,46,1,2,0,routine_entitlement,demo-employee-00294
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,25,1,57,1,unmapped_privileged,demo-employee-00396
+Sales,Windows AD,read,medium,active,active,0,0,1,6,1,40,0,routine_entitlement,demo-employee-00278
+Sales,Windows AD,read,medium,active,active,0,0,0,0,1,4,0,routine_entitlement,demo-employee-00213
+HR,Windows AD,read,medium,active,active,0,0,1,18,1,12,0,routine_entitlement,demo-employee-00019
+Finance,GitHub,privileged,critical,active,active,0,0,1,200,1,110,1,stale_privileged_access,demo-employee-00354
+Finance,GitHub,read,medium,active,active,0,0,1,46,1,26,0,routine_entitlement,demo-employee-00100
+HR,GitHub,read,medium,active,active,0,0,1,8,1,42,0,routine_entitlement,demo-employee-00208
+Finance,Linux,read,medium,active,active,0,0,1,9,1,54,0,routine_entitlement,demo-employee-00139
+HR,Windows AD,read,medium,active,active,0,0,1,39,1,50,0,routine_entitlement,demo-employee-00296
+IT,Windows AD,write,medium,active,active,0,0,1,27,1,58,0,routine_entitlement,demo-employee-00246
+Finance,GitHub,privileged,high,active,active,0,1,0,0,1,41,1,outside_department_privileged,demo-employee-00361
+IT,Linux,write,medium,active,active,0,0,1,50,1,44,0,routine_entitlement,demo-employee-00187
+Sales,Windows AD,read,low,active,active,0,0,1,31,1,36,0,routine_entitlement,demo-employee-00240
+IT,Linux,write,medium,active,active,0,0,0,0,1,42,0,routine_entitlement,demo-employee-00028
+HR,GitHub,read,medium,active,active,0,0,1,19,1,54,0,routine_entitlement,demo-employee-00110
+Sales,Windows AD,write,medium,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00125
+HR,Linux,write,medium,active,active,0,0,1,30,1,24,0,routine_entitlement,demo-employee-00206
+Sales,GitHub,read,medium,active,active,0,0,1,36,1,31,0,routine_entitlement,demo-employee-00215
+Finance,Windows AD,write,high,active,active,0,0,1,13,1,52,0,routine_entitlement,demo-employee-00325
+Sales,Linux,read,low,active,active,0,0,1,42,1,47,0,routine_entitlement,demo-employee-00221
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,0,0,1,26,1,unmapped_privileged,demo-employee-00350
+Sales,Linux,read,medium,active,active,0,0,1,45,1,35,0,routine_entitlement,demo-employee-00039
+HR,Windows AD,read,medium,active,active,0,0,0,0,1,8,0,routine_entitlement,demo-employee-00182
+Sales,GitHub,read,high,active,active,0,0,0,0,1,9,0,routine_entitlement,demo-employee-00071
+Engineering,GitHub,read,medium,active,active,0,0,0,0,1,17,0,routine_entitlement,demo-employee-00281
+HR,Windows AD,read,medium,active,active,0,0,1,17,1,9,0,routine_entitlement,demo-employee-00084
+Finance,Linux,write,medium,active,active,0,0,1,28,1,16,0,routine_entitlement,demo-employee-00219
+Engineering,GitHub,read,high,active,active,0,0,1,17,1,32,0,routine_entitlement,demo-employee-00017
+Engineering,GitHub,read,medium,active,active,0,0,1,48,1,56,0,routine_entitlement,demo-employee-00324
+HR,GitHub,read,medium,active,active,0,0,1,25,1,49,0,routine_entitlement,demo-employee-00092
+Sales,GitHub,write,high,active,active,0,0,1,18,1,10,0,routine_entitlement,demo-employee-00045
+Sales,Linux,write,high,active,active,0,0,1,2,0,0,0,routine_entitlement,demo-employee-00094
+IT,Linux,read,medium,active,active,0,0,1,44,1,26,0,routine_entitlement,demo-employee-00050
+HR,Linux,read,high,active,active,0,0,1,51,1,9,0,routine_entitlement,demo-employee-00218
+Engineering,GitHub,read,medium,active,active,0,0,1,19,1,51,0,routine_entitlement,demo-employee-00013
+Engineering,Windows AD,read,medium,active,active,0,0,1,43,1,46,0,routine_entitlement,demo-employee-00099
+HR,GitHub,write,high,inactive,active,0,0,1,12,1,8,1,terminated_account,demo-employee-00378
+Finance,Windows AD,write,high,active,active,0,0,1,25,1,58,0,routine_entitlement,demo-employee-00330
+Sales,Windows AD,read,medium,active,active,0,0,1,37,1,50,0,routine_entitlement,demo-employee-00317
+Sales,Linux,read,critical,active,active,0,0,1,18,1,5,0,routine_entitlement,demo-employee-00076
+Engineering,Windows AD,read,low,active,active,0,0,1,13,1,29,0,routine_entitlement,demo-employee-00058
+Engineering,GitHub,read,medium,active,active,0,0,1,32,1,8,0,routine_entitlement,demo-employee-00040
+IT,Linux,read,high,inactive,active,0,0,1,30,1,8,1,terminated_account,demo-employee-00342
+HR,Windows AD,read,high,active,active,0,0,1,19,1,19,0,routine_entitlement,demo-employee-00091
+HR,GitHub,read,low,active,active,0,0,1,22,1,51,0,routine_entitlement,demo-employee-00241
+IT,Linux,write,medium,active,active,0,0,1,34,1,8,0,routine_entitlement,demo-employee-00101
+Finance,GitHub,privileged,critical,active,active,0,0,1,171,1,236,1,stale_privileged_access,demo-employee-00353
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,7,1,26,1,unmapped_privileged,demo-employee-00356
+Engineering,Windows AD,read,medium,active,active,0,0,1,35,1,56,0,routine_entitlement,demo-employee-00103
+Engineering,GitHub,privileged,medium,active,active,0,0,1,21,1,32,0,routine_entitlement,demo-employee-00088
+HR,Windows AD,read,medium,active,active,0,0,0,0,1,15,0,routine_entitlement,demo-employee-00179
+HR,GitHub,write,high,active,active,0,0,0,0,1,17,0,routine_entitlement,demo-employee-00245
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,13,1,26,1,unmapped_privileged,demo-employee-00384
+Sales,Windows AD,read,medium,active,active,0,0,1,35,1,32,0,routine_entitlement,demo-employee-00320
+Engineering,Windows AD,write,low,active,active,0,0,0,0,1,12,0,routine_entitlement,demo-employee-00155
+HR,Linux,read,medium,active,active,0,0,1,50,1,38,0,routine_entitlement,demo-employee-00313
+Engineering,GitHub,read,medium,active,active,0,0,1,48,1,43,0,routine_entitlement,demo-employee-00320
+IT,Windows AD,read,medium,active,active,0,0,1,8,1,26,0,routine_entitlement,demo-employee-00300
+IT,Linux,write,high,active,active,0,0,1,14,1,51,0,routine_entitlement,demo-employee-00003
+Finance,Linux,read,low,active,active,0,0,1,38,1,9,0,routine_entitlement,demo-employee-00318
+Engineering,Windows AD,read,high,active,active,0,0,1,50,1,38,0,routine_entitlement,demo-employee-00202
+HR,Windows AD,read,medium,active,active,0,0,1,43,1,44,0,routine_entitlement,demo-employee-00074
+IT,GitHub,privileged,low,active,active,0,0,1,50,1,41,0,routine_entitlement,demo-employee-00195
+Sales,Linux,write,medium,active,active,0,0,0,0,1,39,0,routine_entitlement,demo-employee-00054
+Finance,Linux,write,medium,active,active,0,0,1,48,1,5,0,routine_entitlement,demo-employee-00001
+Finance,Linux,read,low,active,active,0,0,1,48,1,11,0,routine_entitlement,demo-employee-00062
+Engineering,GitHub,privileged,critical,active,active,0,0,1,96,1,92,1,stale_privileged_access,demo-employee-00364
+HR,Windows AD,read,low,active,active,0,0,1,35,1,8,0,routine_entitlement,demo-employee-00092
+HR,GitHub,write,high,active,active,0,0,0,0,1,34,0,routine_entitlement,demo-employee-00207
+Engineering,Windows AD,read,medium,active,active,0,0,1,41,1,4,0,routine_entitlement,demo-employee-00136
+HR,GitHub,write,low,active,active,0,0,1,48,1,41,0,routine_entitlement,demo-employee-00133
+Finance,GitHub,read,low,active,active,0,0,1,44,1,29,0,routine_entitlement,demo-employee-00266
+Engineering,Windows AD,privileged,high,active,active,0,1,1,11,0,0,1,outside_department_privileged,demo-employee-00366
+IT,GitHub,privileged,high,active,active,0,1,1,22,1,32,1,outside_department_privileged,demo-employee-00411
+Finance,GitHub,read,low,active,active,0,0,1,44,1,44,0,routine_entitlement,demo-employee-00173
+Engineering,Windows AD,read,medium,active,active,0,0,1,36,1,11,0,routine_entitlement,demo-employee-00256
+IT,GitHub,read,high,active,active,0,0,1,11,1,20,0,routine_entitlement,demo-employee-00149
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,30,1,21,1,unmapped_privileged,demo-employee-00368
+Finance,GitHub,read,high,inactive,active,0,0,1,25,1,38,1,terminated_account,demo-employee-00334
+Engineering,Linux,read,high,active,active,0,0,1,30,1,0,0,routine_entitlement,demo-employee-00175
+Engineering,Windows AD,read,high,active,active,0,0,1,3,1,58,0,routine_entitlement,demo-employee-00297
+Engineering,GitHub,read,medium,active,active,0,0,1,45,1,45,0,routine_entitlement,demo-employee-00181
+Finance,Linux,write,low,active,active,0,0,1,5,1,40,0,routine_entitlement,demo-employee-00233
+Sales,Linux,read,high,inactive,active,0,0,1,45,1,5,1,terminated_account,demo-employee-00365
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,46,1,21,1,unmapped_privileged,demo-employee-00379
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,9,1,20,1,unmapped_privileged,demo-employee-00357
+Sales,Linux,read,medium,active,active,0,0,1,50,1,46,0,routine_entitlement,demo-employee-00252
+Engineering,GitHub,read,medium,active,active,0,0,1,28,1,57,0,routine_entitlement,demo-employee-00064
+Sales,Linux,write,critical,active,active,0,0,1,33,1,56,0,routine_entitlement,demo-employee-00236
+Finance,Windows AD,read,critical,active,active,0,0,0,0,1,1,0,routine_entitlement,demo-employee-00271
+Finance,GitHub,read,medium,active,active,0,0,1,48,1,19,0,routine_entitlement,demo-employee-00020
+Finance,Windows AD,write,low,active,active,0,0,1,2,1,3,0,routine_entitlement,demo-employee-00193
+Engineering,Windows AD,read,medium,active,active,0,0,1,27,1,19,0,routine_entitlement,demo-employee-00015
+IT,Windows AD,read,medium,active,active,0,0,1,33,1,43,0,routine_entitlement,demo-employee-00098
+Finance,GitHub,privileged,medium,active,active,0,0,1,6,1,44,0,routine_entitlement,demo-employee-00044
+HR,Linux,read,medium,active,active,0,0,1,14,1,19,0,routine_entitlement,demo-employee-00237
+Engineering,Linux,read,medium,active,active,0,0,1,43,1,0,0,routine_entitlement,demo-employee-00093
+Sales,Linux,read,medium,active,active,0,0,0,0,1,49,0,routine_entitlement,demo-employee-00204
+Sales,Windows AD,read,medium,active,active,0,0,1,6,1,13,0,routine_entitlement,demo-employee-00056
+Engineering,Windows AD,write,medium,active,active,0,0,1,25,1,41,0,routine_entitlement,demo-employee-00007
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,17,1,23,1,unmapped_privileged,demo-employee-00388
+Sales,Windows AD,read,low,active,active,0,0,1,19,1,29,0,routine_entitlement,demo-employee-00171
+Sales,GitHub,read,medium,active,active,0,0,1,31,1,9,0,routine_entitlement,demo-employee-00317
+Finance,Windows AD,write,medium,active,active,0,0,1,46,1,42,0,routine_entitlement,demo-employee-00178
+Sales,Linux,read,low,active,active,0,0,1,8,1,16,0,routine_entitlement,demo-employee-00143
+Engineering,Windows AD,read,medium,active,active,0,0,1,49,1,43,0,routine_entitlement,demo-employee-00164
+HR,Linux,write,medium,active,active,0,0,1,31,1,17,0,routine_entitlement,demo-employee-00023
+Sales,Windows AD,read,medium,active,active,0,0,1,10,1,42,0,routine_entitlement,demo-employee-00148
+Engineering,Linux,read,medium,active,active,0,0,1,50,1,39,0,routine_entitlement,demo-employee-00310
+Engineering,GitHub,write,medium,active,active,0,0,1,26,1,30,0,routine_entitlement,demo-employee-00040
+Sales,Windows AD,read,low,active,active,0,0,1,29,1,45,0,routine_entitlement,demo-employee-00244
+Finance,Windows AD,privileged,critical,active,active,0,0,1,141,1,202,1,stale_privileged_access,demo-employee-00415
+HR,GitHub,read,high,active,active,0,0,0,0,1,40,0,routine_entitlement,demo-employee-00153
+Sales,Windows AD,read,high,active,active,0,0,1,11,1,31,0,routine_entitlement,demo-employee-00124
+Sales,GitHub,read,low,active,active,0,0,1,19,1,55,0,routine_entitlement,demo-employee-00305
+IT,Linux,privileged,medium,active,active,0,0,1,28,1,53,0,routine_entitlement,demo-employee-00118
+Finance,Linux,privileged,critical,active,active,0,0,1,245,1,233,1,stale_privileged_access,demo-employee-00355
+HR,Linux,read,medium,active,active,0,0,1,32,1,40,0,routine_entitlement,demo-employee-00309
+Finance,Windows AD,read,medium,active,active,0,0,0,0,1,0,0,routine_entitlement,demo-employee-00288
+Sales,Linux,read,high,inactive,active,0,0,0,0,1,24,1,terminated_account,demo-employee-00359
+HR,Windows AD,write,low,active,active,0,0,1,44,1,50,0,routine_entitlement,demo-employee-00259
+Finance,Windows AD,privileged,high,active,active,0,1,1,30,1,53,1,outside_department_privileged,demo-employee-00385
+Engineering,Windows AD,read,medium,active,active,0,0,1,14,1,5,0,routine_entitlement,demo-employee-00304
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,37,1,23,1,unmapped_privileged,demo-employee-00373
+Finance,GitHub,privileged,high,active,active,0,1,0,0,0,0,1,outside_department_privileged,demo-employee-00398
+HR,Windows AD,write,high,active,active,0,0,1,50,1,20,0,routine_entitlement,demo-employee-00187
+HR,GitHub,privileged,low,active,active,0,0,0,0,1,52,0,routine_entitlement,demo-employee-00142
+IT,Windows AD,read,medium,active,active,0,0,1,24,1,21,0,routine_entitlement,demo-employee-00065
+HR,Windows AD,write,medium,active,active,0,0,1,45,1,31,0,routine_entitlement,demo-employee-00043
+Finance,Linux,read,high,active,active,0,0,0,0,1,8,0,routine_entitlement,demo-employee-00014
+Engineering,Linux,read,low,active,active,0,0,1,0,1,9,0,routine_entitlement,demo-employee-00052
+HR,Windows AD,privileged,high,active,active,0,1,1,51,1,58,1,outside_department_privileged,demo-employee-00343
+Sales,Linux,read,medium,active,active,0,0,0,0,1,40,0,routine_entitlement,demo-employee-00182
+IT,Linux,privileged,critical,active,active,0,0,1,120,1,196,1,stale_privileged_access,demo-employee-00347
+Sales,Windows AD,read,high,active,active,0,0,1,12,1,21,0,routine_entitlement,demo-employee-00259
+HR,GitHub,read,medium,active,active,0,0,1,6,1,14,0,routine_entitlement,demo-employee-00161
+Engineering,Windows AD,write,high,active,active,0,0,1,35,1,46,0,routine_entitlement,demo-employee-00247
+Sales,Linux,read,medium,active,active,0,0,1,8,1,18,0,routine_entitlement,demo-employee-00102
+Finance,GitHub,read,medium,active,active,0,0,1,21,1,27,0,routine_entitlement,demo-employee-00117
+IT,Windows AD,read,medium,active,active,0,0,1,2,1,41,0,routine_entitlement,demo-employee-00211
+Sales,Linux,read,low,active,active,0,0,0,0,1,12,0,routine_entitlement,demo-employee-00186
+Finance,Windows AD,read,low,active,active,0,0,1,22,1,3,0,routine_entitlement,demo-employee-00321
+Sales,Linux,privileged,medium,active,active,0,0,1,37,1,1,0,routine_entitlement,demo-employee-00025
+Engineering,Linux,write,high,active,active,0,0,0,0,1,35,0,routine_entitlement,demo-employee-00033
+Finance,GitHub,read,medium,active,active,0,0,1,47,1,53,0,routine_entitlement,demo-employee-00315
+IT,Linux,read,medium,active,active,0,0,1,11,1,44,0,routine_entitlement,demo-employee-00152
+HR,Linux,read,medium,active,active,0,0,1,16,1,32,0,routine_entitlement,demo-employee-00240
+IT,Linux,write,medium,active,active,0,0,0,0,1,43,0,routine_entitlement,demo-employee-00065
+HR,Windows AD,read,medium,active,active,0,0,0,0,1,28,0,routine_entitlement,demo-employee-00065
+HR,Windows AD,read,medium,active,active,0,0,1,15,1,37,0,routine_entitlement,demo-employee-00279
+IT,Linux,read,medium,active,active,0,0,1,36,1,40,0,routine_entitlement,demo-employee-00223
+Sales,Linux,read,low,active,active,0,0,1,11,1,53,0,routine_entitlement,demo-employee-00301
+Finance,Linux,write,medium,active,active,0,0,1,23,1,28,0,routine_entitlement,demo-employee-00311
+Engineering,GitHub,read,medium,active,active,0,0,1,23,1,43,0,routine_entitlement,demo-employee-00330
+IT,Linux,read,medium,active,active,0,0,1,51,1,43,0,routine_entitlement,demo-employee-00200
+HR,Linux,write,medium,active,active,0,0,1,18,1,45,0,routine_entitlement,demo-employee-00014
+Finance,GitHub,write,high,active,active,0,0,1,42,1,9,0,routine_entitlement,demo-employee-00041
+IT,Windows AD,read,low,active,active,0,0,0,0,1,39,0,routine_entitlement,demo-employee-00205
+IT,Windows AD,write,medium,active,active,0,0,1,49,1,21,0,routine_entitlement,demo-employee-00253
+Engineering,Windows AD,write,high,active,active,0,0,1,12,1,15,0,routine_entitlement,demo-employee-00214
+HR,Linux,read,high,active,active,0,0,1,23,1,15,0,routine_entitlement,demo-employee-00044
+Finance,Linux,read,medium,active,active,0,0,1,36,1,28,0,routine_entitlement,demo-employee-00036
+IT,Linux,read,low,active,active,0,0,0,0,1,49,0,routine_entitlement,demo-employee-00302
+Sales,Windows AD,read,medium,active,active,0,0,1,7,1,7,0,routine_entitlement,demo-employee-00059
+HR,Linux,read,low,active,active,0,0,1,2,1,58,0,routine_entitlement,demo-employee-00262
+HR,GitHub,write,medium,active,active,0,0,1,17,1,12,0,routine_entitlement,demo-employee-00143
+Engineering,Windows AD,write,medium,active,active,0,0,1,34,1,12,0,routine_entitlement,demo-employee-00188
+Finance,Linux,read,high,active,active,0,0,1,31,1,55,0,routine_entitlement,demo-employee-00162
+IT,Windows AD,write,low,active,active,0,0,0,0,1,3,0,routine_entitlement,demo-employee-00253
+IT,GitHub,read,low,active,active,0,0,1,37,1,51,0,routine_entitlement,demo-employee-00246
+Engineering,Linux,read,medium,active,active,0,0,0,0,1,33,0,routine_entitlement,demo-employee-00246
+HR,Linux,read,high,inactive,active,0,0,1,49,1,19,1,terminated_account,demo-employee-00380
+IT,GitHub,write,medium,active,active,0,0,1,23,1,7,0,routine_entitlement,demo-employee-00088
+Finance,GitHub,read,high,inactive,active,0,0,1,29,1,21,1,terminated_account,demo-employee-00372
+Sales,GitHub,read,high,active,active,0,0,1,38,1,21,0,routine_entitlement,demo-employee-00066
+HR,Linux,read,medium,active,active,0,0,1,33,1,5,0,routine_entitlement,demo-employee-00076
+Finance,GitHub,privileged,high,active,active,0,1,1,37,1,57,1,outside_department_privileged,demo-employee-00354
+Engineering,Windows AD,privileged,low,active,active,0,0,1,6,1,13,0,routine_entitlement,demo-employee-00228
+IT,Windows AD,privileged,high,active,active,0,1,1,33,1,40,1,outside_department_privileged,demo-employee-00353
+Finance,GitHub,privileged,critical,active,active,0,0,1,116,1,92,1,stale_privileged_access,demo-employee-00335
+IT,Windows AD,read,medium,active,active,0,0,1,8,1,57,0,routine_entitlement,demo-employee-00172
+Engineering,GitHub,read,low,active,active,0,0,1,49,1,47,0,routine_entitlement,demo-employee-00126
+Sales,GitHub,privileged,high,active,active,0,1,1,30,0,0,1,outside_department_privileged,demo-employee-00393
+Engineering,Windows AD,read,medium,active,active,0,0,1,15,1,39,0,routine_entitlement,demo-employee-00068
+Finance,Linux,write,medium,active,active,0,0,1,39,1,15,0,routine_entitlement,demo-employee-00191
+HR,Linux,read,low,active,active,0,0,1,29,1,27,0,routine_entitlement,demo-employee-00322
+Sales,GitHub,write,low,active,active,0,0,1,14,1,25,0,routine_entitlement,demo-employee-00194
+Engineering,GitHub,read,low,active,active,0,0,1,11,0,0,0,routine_entitlement,demo-employee-00144
+HR,GitHub,read,high,active,active,0,0,1,1,1,22,0,routine_entitlement,demo-employee-00219
+Engineering,GitHub,privileged,high,active,active,0,1,1,0,1,42,1,outside_department_privileged,demo-employee-00371
+IT,Linux,read,low,active,active,0,0,0,0,1,38,0,routine_entitlement,demo-employee-00000
+IT,Linux,write,medium,active,active,0,0,1,24,1,45,0,routine_entitlement,demo-employee-00027
+IT,Windows AD,read,low,active,active,0,0,0,0,1,11,0,routine_entitlement,demo-employee-00124
+Finance,Linux,read,medium,active,active,0,0,1,45,1,17,0,routine_entitlement,demo-employee-00032
+Sales,Linux,read,medium,active,active,0,0,1,40,1,46,0,routine_entitlement,demo-employee-00218
+IT,Linux,write,high,active,active,0,0,1,14,1,47,0,routine_entitlement,demo-employee-00168
+IT,Linux,read,low,active,active,0,0,1,19,1,53,0,routine_entitlement,demo-employee-00285
+Finance,Windows AD,write,medium,active,active,0,0,1,2,1,36,0,routine_entitlement,demo-employee-00239
+Finance,Windows AD,write,medium,active,active,0,0,1,7,1,34,0,routine_entitlement,demo-employee-00191
+Sales,GitHub,read,high,active,active,0,0,1,47,1,49,0,routine_entitlement,demo-employee-00248
+Finance,Windows AD,privileged,high,active,active,0,1,1,45,0,0,1,outside_department_privileged,demo-employee-00386
+Engineering,Linux,write,high,active,active,0,0,1,19,1,52,0,routine_entitlement,demo-employee-00075
+Finance,GitHub,write,medium,active,active,0,0,1,23,1,27,0,routine_entitlement,demo-employee-00207
+Finance,GitHub,read,medium,active,active,0,0,1,14,1,18,0,routine_entitlement,demo-employee-00035
+Sales,Linux,read,low,active,active,0,0,1,10,1,31,0,routine_entitlement,demo-employee-00291
+Sales,GitHub,privileged,high,active,active,0,1,1,22,1,22,1,outside_department_privileged,demo-employee-00348
+Engineering,Windows AD,read,medium,active,active,0,0,1,26,0,0,0,routine_entitlement,demo-employee-00041
+Sales,Windows AD,privileged,high,active,active,0,1,0,0,1,14,1,outside_department_privileged,demo-employee-00379
+Finance,Linux,write,high,active,active,0,0,1,11,1,59,0,routine_entitlement,demo-employee-00290
+Finance,GitHub,write,low,active,active,0,0,0,0,1,30,0,routine_entitlement,demo-employee-00229
+HR,GitHub,read,low,active,active,0,0,1,50,1,31,0,routine_entitlement,demo-employee-00151
+Finance,Linux,write,high,active,active,0,0,1,48,1,35,0,routine_entitlement,demo-employee-00157
+Finance,Windows AD,read,medium,active,active,0,0,1,6,1,25,0,routine_entitlement,demo-employee-00209
+Sales,GitHub,read,medium,active,active,0,0,1,18,1,28,0,routine_entitlement,demo-employee-00278
+Finance,GitHub,read,medium,active,active,0,0,1,7,1,21,0,routine_entitlement,demo-employee-00259
+Engineering,GitHub,privileged,high,active,active,0,1,1,3,1,30,1,outside_department_privileged,demo-employee-00407
+HR,Windows AD,read,medium,active,active,0,0,1,32,1,33,0,routine_entitlement,demo-employee-00062
+Sales,Windows AD,read,medium,active,active,0,0,1,27,1,5,0,routine_entitlement,demo-employee-00136
+IT,Linux,read,low,active,active,0,0,0,0,1,36,0,routine_entitlement,demo-employee-00012
+Finance,Linux,read,medium,active,active,0,0,1,21,1,56,0,routine_entitlement,demo-employee-00291
+Finance,GitHub,read,low,active,active,0,0,1,4,0,0,0,routine_entitlement,demo-employee-00099
+Sales,GitHub,read,high,active,active,0,0,1,44,1,56,0,routine_entitlement,demo-employee-00131
+HR,Linux,privileged,medium,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00186
+Sales,GitHub,read,high,active,active,0,0,1,26,1,5,0,routine_entitlement,demo-employee-00026
+Finance,Windows AD,read,medium,active,active,0,0,1,44,1,46,0,routine_entitlement,demo-employee-00273
+Engineering,Linux,read,medium,active,active,0,0,1,28,1,9,0,routine_entitlement,demo-employee-00090
+Engineering,GitHub,write,low,active,active,0,0,1,33,1,54,0,routine_entitlement,demo-employee-00082
+Finance,GitHub,write,medium,active,active,0,0,1,6,0,0,0,routine_entitlement,demo-employee-00156
+Engineering,Linux,write,critical,active,active,0,0,1,46,1,34,0,routine_entitlement,demo-employee-00101
+Engineering,Windows AD,write,medium,active,active,0,0,1,15,1,43,0,routine_entitlement,demo-employee-00128
+IT,Linux,read,high,active,active,0,0,1,43,1,19,0,routine_entitlement,demo-employee-00123
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,37,1,32,1,unmapped_privileged,demo-employee-00342
+Finance,GitHub,read,low,active,active,0,0,1,32,1,27,0,routine_entitlement,demo-employee-00070
+Sales,Linux,read,high,active,active,0,0,1,34,1,16,0,routine_entitlement,demo-employee-00323
+Finance,Linux,privileged,critical,active,active,0,0,1,212,1,208,1,stale_privileged_access,demo-employee-00383
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,1,1,51,1,unmapped_privileged,demo-employee-00368
+HR,GitHub,write,medium,active,active,0,0,1,18,1,7,0,routine_entitlement,demo-employee-00168
+IT,Linux,read,high,active,active,0,0,1,30,1,55,0,routine_entitlement,demo-employee-00179
+HR,GitHub,write,medium,active,active,0,0,1,25,1,17,0,routine_entitlement,demo-employee-00078
+HR,Linux,write,high,active,active,0,0,1,51,1,31,0,routine_entitlement,demo-employee-00191
+Engineering,Linux,read,medium,active,active,0,0,1,40,0,0,0,routine_entitlement,demo-employee-00170
+Engineering,Linux,write,medium,active,active,0,0,1,45,1,27,0,routine_entitlement,demo-employee-00127
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,28,1,53,1,unmapped_privileged,demo-employee-00349
+Sales,Windows AD,read,medium,active,active,0,0,0,0,1,48,0,routine_entitlement,demo-employee-00104
+Sales,Linux,write,medium,active,active,0,0,1,4,1,12,0,routine_entitlement,demo-employee-00169
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,40,0,routine_entitlement,demo-employee-00292
+Engineering,Windows AD,read,high,active,active,0,0,1,42,1,22,0,routine_entitlement,demo-employee-00056
+Finance,GitHub,read,medium,active,active,0,0,1,45,1,58,0,routine_entitlement,demo-employee-00331
+IT,Windows AD,read,low,active,active,0,0,1,49,1,43,0,routine_entitlement,demo-employee-00192
+Finance,Linux,read,medium,active,active,0,0,1,19,1,9,0,routine_entitlement,demo-employee-00197
+Finance,GitHub,read,high,active,active,0,0,1,26,1,42,0,routine_entitlement,demo-employee-00327
+Engineering,GitHub,read,medium,active,active,0,0,0,0,1,24,0,routine_entitlement,demo-employee-00296
+Finance,GitHub,read,medium,active,active,0,0,1,46,1,32,0,routine_entitlement,demo-employee-00005
+HR,GitHub,read,low,active,active,0,0,1,3,1,7,0,routine_entitlement,demo-employee-00293
+Sales,Windows AD,read,medium,active,active,0,0,1,3,1,38,0,routine_entitlement,demo-employee-00233
+Sales,Linux,write,high,active,active,0,0,1,40,1,51,0,routine_entitlement,demo-employee-00035
+Engineering,Linux,write,high,active,active,0,0,1,1,1,50,0,routine_entitlement,demo-employee-00161
+Sales,GitHub,read,medium,active,active,0,0,1,43,1,41,0,routine_entitlement,demo-employee-00009
+Sales,GitHub,privileged,critical,active,active,0,0,1,256,1,199,1,stale_privileged_access,demo-employee-00341
+Finance,Linux,write,medium,active,active,0,0,1,33,1,36,0,routine_entitlement,demo-employee-00234
+IT,Windows AD,privileged,high,active,active,0,1,1,32,1,0,1,outside_department_privileged,demo-employee-00390
+Engineering,Linux,read,low,active,active,0,0,1,38,1,41,0,routine_entitlement,demo-employee-00086
+HR,Linux,write,high,active,active,0,0,1,16,1,54,0,routine_entitlement,demo-employee-00014
+Finance,Windows AD,read,medium,active,active,0,0,1,1,1,30,0,routine_entitlement,demo-employee-00073
+Sales,Windows AD,read,low,active,active,0,0,1,29,0,0,0,routine_entitlement,demo-employee-00074
+IT,GitHub,read,medium,active,active,0,0,1,24,1,43,0,routine_entitlement,demo-employee-00089
+Finance,Linux,read,low,active,active,0,0,1,45,1,37,0,routine_entitlement,demo-employee-00265
+Engineering,Windows AD,privileged,critical,active,active,0,0,1,200,1,114,1,stale_privileged_access,demo-employee-00342
+Sales,GitHub,write,medium,active,active,0,0,1,39,1,32,0,routine_entitlement,demo-employee-00272
+Finance,Linux,read,low,active,active,0,0,0,0,1,35,0,routine_entitlement,demo-employee-00221
+Sales,GitHub,read,low,active,active,0,0,1,23,1,4,0,routine_entitlement,demo-employee-00086
+IT,Linux,privileged,critical,active,active,0,0,1,169,1,127,1,stale_privileged_access,demo-employee-00406
+IT,GitHub,privileged,high,inactive,active,0,0,0,0,1,12,1,terminated_account,demo-employee-00375
+Engineering,Linux,privileged,high,active,active,0,1,1,36,1,1,1,outside_department_privileged,demo-employee-00333
+IT,Linux,privileged,critical,active,active,0,0,1,192,1,142,1,stale_privileged_access,demo-employee-00380
+IT,Linux,read,medium,active,active,0,0,0,0,1,33,0,routine_entitlement,demo-employee-00081
+HR,Windows AD,read,medium,active,active,0,0,1,21,1,3,0,routine_entitlement,demo-employee-00181
+Finance,Linux,read,low,active,active,0,0,1,51,1,35,0,routine_entitlement,demo-employee-00327
+Sales,Linux,read,low,active,active,0,0,1,2,1,50,0,routine_entitlement,demo-employee-00135
+Finance,Windows AD,read,high,active,active,0,0,1,42,1,0,0,routine_entitlement,demo-employee-00109
+Sales,GitHub,write,medium,active,active,0,0,1,24,1,15,0,routine_entitlement,demo-employee-00021
+Finance,Windows AD,read,medium,active,active,0,0,1,31,1,1,0,routine_entitlement,demo-employee-00226
+Sales,Windows AD,write,low,active,active,0,0,1,27,1,53,0,routine_entitlement,demo-employee-00287
+IT,GitHub,read,medium,active,active,0,0,0,0,1,8,0,routine_entitlement,demo-employee-00269
+Unknown,Windows AD,privileged,critical,unknown,active,1,0,1,0,1,5,1,unmapped_privileged,demo-employee-00408
+IT,Windows AD,privileged,medium,active,active,0,0,1,10,1,6,0,routine_entitlement,demo-employee-00027
+Finance,GitHub,write,medium,active,active,0,0,0,0,1,28,0,routine_entitlement,demo-employee-00194
+Finance,GitHub,read,medium,active,active,0,0,1,23,1,31,0,routine_entitlement,demo-employee-00129
+IT,GitHub,read,medium,active,active,0,0,1,22,1,3,0,routine_entitlement,demo-employee-00075
+HR,GitHub,read,high,active,active,0,0,1,23,1,11,0,routine_entitlement,demo-employee-00135
+Finance,Linux,read,medium,active,active,0,0,1,25,1,1,0,routine_entitlement,demo-employee-00245
+Sales,GitHub,write,medium,active,active,0,0,0,0,1,47,0,routine_entitlement,demo-employee-00003
+IT,Windows AD,read,critical,active,active,0,0,1,8,1,25,0,routine_entitlement,demo-employee-00296
+Sales,Windows AD,write,high,inactive,active,0,0,1,51,1,9,1,terminated_account,demo-employee-00396
+Engineering,Windows AD,read,low,active,active,0,0,0,0,1,29,0,routine_entitlement,demo-employee-00095
+Engineering,Linux,read,medium,active,active,0,0,1,17,1,5,0,routine_entitlement,demo-employee-00110
+Finance,Linux,read,low,active,active,0,0,0,0,1,13,0,routine_entitlement,demo-employee-00299
+Finance,Linux,write,medium,active,active,0,0,0,0,1,18,0,routine_entitlement,demo-employee-00299
+Engineering,Windows AD,write,low,active,active,0,0,1,48,1,2,0,routine_entitlement,demo-employee-00074
+Finance,Windows AD,write,high,active,active,0,0,1,32,1,58,0,routine_entitlement,demo-employee-00183
+Finance,Linux,privileged,critical,active,active,0,0,1,138,1,231,1,stale_privileged_access,demo-employee-00366
+HR,Windows AD,read,medium,active,active,0,0,1,36,1,11,0,routine_entitlement,demo-employee-00124
+Engineering,GitHub,write,low,active,active,0,0,1,3,1,9,0,routine_entitlement,demo-employee-00292
+IT,Linux,read,medium,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00248
+IT,GitHub,write,high,inactive,active,0,0,0,0,1,5,1,terminated_account,demo-employee-00403
+Engineering,Linux,read,low,active,active,0,0,1,9,1,42,0,routine_entitlement,demo-employee-00255
+IT,Windows AD,write,medium,active,active,0,0,1,28,1,24,0,routine_entitlement,demo-employee-00269
+HR,Linux,read,low,active,active,0,0,1,22,1,37,0,routine_entitlement,demo-employee-00321
+Engineering,Linux,read,high,active,active,0,0,0,0,0,0,0,routine_entitlement,demo-employee-00154
+Finance,Linux,read,medium,active,active,0,0,1,30,1,2,0,routine_entitlement,demo-employee-00170
+Finance,Linux,write,high,active,active,0,0,0,0,1,30,0,routine_entitlement,demo-employee-00106
+IT,Windows AD,privileged,critical,active,active,0,0,1,192,1,96,1,stale_privileged_access,demo-employee-00413
+Engineering,Linux,read,medium,active,active,0,0,1,5,1,15,0,routine_entitlement,demo-employee-00332
+Engineering,GitHub,write,medium,active,active,0,0,1,22,1,8,0,routine_entitlement,demo-employee-00084
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,8,0,routine_entitlement,demo-employee-00280
+Finance,Windows AD,read,medium,active,active,0,0,1,24,1,13,0,routine_entitlement,demo-employee-00104
+HR,Linux,read,high,inactive,active,0,0,1,33,1,5,1,terminated_account,demo-employee-00351
+Unknown,Linux,privileged,critical,unknown,active,1,0,1,32,1,24,1,unmapped_privileged,demo-employee-00361
+IT,Linux,read,medium,active,active,0,0,1,1,1,44,0,routine_entitlement,demo-employee-00057
+HR,Linux,read,medium,active,active,0,0,1,18,1,50,0,routine_entitlement,demo-employee-00134
+Sales,Linux,privileged,critical,active,active,0,0,1,283,1,242,1,stale_privileged_access,demo-employee-00335
+Engineering,Windows AD,read,medium,active,active,0,0,0,0,1,55,0,routine_entitlement,demo-employee-00294
+HR,Windows AD,write,medium,active,active,0,0,1,51,1,57,0,routine_entitlement,demo-employee-00069
+Engineering,GitHub,write,medium,active,active,0,0,1,33,1,38,0,routine_entitlement,demo-employee-00006
+Sales,Windows AD,read,low,active,active,0,0,1,12,1,9,0,routine_entitlement,demo-employee-00242
+Finance,Windows AD,read,high,active,active,0,0,1,3,1,34,0,routine_entitlement,demo-employee-00274
+Engineering,GitHub,write,low,active,active,0,0,1,5,1,7,0,routine_entitlement,demo-employee-00127
+Finance,Windows AD,write,medium,active,active,0,0,1,49,1,56,0,routine_entitlement,demo-employee-00238
+HR,GitHub,read,low,active,active,0,0,1,45,1,41,0,routine_entitlement,demo-employee-00003
+IT,GitHub,read,medium,active,active,0,0,1,5,1,23,0,routine_entitlement,demo-employee-00073
+HR,Windows AD,write,low,active,active,0,0,1,27,1,12,0,routine_entitlement,demo-employee-00241
+IT,Linux,read,medium,active,active,0,0,1,25,1,36,0,routine_entitlement,demo-employee-00203
+Sales,GitHub,read,low,active,active,0,0,1,48,1,22,0,routine_entitlement,demo-employee-00224
+IT,Linux,read,medium,active,active,0,0,0,0,1,12,0,routine_entitlement,demo-employee-00314
+IT,Windows AD,read,medium,active,active,0,0,1,25,1,8,0,routine_entitlement,demo-employee-00004
+HR,Linux,read,high,active,active,0,0,1,30,0,0,0,routine_entitlement,demo-employee-00242
+Sales,Windows AD,read,low,active,active,0,0,1,8,1,28,0,routine_entitlement,demo-employee-00039
+IT,Windows AD,privileged,high,active,active,0,0,1,38,1,50,0,routine_entitlement,demo-employee-00333
+Sales,Linux,read,medium,active,active,0,0,1,12,1,57,0,routine_entitlement,demo-employee-00316
+Sales,GitHub,read,high,active,active,0,0,1,49,1,44,0,routine_entitlement,demo-employee-00024
+IT,Linux,privileged,critical,active,active,0,0,1,269,1,269,1,stale_privileged_access,demo-employee-00351
+IT,GitHub,read,medium,active,active,0,0,1,39,1,43,0,routine_entitlement,demo-employee-00208
+Finance,GitHub,read,low,active,active,0,0,1,17,0,0,0,routine_entitlement,demo-employee-00148
+Finance,Windows AD,write,medium,active,active,0,0,1,37,1,20,0,routine_entitlement,demo-employee-00268
+Engineering,Linux,privileged,high,active,active,0,1,1,35,1,39,1,outside_department_privileged,demo-employee-00388
+Sales,Linux,read,medium,active,active,0,0,1,2,1,34,0,routine_entitlement,demo-employee-00001
+Engineering,Linux,read,high,active,active,0,0,1,8,1,25,0,routine_entitlement,demo-employee-00145
+Sales,Linux,write,medium,active,active,0,0,0,0,1,41,0,routine_entitlement,demo-employee-00180
+Engineering,Windows AD,read,low,active,active,0,0,1,36,1,9,0,routine_entitlement,demo-employee-00200
+Engineering,GitHub,write,high,active,active,0,0,1,45,1,19,0,routine_entitlement,demo-employee-00329
+Finance,Windows AD,write,high,active,active,0,0,1,13,1,30,0,routine_entitlement,demo-employee-00204
+Engineering,Windows AD,write,medium,active,active,0,0,1,8,1,21,0,routine_entitlement,demo-employee-00198
+Finance,GitHub,read,medium,active,active,0,0,1,35,1,56,0,routine_entitlement,demo-employee-00080
+Sales,Linux,privileged,critical,active,active,0,0,1,114,1,153,1,stale_privileged_access,demo-employee-00368
+Sales,GitHub,read,medium,active,active,0,0,1,10,1,48,0,routine_entitlement,demo-employee-00170
+Sales,GitHub,write,medium,active,active,0,0,0,0,1,35,0,routine_entitlement,demo-employee-00230
+Sales,Linux,write,high,active,active,0,0,1,27,1,50,0,routine_entitlement,demo-employee-00077
+IT,Linux,read,medium,active,active,0,0,1,42,1,26,0,routine_entitlement,demo-employee-00254
+Engineering,Linux,read,medium,active,active,0,0,1,50,0,0,0,routine_entitlement,demo-employee-00116
+Finance,Windows AD,write,high,active,active,0,0,1,26,0,0,0,routine_entitlement,demo-employee-00258
+Sales,GitHub,privileged,critical,active,active,0,0,1,212,1,216,1,stale_privileged_access,demo-employee-00338
+Engineering,Windows AD,read,low,active,active,0,0,1,37,0,0,0,routine_entitlement,demo-employee-00288
+Engineering,Windows AD,read,medium,active,active,0,0,1,11,1,10,0,routine_entitlement,demo-employee-00034
+Engineering,Windows AD,read,medium,active,active,0,0,1,4,1,27,0,routine_entitlement,demo-employee-00241
+Engineering,Linux,privileged,critical,active,active,0,0,1,212,1,222,1,stale_privileged_access,demo-employee-00350
+HR,Linux,read,medium,active,active,0,0,1,43,1,46,0,routine_entitlement,demo-employee-00091
+Finance,Windows AD,write,medium,active,active,0,0,1,39,1,36,0,routine_entitlement,demo-employee-00250
+Finance,Windows AD,read,medium,active,active,0,0,1,23,1,43,0,routine_entitlement,demo-employee-00051
+Sales,Windows AD,read,high,active,active,0,0,1,51,1,40,0,routine_entitlement,demo-employee-00119
+HR,GitHub,read,low,active,active,0,0,1,22,1,6,0,routine_entitlement,demo-employee-00153
+Sales,GitHub,privileged,high,active,active,0,1,1,50,1,53,1,outside_department_privileged,demo-employee-00357
+HR,GitHub,read,low,active,active,0,0,1,35,1,26,0,routine_entitlement,demo-employee-00115
+Engineering,Windows AD,privileged,medium,active,active,0,0,1,8,1,38,0,routine_entitlement,demo-employee-00306
+HR,Linux,read,medium,active,active,0,0,1,31,1,23,0,routine_entitlement,demo-employee-00028
+Unknown,GitHub,privileged,critical,unknown,active,1,0,1,11,0,0,1,unmapped_privileged,demo-employee-00360
+HR,Linux,read,medium,active,active,0,0,1,51,1,51,0,routine_entitlement,demo-employee-00166
+Sales,Windows AD,write,high,active,active,0,0,1,11,1,32,0,routine_entitlement,demo-employee-00235
+IT,Linux,privileged,critical,active,active,0,0,1,248,1,181,1,stale_privileged_access,demo-employee-00364
+HR,GitHub,read,medium,active,active,0,0,1,33,1,39,0,routine_entitlement,demo-employee-00290
+Sales,Windows AD,read,medium,active,active,0,0,1,33,1,35,0,routine_entitlement,demo-employee-00004
+HR,Windows AD,read,medium,active,active,0,0,1,46,1,40,0,routine_entitlement,demo-employee-00129
+Finance,Linux,read,medium,active,active,0,0,1,15,1,34,0,routine_entitlement,demo-employee-00009
+IT,Linux,read,low,active,active,0,0,0,0,1,9,0,routine_entitlement,demo-employee-00276
+Finance,Linux,read,medium,active,active,0,0,1,15,1,57,0,routine_entitlement,demo-employee-00085
+Sales,Windows AD,read,high,inactive,active,0,0,1,17,1,13,1,terminated_account,demo-employee-00363
+HR,GitHub,privileged,high,active,active,0,1,0,0,1,42,1,outside_department_privileged,demo-employee-00351
+Sales,GitHub,privileged,critical,active,active,0,0,1,178,1,235,1,stale_privileged_access,demo-employee-00339
+Engineering,Windows AD,write,high,active,active,0,0,1,1,0,0,0,routine_entitlement,demo-employee-00327
+Finance,Windows AD,write,medium,active,active,0,0,0,0,1,14,0,routine_entitlement,demo-employee-00093
+Engineering,Windows AD,privileged,critical,active,active,0,0,1,128,1,165,1,stale_privileged_access,demo-employee-00347

@@ -1,0 +1,13 @@
+.env
+node_modules/
+dist/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.db
+*.sqlite*
+
+# Keep generated model files out of source control
+backend/ml_artifacts/*.joblib
+backend/ml_artifacts/*.json
+backend/access_governance.db

@@ -1,0 +1,5 @@
+platform,username,employee_code,status,last_login,last_login_source
+GitLab,e501_demo,E501,active,2026-11-02T09:40:00Z,gitlab-export
+GitHub,e502_demo,E502,active,2026-11-01T11:22:00Z,github-export
+Linux,e503_demo,E503,active,2026-10-20T07:45:00Z,linux-export
+Windows,e504_demo,E504,active,2026-09-30T10:00:00Z,ad-export

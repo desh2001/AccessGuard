@@ -1,0 +1,5 @@
+code,name,email,department,job_title,status,manager_username
+E501,Demo Engineer 501,e501@example.test,Engineering,Software Engineer,active,reviewer
+E502,Demo Analyst 502,e502@example.test,Finance,Analyst,active,reviewer
+E503,Demo Analyst 503,e503@example.test,IT,Support Engineer,active,reviewer
+E504,Former Employee 504,e504@example.test,Operations,Analyst,resigned,reviewer

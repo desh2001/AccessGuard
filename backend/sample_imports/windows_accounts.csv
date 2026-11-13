@@ -1,0 +1,3 @@
+external_account_id,username,account_email,permission,resource
+lab-S-1-5-21-0001,dev-lab-01,dev01@demo.example,Reader,Windows File Share Lab
+lab-S-1-5-21-0002,finance-admin,fin02@demo.example,Admin,Demo Directory Group

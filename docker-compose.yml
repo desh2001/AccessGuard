@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: accessguard-complete-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: accessguard_lab
+      POSTGRES_USER: accessguard_lab
+      POSTGRES_PASSWORD: research-local-only
+    ports:
+      # Windows host 5434 -> actual postgres service port 5432 INSIDE container.
+      - '127.0.0.1:5434:5432'
+    volumes:
+      # Separate from Phase 2 to avoid accidentally modifying/deleting existing data.
+      - accessguard_complete_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U accessguard_lab -d accessguard_lab']
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  accessguard_complete_pgdata:

@@ -1,0 +1,2 @@
+employee_code,occurred_at,from_department,to_department,from_manager,to_manager,from_org_unit,to_org_unit,source
+EMP-001,2026-10-06T09:00:00Z,IT,Finance,Manager-A,Manager-B,OU=IT,OU=Finance,HRIS-readonly

@@ -1,0 +1,4 @@
+platform,resource_kind,resource_key,allowed_departments,allowed_job_titles,approved_by,policy_version,effective_at
+Linux,managed_software,production-db-admin,IT|Engineering,,security-owner,2026Q4,2026-07-01T00:00:00
+Windows AD,business_application,payroll-admin,Finance,,security-owner,2026Q4,2026-07-01T00:00:00
+GitHub,managed_web_app,organization-settings,IT|Engineering,,security-owner,2026Q4,2026-07-01T00:00:00
