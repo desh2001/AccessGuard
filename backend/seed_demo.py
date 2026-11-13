@@ -79,7 +79,8 @@ def seed_demo(session: Session) -> bool:
 
     # ── Systems ──────────────────────────────────────────────────────────────
     for id_, name, category in SYSTEMS:
-        session.add(System(id=id_, name=name, category=category))
+        if session.get(System, id_) is None:
+            session.add(System(id=id_, name=name, category=category))
     session.flush()
 
     identities: list[Identity] = []

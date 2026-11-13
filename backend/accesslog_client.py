@@ -27,94 +27,9 @@ ACCESSLOG_SERVICE_URL = os.getenv('ACCESSLOG_SERVICE_URL', 'http://127.0.0.1:800
 
 USER_RE = re.compile(r'(?:for (?:invalid user )?|user[= :]\s*|account[= :]\s*)([\w.@-]{1,128})', re.IGNORECASE)
 
-# Realistic fallback telemetry modeled on Pasindu's Syslog Collector
-FALLBACK_DEVICES = [
-    {'device_id': 'vpn-gw-colombo.dialog.lk', 'source_ip': '10.77.0.1', 'event_count': 1420, 'status': 'active', 'last_seen': 'Just now'},
-    {'device_id': 'win-dc01.corp.dialog.lk', 'source_ip': '10.77.0.12', 'event_count': 892, 'status': 'active', 'last_seen': '2 mins ago'},
-    {'device_id': 'linux-bastion-prod.dialog.lk', 'source_ip': '10.77.0.15', 'event_count': 641, 'status': 'active', 'last_seen': '5 mins ago'},
-    {'device_id': 'app-k8s-node-03.dialog.lk', 'source_ip': '10.77.0.28', 'event_count': 410, 'status': 'active', 'last_seen': '12 mins ago'},
-    {'device_id': 'db-postgres-cluster.dialog.lk', 'source_ip': '10.77.0.44', 'event_count': 188, 'status': 'inactive', 'last_seen': '28 mins ago'},
-]
-
-FALLBACK_EVENTS = [
-    {
-        'id': 101,
-        'device_id': 'linux-bastion-prod.dialog.lk',
-        'user_id': 'chamila.d',
-        'event_type': 'PRIVILEGE_USED',
-        'action': 'PRIVILEGE_USED',
-        'severity': 'warning',
-        'source_ip': '10.77.0.15',
-        'raw_message': 'sudo: chamila.d : TTY=pts/2 ; PWD=/home/chamila.d ; USER=root ; COMMAND=/usr/bin/systemctl restart nginx',
-        'occurred_at': (now_utc() - timedelta(minutes=4)).isoformat(),
-    },
-    {
-        'id': 102,
-        'device_id': 'win-dc01.corp.dialog.lk',
-        'user_id': 'rishan.k',
-        'event_type': 'LOGIN_SUCCESS',
-        'action': 'LOGIN_SUCCESS',
-        'severity': 'info',
-        'source_ip': '10.77.0.12',
-        'raw_message': 'Microsoft-Windows-Security-Auditing: Event 4624: An account was successfully logged on. Account Name: rishan.k Logon Type: 10',
-        'occurred_at': (now_utc() - timedelta(minutes=11)).isoformat(),
-    },
-    {
-        'id': 103,
-        'device_id': 'vpn-gw-colombo.dialog.lk',
-        'user_id': 'hashan.h',
-        'event_type': 'LOGIN_FAILED',
-        'action': 'LOGIN_FAILED',
-        'severity': 'warning',
-        'source_ip': '10.77.0.1',
-        'raw_message': 'sshd[19284]: Failed password for invalid user hashan.h from 192.168.1.104 port 52311 ssh2',
-        'occurred_at': (now_utc() - timedelta(minutes=18)).isoformat(),
-    },
-    {
-        'id': 104,
-        'device_id': 'vpn-gw-colombo.dialog.lk',
-        'user_id': 'hashan.h',
-        'event_type': 'LOGIN_FAILED',
-        'action': 'LOGIN_FAILED',
-        'severity': 'warning',
-        'source_ip': '10.77.0.1',
-        'raw_message': 'sshd[19302]: Failed password for invalid user hashan.h from 192.168.1.104 port 52319 ssh2 (repeated attempt 2)',
-        'occurred_at': (now_utc() - timedelta(minutes=17)).isoformat(),
-    },
-    {
-        'id': 105,
-        'device_id': 'linux-bastion-prod.dialog.lk',
-        'user_id': 'kasun.p',
-        'event_type': 'LOGIN_SUCCESS',
-        'action': 'LOGIN_SUCCESS',
-        'severity': 'info',
-        'source_ip': '10.77.0.15',
-        'raw_message': 'sshd[22105]: Accepted publickey for kasun.p from 10.77.0.88 port 48102 ssh2: RSA SHA256:7mC... (authorized key match)',
-        'occurred_at': (now_utc() - timedelta(minutes=25)).isoformat(),
-    },
-    {
-        'id': 106,
-        'device_id': 'app-k8s-node-03.dialog.lk',
-        'user_id': 'svc-deployer',
-        'event_type': 'OTHER',
-        'action': 'OBSERVED',
-        'severity': 'info',
-        'source_ip': '10.77.0.28',
-        'raw_message': 'dockerd[1044]: Container dialog-core-api started for deployment rollout v2.4.1',
-        'occurred_at': (now_utc() - timedelta(minutes=32)).isoformat(),
-    },
-    {
-        'id': 107,
-        'device_id': 'win-dc01.corp.dialog.lk',
-        'user_id': 'tharindu.s',
-        'event_type': 'LOGIN_FAILED',
-        'action': 'LOGIN_FAILED',
-        'severity': 'warning',
-        'source_ip': '10.77.0.12',
-        'raw_message': 'Microsoft-Windows-Security-Auditing: Event 4625: An account failed to log on. Account Name: tharindu.s Reason: Unknown user name or bad password',
-        'occurred_at': (now_utc() - timedelta(minutes=45)).isoformat(),
-    },
-]
+# Live telemetry buffer (No mock devices by default)
+FALLBACK_DEVICES = []
+FALLBACK_EVENTS = []
 
 
 def check_accesslog_health() -> dict[str, Any]:
@@ -159,28 +74,16 @@ def get_accesslog_summary() -> dict[str, Any]:
     except Exception:
         pass
 
-    # High-fidelity fallback summary
+    # Clean fallback summary
     return {
         'online': False,
-        'mode': 'fallback-telemetry',
-        'total_events': 3551,
-        'failed_logins_24h': 14,
-        'active_devices_15m': 4,
-        'devices_seen': len(FALLBACK_DEVICES),
-        'hourly': [
-            {'hour': '10:00', 'total': 180},
-            {'hour': '11:00', 'total': 240},
-            {'hour': '12:00', 'total': 310},
-            {'hour': '13:00', 'total': 285},
-            {'hour': '14:00', 'total': 390},
-            {'hour': '15:00', 'total': 420},
-        ],
-        'types': [
-            {'event_type': 'LOGIN_SUCCESS', 'total': 2100},
-            {'event_type': 'OBSERVED', 'total': 840},
-            {'event_type': 'PRIVILEGE_USED', 'total': 380},
-            {'event_type': 'LOGIN_FAILED', 'total': 231},
-        ],
+        'mode': 'live-stream-ready',
+        'total_events': 0,
+        'failed_logins_24h': 0,
+        'active_devices_15m': 0,
+        'devices_seen': 0,
+        'hourly': [],
+        'types': [],
     }
 
 

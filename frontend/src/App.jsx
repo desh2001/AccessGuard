@@ -1413,16 +1413,16 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
     <>
       <div className="stat-grid four">
         <StatCard label="Syslog Ingestion Listener" value={accesslogStatus?.online ? "Active (Port 5514)" : "Port 5514 Listening"} Icon={Server} tone="teal" hint="TCP daemon streaming" />
-        <StatCard label="Observed Devices" value={accesslogDevices.length || 5} Icon={HardDrive} tone="purple" hint="Network endpoints seen" />
-        <StatCard label="Total Syslog Events" value={accesslogSummary?.total_events || 3551} Icon={Activity} tone="teal" hint="Normalized syslog entries" />
-        <StatCard label="24h Failed Logins" value={accesslogSummary?.failed_logins_24h || 14} Icon={AlertTriangle} tone="pink" hint="Potential intrusion attempts" />
+        <StatCard label="Observed Devices" value={accesslogDevices.length} Icon={HardDrive} tone="purple" hint="Network endpoints seen" />
+        <StatCard label="Total Syslog Events" value={accesslogSummary?.total_events || 0} Icon={Activity} tone="teal" hint="Normalized syslog entries" />
+        <StatCard label="24h Failed Logins" value={accesslogSummary?.failed_logins_24h || 0} Icon={AlertTriangle} tone="pink" hint="Potential intrusion attempts" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, marginBottom: 24 }}>
         {/* Network Devices Panel */}
         <Panel
           title="Monitored Network Endpoints"
-          description={`${accesslogDevices.length || 5} endpoints discovered`}
+          description={`${accesslogDevices.length} endpoints discovered`}
           action={
             <button className="btn-light small" onClick={pingAccessLog} disabled={busy === 'accesslog-ping'}>
               <RefreshCw size={12} className={busy === 'accesslog-ping' ? 'spin' : ''} /> Ping Listener
@@ -1433,13 +1433,7 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
             <table>
               <thead><tr><th>DEVICE HOSTNAME</th><th>SOURCE IP</th><th>EVENTS</th><th>STATUS</th></tr></thead>
               <tbody>
-                {(accesslogDevices.length ? accesslogDevices : [
-                  { device_id: 'vpn-gw-colombo.dialog.lk', source_ip: '10.77.0.1', event_count: 1420, status: 'active' },
-                  { device_id: 'win-dc01.corp.dialog.lk', source_ip: '10.77.0.12', event_count: 892, status: 'active' },
-                  { device_id: 'linux-bastion-prod.dialog.lk', source_ip: '10.77.0.15', event_count: 641, status: 'active' },
-                  { device_id: 'app-k8s-node-03.dialog.lk', source_ip: '10.77.0.28', event_count: 410, status: 'active' },
-                  { device_id: 'db-postgres-cluster.dialog.lk', source_ip: '10.77.0.44', event_count: 188, status: 'active' },
-                ]).map(d => (
+                {accesslogDevices.map(d => (
                   <tr key={d.device_id}>
                     <td><strong>{d.device_id}</strong></td>
                     <td className="mono">{d.source_ip}</td>
@@ -1449,6 +1443,13 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
                 ))}
               </tbody>
             </table>
+            {accesslogDevices.length === 0 && (
+              <div className="empty" style={{ padding: 24 }}>
+                <Server size={28} />
+                <b>No devices observed yet</b>
+                <span>Stream TCP syslog packets to port 5514 or link a device under an employee to monitor.</span>
+              </div>
+            )}
           </div>
         </Panel>
 
@@ -1491,7 +1492,7 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
                 {filteredEvents.length === 0 && (
                   <tr>
                     <td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#888' }}>
-                      No live events match your search query.
+                      No live events received yet. Stream TCP syslog messages to port 5514.
                     </td>
                   </tr>
                 )}
