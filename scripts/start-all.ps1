@@ -1,4 +1,4 @@
-# AccessGuard Master Launcher
+﻿# AccessGuard Master Launcher
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $backend = Join-Path $root 'backend'
@@ -61,10 +61,10 @@ $scriptMl = Join-Path $PSScriptRoot 'start-ml.ps1'
 $scriptAccesslog = Join-Path $PSScriptRoot 'start-accesslog.ps1'
 $scriptFrontend = Join-Path $PSScriptRoot 'start-frontend.ps1'
 
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptBackend`""
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptMl`""
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptAccesslog`""
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptFrontend`""
+Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $scriptBackend
+Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $scriptMl
+Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $scriptAccesslog
+Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $scriptFrontend
 
 # 5. Summary & Browser Launch
 Write-Host "[5/5] Ecosystem startup initiated successfully!" -ForegroundColor Green
@@ -81,4 +81,4 @@ Write-Host "==================================================================" 
 Write-Host ""
 Write-Host "Opening Central Dashboard in your browser..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
-Start-Process "http://127.0.0.1:5173"
+Start-Process 'http://127.0.0.1:5173'
