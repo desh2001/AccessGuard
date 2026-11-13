@@ -8,16 +8,78 @@ services:
       POSTGRES_USER: accessguard_lab
       POSTGRES_PASSWORD: research-local-only
     ports:
-      # Windows host 5434 -> actual postgres service port 5432 INSIDE container.
       - '127.0.0.1:5434:5432'
     volumes:
-      # Separate from Phase 2 to avoid accidentally modifying/deleting existing data.
       - accessguard_complete_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U accessguard_lab -d accessguard_lab']
       interval: 5s
       timeout: 5s
       retries: 15
+    networks:
+      - accessguard-net
+
+  ml-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.ml
+    container_name: accessguard-ml-service
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8001:8001'
+    networks:
+      - accessguard-net
+
+  accesslog-service:
+    build:
+      context: ./accesslog-main
+      dockerfile: Dockerfile.standalone
+    container_name: accessguard-accesslog-service
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8002:8002'
+      - '5514:5514'
+    networks:
+      - accessguard-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: accessguard-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://accessguard_lab:research-local-only@postgres:5432/accessguard_lab
+      ML_SERVICE_URL: http://ml-service:8001
+      ACCESSLOG_SERVICE_URL: http://accesslog-service:8002
+    ports:
+      - '127.0.0.1:8000:8000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+      accesslog-service:
+        condition: service_started
+    networks:
+      - accessguard-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: accessguard-frontend
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:5173:80'
+    depends_on:
+      - backend
+    networks:
+      - accessguard-net
 
 volumes:
   accessguard_complete_pgdata:
+
+networks:
+  accessguard-net:
+    driver: bridge
