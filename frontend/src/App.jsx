@@ -1597,19 +1597,23 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
         >
           <div className="table-wrap">
             <table>
-              <thead><tr><th>DEVICE HOSTNAME</th><th>SOURCE IP</th><th>PLATFORM</th><th>STATUS</th></tr></thead>
+              <thead><tr><th>DEVICE HOSTNAME</th><th>SOURCE IP</th><th>EVENTS</th><th>LAST SEEN</th><th>STATUS</th></tr></thead>
               <tbody>
                 {accesslogDevices.map(d => (
-                  <tr key={d.device_id}>
-                    <td><strong>{d.device_id || d.hostname}</strong></td>
-                    <td className="mono">{d.source_ip || '10.77.0.4'}</td>
+                  <tr key={d.device_id || d.hostname}>
+                    <td>
+                      <strong>{d.hostname || d.device_id}</strong>
+                      <small style={{ display: 'block', color: '#888' }}>{d.source || 'syslog'}</small>
+                    </td>
+                    <td className="mono">{d.source_ip || '—'}</td>
+                    <td>{d.event_count?.toLocaleString() || 0}</td>
+                    <td style={{ fontSize: 11 }}>{d.last_seen ? new Date(d.last_seen).toLocaleTimeString() : 'Recently'}</td>
                     <td>
                       <Badge
-                        value={d.os || (d.hostname?.toLowerCase().includes('win') ? 'Windows' : 'Linux')}
-                        tone="purple"
+                        value={d.status === 'active' ? 'Active' : 'Inactive'}
+                        tone={d.status === 'active' ? 'active' : 'neutral'}
                       />
                     </td>
-                    <td><Badge value={d.status || 'Active'} tone="active" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -1649,14 +1653,23 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
           </div>
           <div className="table-wrap" style={{ maxHeight: 420, overflowY: 'auto' }}>
             <table>
-              <thead><tr><th>TIMESTAMP</th><th>ENDPOINT</th><th>EVENT</th><th>IDENTITY / USER</th><th>STATUS</th></tr></thead>
+              <thead><tr><th>TIMESTAMP</th><th>DEVICE / HOST</th><th>USER</th><th>EVENT / ACTION</th><th>IP</th><th>STATUS</th></tr></thead>
               <tbody>
-                {filteredEvents.slice(0, 50).map((e, idx) => (
+                {filteredEvents.slice(0, 100).map((e, idx) => (
                   <tr key={idx}>
-                    <td className="mono" style={{ fontSize: 11 }}>{e.occurred_at ? new Date(e.occurred_at).toLocaleTimeString() : 'Recent'}</td>
-                    <td><span className="mono" style={{ color: '#7045ce' }}>{e.device_id}</span></td>
-                    <td>{e.event_type || e.action || 'AUTH_EVENT'}</td>
-                    <td><strong>{e.username || 'system'}</strong></td>
+                    <td className="mono" style={{ fontSize: 11 }}>
+                      {e.occurred_at ? new Date(e.occurred_at).toLocaleTimeString() : 'Recent'}
+                    </td>
+                    <td>
+                      <strong style={{ color: '#7045ce' }}>{e.hostname || e.device_id}</strong>
+                      <small style={{ display: 'block', color: '#888' }}>{e.source || 'syslog'}</small>
+                    </td>
+                    <td><strong>{e.user_id || e.username || 'admin'}</strong></td>
+                    <td>
+                      <span>{e.event_type}</span>
+                      {e.raw_message && <small style={{ display: 'block', color: '#666', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.raw_message}</small>}
+                    </td>
+                    <td className="mono" style={{ fontSize: 11 }}>{e.source_ip || '—'}</td>
                     <td>
                       <Badge
                         value={e.severity === 'warning' || e.event_type?.includes('FAIL') ? 'Failure' : 'Success'}

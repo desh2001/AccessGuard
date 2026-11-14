@@ -129,7 +129,26 @@ def check_accesslog_health() -> dict[str, Any]:
 
 
 def get_accesslog_summary() -> dict[str, Any]:
-    """Retrieve aggregate telemetry overview from Dialog Access Log."""
+    """Retrieve aggregate telemetry overview from Sentinel VPS (or local fallback)."""
+    token = os.getenv('SENTINEL_INGESTION_TOKEN', SENTINEL_INGESTION_TOKEN)
+
+    # 1. Try Sentinel Cloud VPS stats endpoint
+    if token:
+        try:
+            with httpx.Client(timeout=3.0) as client:
+                res = client.get(
+                    f"{SENTINEL_API_URL}/api/v1/logs/stats",
+                    headers={"Authorization": f"Bearer {token}"}
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    data['online'] = True
+                    data['mode'] = 'sentinel-cloud-vps'
+                    return data
+        except Exception:
+            pass
+
+    # 2. Local container fallback
     url = f"{ACCESSLOG_SERVICE_URL}/api/summary"
     try:
         with httpx.Client(timeout=2.0) as client:
@@ -144,8 +163,8 @@ def get_accesslog_summary() -> dict[str, Any]:
 
     # Clean fallback summary
     return {
-        'online': False,
-        'mode': 'live-stream-ready',
+        'online': bool(token),
+        'mode': 'sentinel-ready',
         'total_events': 0,
         'failed_logins_24h': 0,
         'active_devices_15m': 0,
@@ -161,19 +180,22 @@ def get_accesslog_devices() -> list[dict[str, Any]]:
 
     # 1. Pull from Sentinel Cloud VPS if token available
     if token:
-        try:
-            with httpx.Client(timeout=3.5) as client:
-                res = client.get(
-                    f"{SENTINEL_API_URL}/api/v1/devices",
-                    headers={"Authorization": f"Bearer {token}"}
-                )
-                if res.status_code == 200:
-                    devices = res.json()
-                    for d in devices:
-                        d['os'] = 'Windows' if any(w in (d.get('hostname', '') + d.get('device_id', '')).lower() for w in ['win', 'desktop', 'laptop', 'wfh']) else 'Linux'
-                    return devices
-        except Exception:
-            pass
+        for ep in ['/api/v1/devices', '/api/devices']:
+            try:
+                with httpx.Client(timeout=3.5) as client:
+                    res = client.get(
+                        f"{SENTINEL_API_URL}{ep}",
+                        headers={"Authorization": f"Bearer {token}"}
+                    )
+                    if res.status_code == 200:
+                        devices = res.json()
+                        if isinstance(devices, list):
+                            for d in devices:
+                                host_str = f"{d.get('hostname', '')} {d.get('device_id', '')}".lower()
+                                d['os'] = 'Windows' if any(w in host_str for w in ['win', 'desktop', 'laptop', 'wfh']) else 'Linux'
+                            return devices
+            except Exception:
+                pass
 
     # 2. Local container fallback
     url = f"{ACCESSLOG_SERVICE_URL}/api/devices"
@@ -188,41 +210,61 @@ def get_accesslog_devices() -> list[dict[str, Any]]:
     return FALLBACK_DEVICES
 
 
-def get_accesslog_events(limit: int = 100, device: str = '', event_type: str = '') -> list[dict[str, Any]]:
+def get_accesslog_events(limit: int = 100, device: str = '', event_type: str = '', source: str = '') -> list[dict[str, Any]]:
     """Retrieve recent live events from Sentinel VPS (Pull) or local daemon."""
     token = os.getenv('SENTINEL_INGESTION_TOKEN', SENTINEL_INGESTION_TOKEN)
 
-    # 1. Pull from Sentinel Cloud VPS (fetch all host logs)
+    # 1. Pull from Sentinel Cloud VPS (both /api/v1/logs and fallback /api/events)
     if token:
-        try:
-            params = {"limit": limit}
-            with httpx.Client(timeout=4.0) as client:
-                res = client.get(
-                    f"{SENTINEL_API_URL}/api/v1/logs",
-                    headers={"Authorization": f"Bearer {token}"},
-                    params=params
-                )
-                if res.status_code == 200:
-                    events = res.json()
-                    formatted = []
-                    for e in events:
-                        meta = e.get('metadata') or {}
-                        formatted.append({
-                            "id": e.get('id') or e.get('_id'),
-                            "device_id": e.get('device_id') or e.get('hostname') or 'host-pc',
-                            "username": e.get('username') or e.get('user_id') or 'user',
-                            "event_type": e.get('event_type') or 'LOGIN',
-                            "action": e.get('action') or e.get('event_type') or 'AUTH',
-                            "source_ip": meta.get('ip_address') or e.get('source_ip') or '10.77.0.4',
-                            "severity": e.get('severity') or 'info',
-                            "raw_message": e.get('message') or e.get('raw_message') or str(e),
-                            "occurred_at": e.get('created_at') or e.get('timestamp') or e.get('occurred_at') or now_utc().isoformat(),
-                            "os": meta.get('os') or ('Windows' if 'win' in str(e.get('device_id', '')).lower() else 'Linux')
-                        })
-                    if formatted:
-                        return formatted
-        except Exception:
-            pass
+        params: dict[str, Any] = {"limit": limit}
+        if device:
+            params['device_id'] = device
+        if event_type and event_type != 'All':
+            params['event_type'] = event_type
+        if source:
+            params['source'] = source
+
+        for ep in ['/api/v1/logs', '/api/events']:
+            try:
+                with httpx.Client(timeout=4.0) as client:
+                    res = client.get(
+                        f"{SENTINEL_API_URL}{ep}",
+                        headers={"Authorization": f"Bearer {token}"},
+                        params=params
+                    )
+                    if res.status_code == 200:
+                        events = res.json()
+                        if isinstance(events, list):
+                            formatted = []
+                            for e in events:
+                                meta = e.get('metadata') or {}
+                                dev_id = e.get('device_id') or e.get('hostname') or 'DESKTOP-94VVCV1'
+                                user = e.get('user_id') or e.get('username') or 'admin'
+                                ev_type = e.get('event_type') or 'LOGIN'
+                                action = e.get('action') or ev_type
+                                ip = e.get('source_ip') or meta.get('ip_address') or '10.77.0.4'
+                                msg = e.get('raw_message') or e.get('message') or f"Event {action} on {dev_id}"
+                                occurred = e.get('occurred_at') or e.get('received_at') or e.get('created_at') or now_utc().isoformat()
+                                sev = e.get('severity') or ('warning' if 'fail' in ev_type.lower() else 'info')
+                                
+                                formatted.append({
+                                    "id": e.get('id') or e.get('_id'),
+                                    "device_id": dev_id,
+                                    "hostname": e.get('hostname') or dev_id,
+                                    "user_id": user,
+                                    "username": user,
+                                    "event_type": ev_type,
+                                    "action": action,
+                                    "source": e.get('source') or 'syslog',
+                                    "source_ip": ip,
+                                    "severity": sev,
+                                    "raw_message": msg,
+                                    "occurred_at": occurred,
+                                    "os": 'Windows' if 'win' in dev_id.lower() or 'desktop' in dev_id.lower() else 'Linux',
+                                })
+                            return formatted
+            except Exception:
+                pass
 
     # 2. Local container fallback
     url = f"{ACCESSLOG_SERVICE_URL}/api/events"

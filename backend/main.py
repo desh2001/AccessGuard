@@ -819,9 +819,9 @@ def accesslog_summary():
 
 
 @app.get('/api/accesslog/events')
-def accesslog_events(limit: int = Query(50, ge=1, le=200), device: str = '', event_type: str = ''):
+def accesslog_events(limit: int = Query(100, ge=1, le=1000), device: str = '', event_type: str = '', source: str = ''):
     from accesslog_client import get_accesslog_events
-    return get_accesslog_events(limit=limit, device=device, event_type=event_type)
+    return get_accesslog_events(limit=limit, device=device, event_type=event_type, source=source)
 
 
 @app.get('/api/accesslog/devices')
