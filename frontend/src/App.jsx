@@ -1496,6 +1496,16 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
   const [sentinelToken, setSentinelToken] = useState('');
   const [testingStream, setTestingStream] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [autoPull, setAutoPull] = useState(true);
+
+  // Auto-pull logs & devices every 5 seconds
+  useEffect(() => {
+    if (!autoPull) return;
+    const interval = setInterval(() => {
+      refresh();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [autoPull, refresh]);
 
   const filteredEvents = (accesslogEvents || []).filter(e => {
     const matchesDev = deviceFilter === 'All' || e.device_id === deviceFilter;
@@ -1631,11 +1641,21 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
         {/* Live Syslog Stream Panel */}
         <Panel
           title="Universal Syslog & Authentication Stream"
-          description="Live events pulled from Sentinel Event Explorer"
+          description={autoPull ? "Realtime live streaming from Sentinel (auto-refreshing every 5s)" : "Live events pulled from Sentinel Event Explorer"}
           action={
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                type="button"
+                className={autoPull ? "btn-soft-green small" : "btn-light small"}
+                onClick={() => setAutoPull(!autoPull)}
+                title={autoPull ? "Auto-pull is ACTIVE (polling every 5s)" : "Auto-pull is PAUSED"}
+                style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+              >
+                <span className="online-dot" style={{ background: autoPull ? '#27a78a' : '#888' }} />
+                {autoPull ? 'Auto-Pull ON (5s)' : 'Auto-Pull OFF'}
+              </button>
               <button className="btn-light small" onClick={async () => { await refresh(); showToast('Logs refreshed from Sentinel host!'); }}>
-                <RefreshCw size={12} /> Pull Logs
+                <RefreshCw size={12} /> Pull Now
               </button>
               <button className="btn-primary small" onClick={syncAccessLog} disabled={busy === 'accesslog-sync'}>
                 <RefreshCw size={12} className={busy === 'accesslog-sync' ? 'spin' : ''} /> Sync to Activity DB
