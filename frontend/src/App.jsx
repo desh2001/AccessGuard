@@ -1629,9 +1629,14 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
           title="Universal Syslog & Authentication Stream"
           description="Live events pulled from Sentinel Event Explorer"
           action={
-            <button className="btn-light small" onClick={syncAccessLog} disabled={busy === 'accesslog-sync'}>
-              <RefreshCw size={12} className={busy === 'accesslog-sync' ? 'spin' : ''} /> Sync to Activity DB
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-light small" onClick={async () => { await refresh(); showToast('Logs refreshed from Sentinel host!'); }}>
+                <RefreshCw size={12} /> Pull Logs
+              </button>
+              <button className="btn-primary small" onClick={syncAccessLog} disabled={busy === 'accesslog-sync'}>
+                <RefreshCw size={12} className={busy === 'accesslog-sync' ? 'spin' : ''} /> Sync to Activity DB
+              </button>
+            </div>
           }
         >
           <div style={{ marginBottom: 12 }}>

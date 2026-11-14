@@ -776,6 +776,14 @@ class UpdateSentinelTokenBody(BaseModel):
     token: str
 
 
+@app.post('/api/sentinel/sync-now')
+def sync_sentinel_now(db: Session = Depends(get_session)):
+    """Pull all host logs from Sentinel VPS directly into AccessGuard Activity and Evidence DB."""
+    from accesslog_client import sync_accesslog_to_activity
+    res = sync_accesslog_to_activity(db)
+    return res
+
+
 @app.post('/api/sentinel/token')
 def update_sentinel_token(body: UpdateSentinelTokenBody):
     import os
