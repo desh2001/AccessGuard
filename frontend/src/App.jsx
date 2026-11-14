@@ -395,7 +395,7 @@ export default function App() {
                 {page === 'alerts'       && <Alerts       rows={data.alerts} navigate={navigate} />}
                 {page === 'activity'     && <ActivityPage rows={data.activity} timeline={data.timeline} accesslogEvents={data.accesslogEvents} accesslogDevices={data.accesslogDevices} accesslogSummary={data.accesslogSummary} syncAccessLog={syncAccessLog} busy={busy} />}
                 {page === 'offboarding'  && <Offboarding  rows={data.offboarding} navigate={navigate} />}
-                {page === 'integrations' && <Integrations rows={data.integrations} runs={data.runs} ftpStatus={data.ftpStatus} mlStatus={data.mlStatus} mlPlatforms={data.mlPlatforms} accesslogStatus={data.accesslogStatus} accesslogSummary={data.accesslogSummary} accesslogDevices={data.accesslogDevices} accesslogAlerts={data.accesslogAlerts} syncFtp={syncFtp} pingMl={pingMl} syncAccessLog={syncAccessLog} pingAccessLog={pingAccessLog} busy={busy} />}
+                {page === 'integrations' && <Integrations rows={data.integrations} runs={data.runs} mlStatus={data.mlStatus} pingMl={pingMl} busy={busy} />}
                 {page === 'audit'        && <Audit        rows={data.audit} />}
                 {page === 'reports'      && <Reports      data={data.reports} runs={data.runs} />}
                 {page === 'settings'     && <SettingsPage resetDb={resetDb} busy={busy} />}
@@ -1309,53 +1309,14 @@ function Offboarding({ rows }) {
 
 // ─── Integrations ─────────────────────────────────────────────────────────────
 function Integrations({
-  rows, runs = [], ftpStatus, mlStatus, mlPlatforms,
-  accesslogStatus, accesslogSummary, accesslogDevices = [], accesslogAlerts = [],
-  syncFtp, pingMl, syncAccessLog, pingAccessLog, busy
+  rows, runs = [], mlStatus, pingMl, busy
 }) {
   return <>
     <InfoNote Icon={Cloud}>
-      <strong>Dialog Central Integration Hub:</strong> Live bidirectional bridges connecting <code>dialog-access-log</code> (Pasindu's Syslog & Ingestion Daemon) and <code>Dialog-Project-Final-ML</code> (Hashan's V8 Multi-Platform Isolation Forest Engine).
+      <strong>Machine Learning & Governance Integrations:</strong> Active connections to the <code>Dialog-Project-Final-ML</code> microservice (Aegis V8 Multi-Platform Isolation Forest Engine) and connected enterprise systems. Real-time Syslog & devices are dedicatedly managed under the <strong>Live Devices & Logs</strong> tab.
     </InfoNote>
 
-    <div className="dialog-ecosystem-grid">
-      {/* Dialog Access Log (Syslog + FTP) */}
-      <article className="dialog-eco-card">
-        <div className="dialog-eco-header">
-          <div className="dialog-eco-icon ftp"><HardDrive size={24} /></div>
-          <div>
-            <div className="dialog-eco-title-row">
-              <h3>Dialog Access Log Service</h3>
-              <Badge value={accesslogStatus?.online ? "Online (Live)" : "Local Telemetry"} tone={accesslogStatus?.online ? "active" : "purple"} />
-            </div>
-            <p>Syslog Collector (TCP :5514) · Event API (:8002) · FTP Ingestion</p>
-          </div>
-        </div>
-        <div className="dialog-eco-body">
-          <div className="dialog-eco-stat"><span>Syslog Listener</span><strong>TCP port 5514 (Live)</strong></div>
-          <div className="dialog-eco-stat"><span>REST API</span><strong>{accesslogStatus?.url || 'http://127.0.0.1:8002'}</strong></div>
-          <div className="dialog-eco-stat"><span>Total Syslog Events</span><strong>{accesslogSummary?.total_events?.toLocaleString() || '3,551'} events</strong></div>
-          <div className="dialog-eco-stat"><span>24h Failed Logins</span><strong>{accesslogSummary?.failed_logins_24h || 14} failed attempts</strong></div>
-          <div className="dialog-eco-stat"><span>Observed Devices</span><strong>{accesslogSummary?.devices_seen || accesslogDevices.length || 5} active devices</strong></div>
-          <div className="dialog-eco-stat"><span>Spool Queue</span><strong>{ftpStatus?.spool_files_available?.length || 0} files ready</strong></div>
-        </div>
-        <div className="dialog-eco-footer">
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn-primary" disabled={busy === 'accesslog-sync'} onClick={syncAccessLog}>
-              <RefreshCw size={14} className={busy === 'accesslog-sync' ? 'spin' : ''} />
-              {busy === 'accesslog-sync' ? 'Syncing...' : 'Sync Syslog to Activity'}
-            </button>
-            <button className="btn-light" disabled={busy === 'accesslog-ping'} onClick={pingAccessLog}>
-              <Zap size={14} className={busy === 'accesslog-ping' ? 'spin' : ''} />
-              Ping API
-            </button>
-          </div>
-          <a href="https://github.com/Pasindu115530/dialog-access-log" target="_blank" rel="noreferrer" className="subtle-link">
-            Pasindu's Repo <ExternalLink size={13} />
-          </a>
-        </div>
-      </article>
-
+    <div className="dialog-ecosystem-grid" style={{ gridTemplateColumns: '1fr' }}>
       {/* Dialog Final ML Service */}
       <article className="dialog-eco-card">
         <div className="dialog-eco-header">
@@ -1387,49 +1348,6 @@ function Integrations({
         </div>
       </article>
     </div>
-
-    {/* Monitored Devices from Dialog Access Log */}
-    {accesslogDevices.length > 0 && (
-      <Panel title="Dialog Observed Network Devices (Syslog Collector)" description={`${accesslogDevices.length} network endpoints streaming syslog over port 5514`}>
-        <div className="table-wrap">
-          <table>
-            <thead><tr><th>DEVICE ID</th><th>SOURCE IP</th><th>OBSERVED EVENTS</th><th>LAST SEEN</th><th>STATUS</th></tr></thead>
-            <tbody>
-              {accesslogDevices.map(d => (
-                <tr key={d.device_id}>
-                  <td><strong>{d.device_id}</strong></td>
-                  <td className="mono">{d.source_ip || '—'}</td>
-                  <td>{d.event_count?.toLocaleString() || 0}</td>
-                  <td>{d.last_seen || 'Recently'}</td>
-                  <td><span className={`device-pill ${d.status === 'active' ? 'active' : ''}`}>{d.status === 'active' ? '● Streaming' : '○ Inactive'}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-    )}
-
-    {/* Active Alerts from Dialog Access Log */}
-    {accesslogAlerts.length > 0 && (
-      <Panel title="Dialog Syslog Anomaly Alerts" description="Heuristic failed-login alerts detected by accesslog-main">
-        <div className="risk-list">
-          {accesslogAlerts.map((a, i) => (
-            <div className="risk-item" key={i}>
-              <div className="risk-avatar"><AlertTriangle size={20} /></div>
-              <div className="risk-body">
-                <div className="risk-name">
-                  <strong>{a.user_id}</strong>
-                  <Badge value={`${a.failures} Failures`} tone="critical" />
-                  <span>Device: {a.device_id}</span>
-                </div>
-                <p>Rule: {a.rule} · Last detected: {a.last_seen ? formatDate(a.last_seen) : 'Recently'}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Panel>
-    )}
 
     <Panel title="Recent Connector Snapshots" description="Snapshot provenance and coverage notes">
       {runs.length
