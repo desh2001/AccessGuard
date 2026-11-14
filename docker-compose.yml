@@ -52,6 +52,8 @@ services:
       DATABASE_URL: postgresql+psycopg://accessguard_lab:research-local-only@postgres:5432/accessguard_lab
       ML_SERVICE_URL: http://ml-service:8001
       ACCESSLOG_SERVICE_URL: http://accesslog-service:8002
+      SENTINEL_API_URL: ${SENTINEL_API_URL:-https://host.pasinduudana.me}
+      SENTINEL_INGESTION_TOKEN: ${SENTINEL_INGESTION_TOKEN:-}
     ports:
       - '127.0.0.1:8000:8000'
     depends_on:

@@ -266,6 +266,20 @@ def connect_device(identity_id: str, body: ConnectDeviceBody, db: Session = Depe
     _log(db, 'Security Administrator', 'DEVICE_ACCOUNT_CONNECTED', f'Account #{account.id}',
          f'Connected device/account {account.username} on {system.name} for employee {person.name} ({person.id})')
     db.commit()
+
+    # Stream event to Sentinel Cloud Ingestion API
+    try:
+        from accesslog_client import forward_log_to_sentinel
+        forward_log_to_sentinel(
+            device_id=ext_id,
+            username=account.username,
+            event_type="LOGIN" if body.privilege == 0 else "PRIVILEGE",
+            message=f"Device/Account {account.username} connected for employee {person.name} ({person.id}) with {body.permission} rights",
+            ip="10.77.0.4"
+        )
+    except Exception:
+        pass
+
     return {'ok': True, 'account_id': account.id, 'username': account.username, 'grant_id': grant.id}
 
 
@@ -756,6 +770,30 @@ def ml_status():
 def ml_platforms():
     from ml_client import load_platform_metadata
     return load_platform_metadata()
+
+
+class UpdateSentinelTokenBody(BaseModel):
+    token: str
+
+
+@app.post('/api/sentinel/token')
+def update_sentinel_token(body: UpdateSentinelTokenBody):
+    import os
+    os.environ['SENTINEL_INGESTION_TOKEN'] = body.token.strip()
+    return {'ok': True, 'configured': bool(body.token.strip())}
+
+
+@app.post('/api/sentinel/test-stream')
+def test_stream_to_sentinel():
+    from accesslog_client import forward_log_to_sentinel
+    ok = forward_log_to_sentinel(
+        device_id="WIN-DESKTOP-TEST",
+        username="admin.test",
+        event_type="LOGIN",
+        message="Manual test event dispatched from AccessGuard UI to Sentinel VPS",
+        ip="10.77.0.1"
+    )
+    return {'ok': ok}
 
 
 # ─── Dialog Access Log Service (Pasindu) ──────────────────────────────────────

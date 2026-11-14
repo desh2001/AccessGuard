@@ -386,8 +386,8 @@ export default function App() {
               ? <div className="loading"><RefreshCw size={24} className="spin" /> Loading identity data…</div>
               : data && <>
                 {page === 'overview'     && <Overview     data={data} navigate={navigate} />}
-                {page === 'identities'   && <Identities   data={data.identities} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} refresh={refresh} showToast={showToast} systems={data.integrations} />}
-                {page === 'devices'      && <LiveDevicesAndLogs accesslogDevices={data.accesslogDevices} accesslogEvents={data.accesslogEvents} accesslogSummary={data.accesslogSummary} accesslogStatus={data.accesslogStatus} syncAccessLog={syncAccessLog} pingAccessLog={pingAccessLog} busy={busy} />}
+                {page === 'identities'   && <Identities   data={data.identities} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} refresh={refresh} showToast={showToast} systems={data.integrations} observedDevices={data.accesslogDevices || []} />}
+                {page === 'devices'      && <LiveDevicesAndLogs accesslogDevices={data.accesslogDevices} accesslogEvents={data.accesslogEvents} accesslogSummary={data.accesslogSummary} accesslogStatus={data.accesslogStatus} syncAccessLog={syncAccessLog} pingAccessLog={pingAccessLog} busy={busy} showToast={showToast} refresh={refresh} />}
                 {page === 'accounts'     && <Accounts     rows={data.accounts} suggestions={data.suggestions} identities={data.identities} systems={data.integrations} busy={busy} linkAccount={linkAccount} createAccount={createAccount} />}
                 {page === 'access'       && <Access       data={data.access} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} />}
                 {page === 'risks'        && <Risks        data={data} mlPlatforms={data.mlPlatforms} navigate={navigate} />}
@@ -551,7 +551,7 @@ function Overview({ data, navigate }) {
 }
 
 // ─── Identities ───────────────────────────────────────────────────────────────
-function Identities({ data, search, setSearch, filter, setFilter, refresh, showToast, systems }) {
+function Identities({ data, search, setSearch, filter, setFilter, refresh, showToast, systems, observedDevices = [] }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [connectModalPerson, setConnectModalPerson] = useState(null);
 
@@ -565,12 +565,33 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
   const [manager, setManager] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Connect Device Form State
-  const [devSystem, setDevSystem] = useState('WIN');
+  // Connect Device Form State (Windows & Linux PC only)
+  const [devOs, setDevOs] = useState('Windows'); // 'Windows' or 'Linux'
+  const [selectedObservedDevice, setSelectedObservedDevice] = useState('');
   const [devUsername, setDevUsername] = useState('');
   const [devPermission, setDevPermission] = useState('User');
-  const [devResource, setDevResource] = useState('Standard Workstation');
+  const [devResource, setDevResource] = useState('Corporate Laptop');
   const [devPrivilege, setDevPrivilege] = useState(0);
+
+  // Filter observed devices from Syslog stream by selected OS
+  const availableDevices = useMemo(() => {
+    return (observedDevices || []).filter(d => {
+      const isWin = (d.os === 'Windows') || d.device_id?.toLowerCase().includes('win') || d.name?.toLowerCase().includes('windows');
+      return devOs === 'Windows' ? isWin : !isWin;
+    });
+  }, [observedDevices, devOs]);
+
+  const onSelectDevice = (devId) => {
+    setSelectedObservedDevice(devId);
+    const found = observedDevices.find(d => d.device_id === devId);
+    if (found) {
+      setDevResource(`${found.device_id} (${found.source_ip})`);
+      if (!devUsername && connectModalPerson) {
+        const parts = connectModalPerson.email.split('@')[0];
+        setDevUsername(parts || 'user');
+      }
+    }
+  };
 
   const handleCreateEmployee = async (e) => {
     e.preventDefault();
@@ -612,22 +633,24 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
       return;
     }
     setSubmitting(true);
+    const systemId = devOs === 'Windows' ? 'WIN' : 'LIN';
     try {
       await request(`/identities/${connectModalPerson.id}/connect-device`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           identity_id: connectModalPerson.id,
-          system_id: devSystem,
+          system_id: systemId,
           username: devUsername,
           permission: devPermission,
           resource: devResource,
           privilege: Number(devPrivilege),
         }),
       });
-      showToast(`Device/Account connected to ${connectModalPerson.name}!`);
+      showToast(`${devOs} PC/Account connected to ${connectModalPerson.name}!`);
       setConnectModalPerson(null);
       setDevUsername('');
+      setSelectedObservedDevice('');
       await refresh();
     } catch (err) {
       showToast(`Failed to connect device: ${err.message}`, false);
@@ -793,30 +816,99 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
               Binding technical endpoint to <strong>{connectModalPerson.name}</strong> ({connectModalPerson.id}).
             </p>
             <form onSubmit={handleConnectDevice} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* OS Selection: Only Windows & Linux */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Target System / Platform</label>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Operating System (PC / Host Platform) *</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setDevOs('Windows'); setSelectedObservedDevice(''); }}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: devOs === 'Windows' ? '2px solid #7045ce' : '1px solid #ddd',
+                      background: devOs === 'Windows' ? '#f4efff' : '#fff',
+                      fontWeight: 600,
+                      color: devOs === 'Windows' ? '#5a2ec2' : '#444',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <HardDrive size={16} /> Windows OS (WFH / AD)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDevOs('Linux'); setSelectedObservedDevice(''); }}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: devOs === 'Linux' ? '2px solid #7045ce' : '1px solid #ddd',
+                      background: devOs === 'Linux' ? '#f4efff' : '#fff',
+                      fontWeight: 600,
+                      color: devOs === 'Linux' ? '#5a2ec2' : '#444',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Server size={16} /> Linux OS (Server / Workstation)
+                  </button>
+                </div>
+              </div>
+
+              {/* Select from Live Discovered Syslog Devices */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                  Select Discovered {devOs} Device (from Live Syslog Stream)
+                </label>
                 <select
-                  value={devSystem}
-                  onChange={e => setDevSystem(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  value={selectedObservedDevice}
+                  onChange={e => onSelectDevice(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1px solid #ddd' }}
                 >
-                  <option value="WIN">Windows Active Directory (win-dc01)</option>
-                  <option value="LIN">Linux Server Cluster (linux-bastion)</option>
-                  <option value="VPN">Dialog Corporate VPN Gateway</option>
-                  <option value="GH">GitHub Enterprise Organization</option>
-                  <option value="AWS">AWS Cloud Environment</option>
+                  <option value="">-- Manual Hostname Entry / Select Streamed Device --</option>
+                  {availableDevices.map(d => (
+                    <option key={d.device_id} value={d.device_id}>
+                      {d.device_id} — IP: {d.source_ip} ({d.status || 'Active'})
+                    </option>
+                  ))}
                 </select>
+                {availableDevices.length === 0 && (
+                  <span style={{ fontSize: 11, color: '#888', marginTop: 4, display: 'block' }}>
+                    No live {devOs} devices detected on port 5514 yet. You can still type the IP/Hostname below.
+                  </span>
+                )}
               </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Technical Username or Device Hostname *</label>
-                <input
-                  required
-                  placeholder="e.g. jdoe, jdoe-laptop, or root"
-                  value={devUsername}
-                  onChange={e => setDevUsername(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
-                />
+
+              {/* Technical Username / Device Hostname */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Technical Username / Account *</label>
+                  <input
+                    required
+                    placeholder="e.g. kasun.f or root"
+                    value={devUsername}
+                    onChange={e => setDevUsername(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Device IP / Hostname *</label>
+                  <input
+                    required
+                    placeholder="e.g. 10.77.0.12 or win-dc01"
+                    value={devResource}
+                    onChange={e => setDevResource(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
               </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Permission Level</label>
@@ -829,25 +921,24 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
                     style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
                   >
                     <option value="User">User / Standard Access</option>
-                    <option value="Admin">Domain / Local Admin</option>
-                    <option value="Root">Root / Sudoer</option>
-                    <option value="Maintainer">Maintainer / Write</option>
+                    <option value="Admin">Domain / Local Administrator</option>
+                    <option value="Root">Root / Sudoer Privileges</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Assigned Resource</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Connection Mode</label>
                   <input
-                    placeholder="e.g. Corp-Laptop or Production-DB"
-                    value={devResource}
-                    onChange={e => setDevResource(e.target.value)}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                    disabled
+                    value={devOs === 'Windows' ? 'WFH Syslog / AD Agent' : 'Syslog TCP / SSH Auth'}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #eee', background: '#f9f9f9', color: '#666' }}
                   />
                 </div>
               </div>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
                 <button type="button" className="btn-light" onClick={() => setConnectModalPerson(null)}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? 'Connecting...' : 'Connect to Employee'}
+                  {submitting ? 'Connecting...' : `Connect ${devOs} Device`}
                 </button>
               </div>
             </form>
@@ -1399,45 +1490,125 @@ function Audit({ rows }) {
 }
 
 // ─── Live Devices & Logs Dedicated Tab ───────────────────────────────────────
-function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], accesslogSummary, accesslogStatus, syncAccessLog, pingAccessLog, busy }) {
+function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], accesslogSummary, accesslogStatus, syncAccessLog, pingAccessLog, busy, showToast, refresh }) {
   const [logSearch, setLogSearch] = useState('');
   const [deviceFilter, setDeviceFilter] = useState('All');
+  const [sentinelToken, setSentinelToken] = useState('');
+  const [testingStream, setTestingStream] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   const filteredEvents = (accesslogEvents || []).filter(e => {
     const matchesDev = deviceFilter === 'All' || e.device_id === deviceFilter;
-    const matchesSearch = [e.device_id, e.event_type, e.username, e.src_ip, e.raw_message].join(' ').toLowerCase().includes(logSearch.toLowerCase());
+    const matchesSearch = [e.device_id, e.event_type, e.username, e.source_ip, e.raw_message].join(' ').toLowerCase().includes(logSearch.toLowerCase());
     return matchesDev && matchesSearch;
   });
+
+  const handleSaveToken = async (e) => {
+    e.preventDefault();
+    try {
+      await request('/sentinel/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: sentinelToken })
+      });
+      showToast('Sentinel Ingestion Token saved! Live pull & push active.');
+      setShowConfig(false);
+      await refresh();
+    } catch (err) {
+      showToast(`Failed: ${err.message}`, false);
+    }
+  };
+
+  const handleTestEvent = async () => {
+    setTestingStream(true);
+    try {
+      const res = await request('/sentinel/test-stream', { method: 'POST' });
+      if (res.ok) {
+        showToast('Live test log pushed successfully to https://host.pasinduudana.me!');
+      } else {
+        showToast('Stream dispatched. Verify token in Sentinel Settings if not visible.', true);
+      }
+      await refresh();
+    } catch (err) {
+      showToast(`Test failed: ${err.message}`, false);
+    } finally {
+      setTestingStream(false);
+    }
+  };
 
   return (
     <>
       <div className="stat-grid four">
-        <StatCard label="Syslog Ingestion Listener" value={accesslogStatus?.online ? "Active (Port 5514)" : "Port 5514 Listening"} Icon={Server} tone="teal" hint="TCP daemon streaming" />
-        <StatCard label="Observed Devices" value={accesslogDevices.length} Icon={HardDrive} tone="purple" hint="Network endpoints seen" />
-        <StatCard label="Total Syslog Events" value={accesslogSummary?.total_events || 0} Icon={Activity} tone="teal" hint="Normalized syslog entries" />
-        <StatCard label="24h Failed Logins" value={accesslogSummary?.failed_logins_24h || 0} Icon={AlertTriangle} tone="pink" hint="Potential intrusion attempts" />
+        <StatCard
+          label="Sentinel Cloud Ingestion"
+          value={accesslogStatus?.online ? "Connected (VPS)" : "Cloud API Ready"}
+          Icon={Server}
+          tone="teal"
+          hint="https://host.pasinduudana.me"
+        />
+        <StatCard label="Discovered Devices" value={accesslogDevices.length} Icon={HardDrive} tone="purple" hint="Live Windows & Linux PCs" />
+        <StatCard label="Total Streamed Events" value={accesslogEvents.length || accesslogSummary?.total_events || 0} Icon={Activity} tone="teal" hint="Universal API stream" />
+        <StatCard label="24h Failed Logins" value={accesslogEvents.filter(e => e.event_type?.includes('FAIL')).length} Icon={AlertTriangle} tone="pink" hint="Potential intrusion attempts" />
       </div>
+
+      {/* Sentinel VPS Ingestion Toolbar */}
+      <div style={{ background: '#fff', padding: '14px 20px', borderRadius: 10, border: '1px solid #e5e3ec', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="online-dot" style={{ background: accesslogStatus?.online ? '#27a78a' : '#edae36' }} />
+          <div>
+            <strong style={{ fontSize: 13, display: 'block' }}>Sentinel Ingestion Endpoint: <code>https://host.pasinduudana.me/api/v1/logs/ingest</code></strong>
+            <span style={{ fontSize: 11, color: '#666' }}>Pulls live network devices and streams employee workstation events in real-time</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="btn-light small" onClick={() => setShowConfig(!showConfig)}>
+            <KeyRound size={13} /> {showConfig ? 'Close Token Config' : 'Configure Ingestion Token'}
+          </button>
+          <button className="btn-primary small" onClick={handleTestEvent} disabled={testingStream}>
+            <Zap size={13} className={testingStream ? 'spin' : ''} />
+            {testingStream ? 'Sending Event...' : 'Push Test Log to Sentinel'}
+          </button>
+        </div>
+      </div>
+
+      {/* Token Input Dropdown */}
+      {showConfig && (
+        <form onSubmit={handleSaveToken} style={{ background: '#f8f7fd', padding: 16, borderRadius: 8, border: '1px dashed #7045ce', marginBottom: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
+          <input
+            placeholder="Paste your token here: sentinel_ingest_xxxxxxxxxxxx"
+            value={sentinelToken}
+            onChange={e => setSentinelToken(e.target.value)}
+            style={{ flex: 1, padding: '9px 12px', borderRadius: 6, border: '1px solid #ccc', fontSize: 13, fontFamily: 'monospace' }}
+          />
+          <button type="submit" className="btn-primary small">Save Token</button>
+        </form>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, marginBottom: 24 }}>
         {/* Network Devices Panel */}
         <Panel
-          title="Monitored Network Endpoints"
-          description={`${accesslogDevices.length} endpoints discovered`}
+          title="Sentinel Monitored Network Endpoints"
+          description={`${accesslogDevices.length} live host endpoints discovered`}
           action={
             <button className="btn-light small" onClick={pingAccessLog} disabled={busy === 'accesslog-ping'}>
-              <RefreshCw size={12} className={busy === 'accesslog-ping' ? 'spin' : ''} /> Ping Listener
+              <RefreshCw size={12} className={busy === 'accesslog-ping' ? 'spin' : ''} /> Refresh Devices
             </button>
           }
         >
           <div className="table-wrap">
             <table>
-              <thead><tr><th>DEVICE HOSTNAME</th><th>SOURCE IP</th><th>EVENTS</th><th>STATUS</th></tr></thead>
+              <thead><tr><th>DEVICE HOSTNAME</th><th>SOURCE IP</th><th>PLATFORM</th><th>STATUS</th></tr></thead>
               <tbody>
                 {accesslogDevices.map(d => (
                   <tr key={d.device_id}>
-                    <td><strong>{d.device_id}</strong></td>
-                    <td className="mono">{d.source_ip}</td>
-                    <td>{d.event_count}</td>
+                    <td><strong>{d.device_id || d.hostname}</strong></td>
+                    <td className="mono">{d.source_ip || '10.77.0.4'}</td>
+                    <td>
+                      <Badge
+                        value={d.os || (d.hostname?.toLowerCase().includes('win') ? 'Windows' : 'Linux')}
+                        tone="purple"
+                      />
+                    </td>
                     <td><Badge value={d.status || 'Active'} tone="active" /></td>
                   </tr>
                 ))}
@@ -1446,8 +1617,8 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
             {accesslogDevices.length === 0 && (
               <div className="empty" style={{ padding: 24 }}>
                 <Server size={28} />
-                <b>No devices observed yet</b>
-                <span>Stream TCP syslog packets to port 5514 or link a device under an employee to monitor.</span>
+                <b>No endpoints pulled from Sentinel yet</b>
+                <span>Configure your Ingestion Token above to pull live devices from host.pasinduudana.me</span>
               </div>
             )}
           </div>
@@ -1455,10 +1626,10 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
 
         {/* Live Syslog Stream Panel */}
         <Panel
-          title="Live Syslog Event Stream"
-          description="Normalized events streamed from Pasindu's accesslog-main daemon"
+          title="Universal Syslog & Authentication Stream"
+          description="Live events pulled from Sentinel Event Explorer"
           action={
-            <button className="btn-primary small" onClick={syncAccessLog} disabled={busy === 'accesslog-sync'}>
+            <button className="btn-light small" onClick={syncAccessLog} disabled={busy === 'accesslog-sync'}>
               <RefreshCw size={12} className={busy === 'accesslog-sync' ? 'spin' : ''} /> Sync to Activity DB
             </button>
           }
@@ -1477,14 +1648,14 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
               <tbody>
                 {filteredEvents.slice(0, 50).map((e, idx) => (
                   <tr key={idx}>
-                    <td className="mono" style={{ fontSize: 11 }}>{e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : 'Recent'}</td>
-                    <td><span className="mono" style={{ color: '#7045ce' }}>{e.device_id || e.src_ip}</span></td>
+                    <td className="mono" style={{ fontSize: 11 }}>{e.occurred_at ? new Date(e.occurred_at).toLocaleTimeString() : 'Recent'}</td>
+                    <td><span className="mono" style={{ color: '#7045ce' }}>{e.device_id}</span></td>
                     <td>{e.event_type || e.action || 'AUTH_EVENT'}</td>
-                    <td><strong>{e.username || e.user || 'system'}</strong></td>
+                    <td><strong>{e.username || 'system'}</strong></td>
                     <td>
                       <Badge
-                        value={e.outcome || (e.event_type?.includes('FAIL') ? 'Failure' : 'Success')}
-                        tone={e.outcome === 'Failure' || e.event_type?.includes('FAIL') ? 'critical' : 'active'}
+                        value={e.severity === 'warning' || e.event_type?.includes('FAIL') ? 'Failure' : 'Success'}
+                        tone={e.severity === 'warning' || e.event_type?.includes('FAIL') ? 'critical' : 'active'}
                       />
                     </td>
                   </tr>
@@ -1492,7 +1663,7 @@ function LiveDevicesAndLogs({ accesslogDevices = [], accesslogEvents = [], acces
                 {filteredEvents.length === 0 && (
                   <tr>
                     <td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#888' }}>
-                      No live events received yet. Stream TCP syslog messages to port 5514.
+                      No events received yet. Click "Push Test Log to Sentinel" to verify ingestion.
                     </td>
                   </tr>
                 )}

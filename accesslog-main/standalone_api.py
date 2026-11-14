@@ -106,6 +106,15 @@ def get_alerts():
     ]
 
 
+def detect_os(raw_msg: str, dev_id: str) -> str:
+    lower = f"{raw_msg} {dev_id}".lower()
+    if any(k in lower for k in ['windows', 'event 4624', 'event 4625', 'microsoft', 'wfh', 'win-', 'active directory', 'logon type']):
+        return 'Windows'
+    if any(k in lower for k in ['linux', 'sudo', 'sshd', 'pts/', 'systemd', 'nginx', 'bash', 'ubuntu', 'debian', 'centos', 'bastion']):
+        return 'Linux'
+    return 'Windows' if 'win' in dev_id.lower() else 'Linux'
+
+
 # Optional Background Syslog Server (Port 5514)
 class SyslogHandler(socketserver.StreamRequestHandler):
     def handle(self):
@@ -114,14 +123,39 @@ class SyslogHandler(socketserver.StreamRequestHandler):
                 s = raw.decode("utf-8", errors="replace").strip()
                 if not s:
                     continue
+                
+                src_ip = self.client_address[0]
+                os_type = detect_os(s, src_ip)
+                dev_id = f"{os_type.lower()}-{src_ip.replace('.', '-')}.corp.dialog.lk"
+
+                # Update or register device in DEVICES list
+                existing = next((d for d in DEVICES if d.get('source_ip') == src_ip), None)
+                if existing:
+                    existing['event_count'] = existing.get('event_count', 0) + 1
+                    existing['last_seen'] = datetime.now(timezone.utc).isoformat()
+                    existing['status'] = 'active'
+                    existing['os'] = os_type
+                else:
+                    DEVICES.append({
+                        'device_id': dev_id,
+                        'name': f"{os_type} PC / Server ({src_ip})",
+                        'source_ip': src_ip,
+                        'os': os_type,
+                        'status': 'active',
+                        'event_count': 1,
+                        'last_seen': datetime.now(timezone.utc).isoformat(),
+                    })
+
                 ev = {
                     "id": len(EVENTS) + 1,
-                    "device_id": self.client_address[0],
-                    "user_id": "syslog-client",
-                    "event_type": "OBSERVED",
-                    "action": "OBSERVED",
-                    "severity": "info",
-                    "source_ip": self.client_address[0],
+                    "device_id": dev_id,
+                    "device_name": f"{os_type} ({src_ip})",
+                    "os": os_type,
+                    "user_id": "syslog-user",
+                    "event_type": "LOGIN_FAILED" if any(f in s.lower() for f in ['failed', '4625', 'failure']) else "LOGIN_SUCCESS",
+                    "action": "AUTH_EVENT",
+                    "severity": "warning" if "fail" in s.lower() else "info",
+                    "source_ip": src_ip,
                     "raw_message": s[:500],
                     "occurred_at": datetime.now(timezone.utc).isoformat(),
                 }
