@@ -1,4 +1,4 @@
-﻿# AccessGuard Master Launcher
+# AccessGuard Master Launcher
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $backend = Join-Path $root 'backend'

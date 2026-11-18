@@ -121,14 +121,12 @@ AccessGuard/
 ├── ml/                             # Dialog Final ML Service (Aegis V8 Multi-Platform)
 │   ├── backend/                    # ML microservice backend & quarterly training pipelines
 │   │   └── ml_artifacts/platforms/ # Trained Windows, Linux, and GitHub Isolation Forest models
-│   ├── frontend/                   # ML specific inspection UI (React / TypeScript)
 │   ├── sample-data/                # Synthetic enterprise access & training datasets
 │   └── docker-compose.yml          # Container configuration for standalone ML stack
 ├── accesslog-main/                 # Dialog Access Log Ingestion Service
 │   ├── standalone_api.py           # Standalone runner for Dialog Access Log API (:8002)
 │   ├── api/                        # FastAPI log explorer API
 │   ├── collector/                  # TCP Syslog listener daemon (port 5514)
-│   ├── frontend/                   # Syslog live event viewer
 │   └── docker-compose.yml          # Stack orchestration for collector and database
 ├── scripts/                        # Automation & startup scripts
 │   ├── start-all.ps1               # Master PowerShell orchestrator for all 4 services
