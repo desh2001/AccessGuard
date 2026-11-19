@@ -110,6 +110,12 @@ def create(x:CompanyIn):
    for p in sorted(set(ps)&set(x.platforms)):
     perm='admin' if dep=='Security' else 'write' if dep in ('Engineering','IT Operations') else 'read';c.execute('INSERT INTO accounts(company,employee,platform,status,permission) VALUES(?,?,?,?,?)',(cid,eid,p,'active',perm));c.executemany('INSERT INTO grants VALUES(?,?,?,?)',[(cid,eid,rid,perm) for rid in resources[p][:3]])
   event(c,co,'enterprise','company.create',x.name,details={'employees':x.count});return co
+@app.delete('/api/companies/{cid}')
+def delete_company(cid:int):
+ with db() as c:
+  company(c,cid)
+  c.execute('DELETE FROM companies WHERE id=?',(cid,))
+  return {'ok':True,'deleted_id':cid}
 @app.get('/api/companies/{cid}/summary')
 def summary(cid:int):
  with db() as c:

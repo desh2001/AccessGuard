@@ -3,7 +3,7 @@ import {
   Activity, AlertTriangle, ArrowRight, CheckCircle2, ChevronRight,
   Clock, Database, Eye, Flame, Play, RefreshCw, RotateCcw,
   Sliders, Terminal, UserCheck, Users, ShieldAlert,
-  Server, Github, Cloud, HardDrive, Check, AlertCircle, Plus, Target
+  Server, Github, Cloud, HardDrive, Check, AlertCircle, Plus, Target, Trash2
 } from 'lucide-react';
 
 export default function TestEnvironmentView({
@@ -170,6 +170,48 @@ export default function TestEnvironmentView({
     }
   };
 
+  // Delete Single Company
+  const deleteCompany = async (targetId, name) => {
+    if (!window.confirm(`Permanently delete virtual company '${name}' (#${targetId}) and all its simulated data?`)) return;
+    setBusy(`del-company-${targetId}`);
+    try {
+      const res = await fetch(`/api/simulator/companies/${targetId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Virtual company '${name}' deleted successfully!`);
+        onRefresh();
+        await loadData();
+      } else {
+        showToast(`Failed: ${data.detail || data.message}`, false);
+      }
+    } catch (e) {
+      showToast(`Error: ${e.message}`, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // Purge ALL Simulated Data
+  const purgeAllSimData = async () => {
+    if (!window.confirm('WARNING: Purge ALL simulated data across all virtual companies from AccessGuard database? Production data remains completely untouched.')) return;
+    setBusy('purge-all');
+    try {
+      const res = await fetch('/api/simulator/purge-all', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('All simulated test data purged from database!');
+        onRefresh();
+        await loadData();
+      } else {
+        showToast(`Failed: ${data.detail}`, false);
+      }
+    } catch (e) {
+      showToast(`Error: ${e.message}`, false);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   // Create & Setup Company Wizard
   const handleWizardSubmit = async (e) => {
     e.preventDefault();
@@ -226,8 +268,11 @@ export default function TestEnvironmentView({
           <button className="btn-primary" onClick={syncNow} disabled={busy} title="Full Inventory Synchronizer">
             <RefreshCw size={15} className={busy === 'sync-inv' ? 'spin' : ''} /> {busy === 'sync-inv' ? 'Syncing…' : 'Sync Inventory'}
           </button>
-          <button className="btn-light" onClick={resetEnv} disabled={busy} style={{ color: 'var(--danger)' }} title="Wipe test data and reset clock">
+          <button className="btn-light" onClick={resetEnv} disabled={busy} style={{ color: 'var(--danger)' }} title="Wipe test data and reset clock for selected company">
             <RotateCcw size={15} /> Reset Test Lab
+          </button>
+          <button className="btn-light" onClick={purgeAllSimData} disabled={busy} style={{ color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2' }} title="Purge ALL simulated entities across all companies from database">
+            <Trash2 size={15} /> Purge All Sim Data
           </button>
         </div>
       </div>
@@ -359,9 +404,20 @@ export default function TestEnvironmentView({
                     <td><span className={`badge ${co.state === 'running' ? 'active' : 'suspended'}`}>{co.state}</span></td>
                     <td style={{ fontSize: '0.82rem' }}>{co.clock ? new Date(co.clock * 1000).toISOString() : '—'}</td>
                     <td>
-                      <button className="btn-light" onClick={() => setSelectedCompanyId(co.id)}>
-                        {co.id === cid ? 'Selected' : 'Switch To'}
-                      </button>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <button className="btn-light" onClick={() => setSelectedCompanyId(co.id)}>
+                          {co.id === cid ? 'Selected' : 'Switch To'}
+                        </button>
+                        <button
+                          className="btn-light"
+                          onClick={() => deleteCompany(co.id, co.name)}
+                          disabled={busy === `del-company-${co.id}`}
+                          style={{ color: '#dc2626', padding: '6px 10px' }}
+                          title="Delete company from simulator and database"
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -668,66 +724,71 @@ export default function TestEnvironmentView({
 
       {/* ─── Setup Wizard Modal ─── */}
       {wizardOpen && (
-        <div className="overlay top" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <form className="card" onSubmit={handleWizardSubmit} style={{ maxWidth: 540, width: '90%', padding: 24 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 8 }}>One-Click Virtual Enterprise Setup</h2>
+        <div className="modal-backdrop" onClick={() => setWizardOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+            <div className="modal-header">
+              <h3>One-Click Virtual Enterprise Setup</h3>
+              <button type="button" className="btn-light" onClick={() => setWizardOpen(false)} style={{ padding: '4px 8px' }}>✕</button>
+            </div>
             <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 20 }}>
               Generate complete synthetic enterprise infrastructure with employees, accounts, and live activity streams.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Enterprise Preset</label>
-                <select
-                  value={wizardForm.count}
-                  onChange={(e) => setWizardForm({ ...wizardForm, count: Number(e.target.value) })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }}
-                >
-                  <option value={100}>Small — 100 employees</option>
-                  <option value={1000}>Medium — 1,000 employees</option>
-                  <option value={10000}>Large — 10,000 employees</option>
-                  <option value={100000}>Enterprise — 100,000 employees</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Company Name</label>
-                <input
-                  required
-                  value={wizardForm.name}
-                  onChange={(e) => setWizardForm({ ...wizardForm, name: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <form onSubmit={handleWizardSubmit}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Industry</label>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Enterprise Preset</label>
+                  <select
+                    value={wizardForm.count}
+                    onChange={(e) => setWizardForm({ ...wizardForm, count: Number(e.target.value) })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #dcd7ea', background: '#faf9fd', color: '#28263d' }}
+                  >
+                    <option value={100}>Small — 100 employees</option>
+                    <option value={1000}>Medium — 1,000 employees</option>
+                    <option value={10000}>Large — 10,000 employees</option>
+                    <option value={100000}>Enterprise — 100,000 employees</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Company Name</label>
                   <input
-                    value={wizardForm.industry}
-                    onChange={(e) => setWizardForm({ ...wizardForm, industry: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }}
+                    required
+                    value={wizardForm.name}
+                    onChange={(e) => setWizardForm({ ...wizardForm, name: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #dcd7ea', background: '#faf9fd', color: '#28263d' }}
                   />
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Events / Sec (EPS)</label>
-                  <input
-                    type="number"
-                    value={wizardForm.eps}
-                    onChange={(e) => setWizardForm({ ...wizardForm, eps: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)' }}
-                  />
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Industry</label>
+                    <input
+                      value={wizardForm.industry}
+                      onChange={(e) => setWizardForm({ ...wizardForm, industry: e.target.value })}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #dcd7ea', background: '#faf9fd', color: '#28263d' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: 4 }}>Events / Sec (EPS)</label>
+                    <input
+                      type="number"
+                      value={wizardForm.eps}
+                      onChange={(e) => setWizardForm({ ...wizardForm, eps: Number(e.target.value) })}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #dcd7ea', background: '#faf9fd', color: '#28263d' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16, borderTop: '1px solid #eee9f7', paddingTop: 14 }}>
+                  <button type="button" className="btn-light" onClick={() => setWizardOpen(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary" disabled={busy === 'wizard-create'}>
+                    {busy === 'wizard-create' ? 'Generating Virtual Enterprise…' : 'Create & Start Test Environment'}
+                  </button>
                 </div>
               </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button type="button" className="btn-light" onClick={() => setWizardOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={busy === 'wizard-create'}>
-                  {busy === 'wizard-create' ? 'Generating Virtual Enterprise…' : 'Create & Start Test Environment'}
-                </button>
-              </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
     </div>

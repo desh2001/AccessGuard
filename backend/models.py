@@ -493,3 +493,35 @@ class TestScenarioResult(Base):
     execution_time_ms: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, nullable=False)
 
+
+class AdminEmailNotificationSetting(Base):
+    """Configuration for automated email notifications to main administrators."""
+    __tablename__ = 'admin_email_settings'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    admin_name: Mapped[str] = mapped_column(String(120), default='Main Security Administrator', nullable=False)
+    admin_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    enabled: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    smtp_host: Mapped[str] = mapped_column(String(120), default='smtp.gmail.com', nullable=False)
+    smtp_port: Mapped[int] = mapped_column(Integer, default=587, nullable=False)
+    smtp_user: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    smtp_password: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Gmail App Password
+    sender_name: Mapped[str] = mapped_column(String(120), default='AccessGuard Security Sentinel', nullable=False)
+    notify_on_high_risk: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    notify_on_attack_detected: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    notify_on_reviews_queued: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, nullable=False)
+
+
+class EmailAlertLog(Base):
+    """Audit log of dispatched automated security notification emails."""
+    __tablename__ = 'email_alert_logs'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    recipient: Mapped[str] = mapped_column(String(255), nullable=False)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default='sent', nullable=False)  # sent, failed, simulated
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trigger_type: Mapped[str] = mapped_column(String(80), nullable=False)  # attack_detection, high_risk, test
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, nullable=False)
+
+

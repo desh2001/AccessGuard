@@ -15,7 +15,7 @@ import logging
 import os
 import random
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
@@ -24,7 +24,9 @@ from sqlalchemy.orm import Session
 
 from models import (
     Identity, System, Account, AccessGrant, Review,
-    AuditLog, ActivityEvent, ConnectorRun, TestScenarioResult, now_utc
+    AuditLog, ActivityEvent, ConnectorRun, TestScenarioResult, now_utc,
+    QuarterlyAccountReview, QuarterlyReviewOutcome, ActivityCoverage,
+    EmployeeTransfer, ADGroupMembershipHistory
 )
 from risk import calculate_risk
 
@@ -572,6 +574,22 @@ SCENARIOS_CATALOG = [
         'description': 'Elevates standard non-technical user to sudo ALL command execution.',
         'expected_behavior': 'Privilege flag raised; access review generated.',
     },
+    {
+        'id': 'scen-log-safe-baseline',
+        'name': 'Generate Safe Routine Activity (Normal Baseline)',
+        'category': 'Activity Telemetry Testing',
+        'platform': 'windows',
+        'description': 'Generates compliant, within-hours successful user activity across Windows, AWS, and Linux. No anomalies triggered.',
+        'expected_behavior': 'Risk score remains normal (Low/Zero risk); ML score remains calibrated near 0.',
+    },
+    {
+        'id': 'scen-log-attack-detection',
+        'name': 'Generate Malicious Access & Anomaly Activity (Employee Caught)',
+        'category': 'Activity Telemetry Testing',
+        'platform': 'aws',
+        'description': 'Simulates an employee breaking role boundaries: multiple failed authentications followed by unauthorized off-hours access and privilege elevation.',
+        'expected_behavior': 'Risk score jumps to High/Critical (60+); employee flagged in Alerts and Access Reviews.',
+    },
 ]
 
 
@@ -585,14 +603,21 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
     plat = scen['platform']
     sys_id = SIMULATOR_SYSTEMS[plat][0]
 
-    # Find a candidate account in simulator
-    account = db.scalar(
+    # Find a candidate account in simulator (randomly pick from eligible accounts so different employees are tested)
+    candidate_accounts = db.scalars(
         select(Account)
-        .where(Account.system_id == sys_id, Account.source == 'EnterpriseSimulator')
-        .order_by(Account.id.desc())
-    )
-    if not account:
+        .where(Account.system_id == sys_id, Account.source == 'EnterpriseSimulator', Account.identity_id.is_not(None))
+    ).all()
+    if not candidate_accounts:
+        # Fallback to any account on system if none have linked identity
+        candidate_accounts = db.scalars(
+            select(Account)
+            .where(Account.system_id == sys_id, Account.source == 'EnterpriseSimulator')
+        ).all()
+    if not candidate_accounts:
         raise ValueError("No simulated accounts found. Please synchronize company inventory first.")
+
+    account = random.choice(candidate_accounts)
 
     identity = db.get(Identity, account.identity_id) if account.identity_id else None
     generated_events = []
@@ -653,6 +678,7 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             )
             db.add(grant)
             db.flush()
+            db.add(Review(grant_id=grant.id, status='Pending'))
             details_map['grant_id'] = grant.id
             details_map['detection_rule'] = 'Privileged Administrator + Cross-Department policy match'
 
@@ -685,6 +711,111 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             ))
             details_map['orphan_account_id'] = orphan_acc.id
             details_map['detection_rule'] = 'Unlinked technical account (+40 risk)'
+
+        elif scenario_id == 'scen-log-safe-baseline':
+            # Generate 5 completely normal, compliant activity logs during work hours
+            now = now_utc()
+            for i in range(5):
+                ev_id = f"sim-{company_id}-safe-{int(time.time()*1000)}-{i}"
+                db.add(ActivityEvent(
+                    account_id=account.id,
+                    occurred_at=now,
+                    action='ROUTINE_LOGIN',
+                    outcome='Success',
+                    ip_address='192.168.1.100',
+                    source='EnterpriseSimulator',
+                    source_event_id=ev_id,
+                    event_type='auth:login_success',
+                    device_id='CORP-WKS-01',
+                    received_at=now,
+                ))
+                generated_events.append(ev_id)
+            detection_result = 'Normal'
+            details_map['risk_score_impact'] = '0 (Remains Low/Safe)'
+            details_map['summary'] = 'Generated 5 compliant routine login events. Zero policy violations.'
+
+        elif scenario_id == 'scen-log-attack-detection':
+            # Generate an attack progression: 3 failed attempts, 1 off-hours success, plus unauthorized cross-dept admin grant
+            now = now_utc()
+            # 1. Failed logins
+            for i in range(3):
+                ev_id = f"sim-{company_id}-fail-{int(time.time()*1000)}-{i}"
+                db.add(ActivityEvent(
+                    account_id=account.id,
+                    occurred_at=now,
+                    action='FAILED_AUTHENTICATION',
+                    outcome='Failure',
+                    ip_address='185.220.101.4',
+                    source='EnterpriseSimulator',
+                    source_event_id=ev_id,
+                    event_type='auth:login_failure',
+                    device_id='CORP-VPN-GW',
+                    received_at=now,
+                ))
+                generated_events.append(ev_id)
+
+            # 2. Suspicious off-hours success from external IP
+            off_id = f"sim-{company_id}-offhour-{int(time.time()*1000)}"
+            db.add(ActivityEvent(
+                account_id=account.id,
+                occurred_at=now.replace(hour=3, minute=15),
+                action='PRIVILEGED_LOGIN',
+                outcome='Success',
+                ip_address='185.220.101.4',
+                source='EnterpriseSimulator',
+                source_event_id=off_id,
+                event_type='auth:unauthorized_elevation',
+                device_id='AWS-PROD-CONSOLE',
+                received_at=now,
+            ))
+            generated_events.append(off_id)
+
+            # 3. Create high-risk cross-department admin permission with inactivity (Score 79 -> High/Critical)
+            attack_grant = AccessGrant(
+                account_id=account.id,
+                permission='AdministratorAccess',
+                resource='Production-Critical-Infrastructure',
+                privilege=1,
+                cross_department=1,
+                last_verified_use=now - timedelta(days=95),
+                status='Active',
+            )
+            db.add(attack_grant)
+            db.flush()
+
+            # Auto-queue into Access Reviews as Pending
+            db.add(Review(grant_id=attack_grant.id, status='Pending'))
+
+            # Trigger automated email notification to Main Admin
+            try:
+                from email_service import (
+                    send_security_alert_email, build_attack_alert_email_template, get_or_create_email_settings
+                )
+                settings = get_or_create_email_settings(db)
+                if settings.enabled and settings.notify_on_attack_detected:
+                    subj, html_b, txt_b = build_attack_alert_email_template(
+                        employee_name=identity.name if identity else account.username,
+                        department=identity.department if identity else 'Unknown',
+                        risk_score=79,
+                        platform=plat,
+                        detection_rule='Unauthorized Role Breach + Off-hours Console Login',
+                        scenario_name=scen['name']
+                    )
+                    send_security_alert_email(
+                        db=db,
+                        subject=subj,
+                        html_content=html_b,
+                        text_content=txt_b,
+                        trigger_type='attack_detection'
+                    )
+            except Exception as mail_ex:
+                logger.warning(f"Failed to dispatch automated attack email: {mail_ex}")
+
+            detection_result = 'Detected'
+            details_map['grant_id'] = attack_grant.id
+            details_map['risk_score_impact'] = 'Jumped to 60+ (High Risk)'
+            details_map['target_employee'] = identity.name if identity else account.username
+            details_map['detection_rule'] = 'Role breach + Cross-Dept Admin + Brute-force/Off-hours activity sequence'
 
     db.commit()
     elapsed_ms = (time.perf_counter() - t_start) * 1000
@@ -800,26 +931,25 @@ def calculate_ml_test_metrics(db: Session, company_id: int) -> dict[str, Any]:
 
 def reset_simulator_environment(db: Session, company_id: int) -> dict[str, Any]:
     """Wipe simulated data from AccessGuard without touching production demo tables."""
-    # 1. Delete Test Scenario Results
-    db.execute(
-        select(TestScenarioResult).where(TestScenarioResult.company_id == company_id)
-    )
     from sqlalchemy import delete
+    # 1. Delete Test Scenario Results
     db.execute(delete(TestScenarioResult).where(TestScenarioResult.company_id == company_id))
 
-    # 2. Delete Activity Events for simulator
-    db.execute(delete(ActivityEvent).where(
-        ActivityEvent.source == 'EnterpriseSimulator',
-        ActivityEvent.source_event_id.like(f"sim-{company_id}-%")
-    ))
-
-    # 3. Find simulated accounts and delete grants & accounts
+    # 2. Find simulated accounts for this company or all simulated systems
     sim_sys_ids = [s[0] for s in SIMULATOR_SYSTEMS.values()]
     acc_ids = db.scalars(
         select(Account.id).where(Account.system_id.in_(sim_sys_ids))
     ).all()
 
     if acc_ids:
+        # Delete dependent quarterly review records
+        db.execute(delete(QuarterlyReviewOutcome).where(QuarterlyReviewOutcome.account_id.in_(acc_ids)))
+        db.execute(delete(QuarterlyAccountReview).where(QuarterlyAccountReview.account_id.in_(acc_ids)))
+        db.execute(delete(ActivityCoverage).where(ActivityCoverage.account_id.in_(acc_ids)))
+
+        # Delete activity events referencing these accounts
+        db.execute(delete(ActivityEvent).where(ActivityEvent.account_id.in_(acc_ids)))
+
         # Delete reviews for these grants
         grant_ids = db.scalars(
             select(AccessGrant.id).where(AccessGrant.account_id.in_(acc_ids))
@@ -827,10 +957,24 @@ def reset_simulator_environment(db: Session, company_id: int) -> dict[str, Any]:
         if grant_ids:
             db.execute(delete(Review).where(Review.grant_id.in_(grant_ids)))
             db.execute(delete(AccessGrant).where(AccessGrant.id.in_(grant_ids)))
+
+        # Delete accounts
         db.execute(delete(Account).where(Account.id.in_(acc_ids)))
 
-    # 4. Delete simulated identities
-    db.execute(delete(Identity).where(Identity.id.like(f"sim-{company_id}-emp-%")))
+    # 3. Clean any remaining activity events from simulator
+    db.execute(delete(ActivityEvent).where(
+        ActivityEvent.source == 'EnterpriseSimulator',
+        ActivityEvent.source_event_id.like(f"sim-{company_id}-%")
+    ))
+
+    # 4. Delete simulated identity dependencies (transfers, AD group memberships)
+    sim_identities = db.scalars(
+        select(Identity.id).where(Identity.id.like(f"sim-{company_id}-emp-%"))
+    ).all()
+    if sim_identities:
+        db.execute(delete(EmployeeTransfer).where(EmployeeTransfer.identity_id.in_(sim_identities)))
+        db.execute(delete(ADGroupMembershipHistory).where(ADGroupMembershipHistory.identity_id.in_(sim_identities)))
+        db.execute(delete(Identity).where(Identity.id.in_(sim_identities)))
 
     # 5. Tell Enterprise Simulator to reset its clock and events
     try:
@@ -844,3 +988,82 @@ def reset_simulator_environment(db: Session, company_id: int) -> dict[str, Any]:
     db.commit()
 
     return {'ok': True, 'company_id': company_id, 'message': 'Test environment reset successfully.'}
+
+
+def delete_simulator_company(db: Session, company_id: int) -> dict[str, Any]:
+    """Completely delete virtual company from both Simulator and AccessGuard database."""
+    # 1. Wipe all test records in AccessGuard for this company
+    reset_simulator_environment(db, company_id)
+
+    # 2. Delete company entity from Enterprise Simulator SQLite
+    deleted_sim = False
+    try:
+        with get_simulator_client() as client:
+            res = client.delete(f'/api/companies/{company_id}')
+            deleted_sim = res.is_success
+    except Exception as ex:
+        logger.warning(f"Failed to delete company #{company_id} in simulator: {ex}")
+
+    _log(db, 'Security Administrator', 'COMPANY_DELETED', f'Virtual Company #{company_id}',
+         f"Virtual company #{company_id} and all related simulated entities were permanently deleted.")
+    db.commit()
+
+    return {'ok': True, 'company_id': company_id, 'deleted_simulator': deleted_sim, 'message': f'Company #{company_id} deleted successfully.'}
+
+
+def purge_all_simulator_data(db: Session) -> dict[str, Any]:
+    """Purge ALL simulated entities across all virtual companies from AccessGuard."""
+    from sqlalchemy import delete
+    
+    # 1. Delete all test scenario results
+    db.execute(delete(TestScenarioResult))
+
+    # 2. Find all simulated accounts across all simulator platforms
+    sim_sys_ids = [s[0] for s in SIMULATOR_SYSTEMS.values()]
+    acc_ids = db.scalars(
+        select(Account.id).where(Account.system_id.in_(sim_sys_ids))
+    ).all()
+
+    if acc_ids:
+        # Delete dependent quarterly review records
+        db.execute(delete(QuarterlyReviewOutcome).where(QuarterlyReviewOutcome.account_id.in_(acc_ids)))
+        db.execute(delete(QuarterlyAccountReview).where(QuarterlyAccountReview.account_id.in_(acc_ids)))
+        db.execute(delete(ActivityCoverage).where(ActivityCoverage.account_id.in_(acc_ids)))
+
+        # Delete activity events referencing accounts
+        db.execute(delete(ActivityEvent).where(ActivityEvent.account_id.in_(acc_ids)))
+
+        # Delete reviews for these grants
+        grant_ids = db.scalars(
+            select(AccessGrant.id).where(AccessGrant.account_id.in_(acc_ids))
+        ).all()
+        if grant_ids:
+            db.execute(delete(Review).where(Review.grant_id.in_(grant_ids)))
+            db.execute(delete(AccessGrant).where(AccessGrant.id.in_(grant_ids)))
+
+        # Delete accounts
+        db.execute(delete(Account).where(Account.id.in_(acc_ids)))
+
+    # 3. Delete any remaining simulated activity events
+    db.execute(delete(ActivityEvent).where(ActivityEvent.source == 'EnterpriseSimulator'))
+
+    # 4. Delete simulated identity dependencies (transfers, AD group memberships)
+    sim_identities = db.scalars(
+        select(Identity.id).where(Identity.id.like('sim-%'))
+    ).all()
+    if sim_identities:
+        db.execute(delete(EmployeeTransfer).where(EmployeeTransfer.identity_id.in_(sim_identities)))
+        db.execute(delete(ADGroupMembershipHistory).where(ADGroupMembershipHistory.identity_id.in_(sim_identities)))
+        db.execute(delete(Identity).where(Identity.id.in_(sim_identities)))
+
+    _log(db, 'Security Administrator', 'SIMULATOR_PURGE_ALL', 'AccessGuard Test Database',
+         "Purged all simulated identities, accounts, grants, and activity events across all virtual companies.")
+    db.commit()
+
+    return {'ok': True, 'message': 'All simulated data successfully purged from AccessGuard.'}
+
+    _log(db, 'Security Administrator', 'SIMULATOR_PURGE_ALL', 'AccessGuard Test Database',
+         "Purged all simulated identities, accounts, grants, and activity events across all virtual companies.")
+    db.commit()
+
+    return {'ok': True, 'message': 'All simulated data successfully purged from AccessGuard.'}

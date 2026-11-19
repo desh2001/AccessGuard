@@ -1682,3 +1682,128 @@ def simulator_reset_env(company_id: int, db: Session = Depends(get_session)):
     from simulator_connector import reset_simulator_environment
     return reset_simulator_environment(db, company_id)
 
+
+@app.delete('/api/simulator/companies/{company_id}')
+def simulator_delete_company(company_id: int, db: Session = Depends(get_session)):
+    """Permanently delete a virtual company and its simulated data."""
+    from simulator_connector import delete_simulator_company
+    return delete_simulator_company(db, company_id)
+
+
+@app.post('/api/simulator/purge-all')
+def simulator_purge_all(db: Session = Depends(get_session)):
+    """Wipe ALL simulated data across all virtual companies from AccessGuard."""
+    from simulator_connector import purge_all_simulator_data
+    return purge_all_simulator_data(db)
+
+
+# ─── Automated Admin Email Alert Settings ─────────────────────────────────────
+
+class EmailSettingsUpdateBody(BaseModel):
+    admin_name: str = Field(default='Main Security Administrator', min_length=2, max_length=120)
+    admin_email: str = Field(min_length=5, max_length=255)
+    enabled: bool = True
+    smtp_host: str = Field(default='smtp.gmail.com', max_length=120)
+    smtp_port: int = Field(default=587)
+    smtp_user: str | None = Field(default=None, max_length=255)
+    smtp_password: str | None = Field(default=None, max_length=255)
+    sender_name: str = Field(default='AccessGuard Security Sentinel', max_length=120)
+    notify_on_high_risk: bool = True
+    notify_on_attack_detected: bool = True
+    notify_on_reviews_queued: bool = True
+
+
+@app.get('/api/settings/email')
+def get_email_settings(db: Session = Depends(get_session)):
+    """Get current admin email notification configuration."""
+    from email_service import get_or_create_email_settings
+    s = get_or_create_email_settings(db)
+    return {
+        'admin_name': s.admin_name,
+        'admin_email': s.admin_email,
+        'enabled': bool(s.enabled),
+        'smtp_host': s.smtp_host,
+        'smtp_port': s.smtp_port,
+        'smtp_user': s.smtp_user or '',
+        'has_password': bool(s.smtp_password),
+        'sender_name': s.sender_name,
+        'notify_on_high_risk': bool(s.notify_on_high_risk),
+        'notify_on_attack_detected': bool(s.notify_on_attack_detected),
+        'notify_on_reviews_queued': bool(s.notify_on_reviews_queued),
+        'updated_at': s.updated_at.isoformat() if s.updated_at else None,
+    }
+
+
+@app.put('/api/settings/email')
+def update_email_settings(body: EmailSettingsUpdateBody, db: Session = Depends(get_session)):
+    """Update admin email notification configuration."""
+    from email_service import get_or_create_email_settings
+    s = get_or_create_email_settings(db)
+    s.admin_name = body.admin_name.strip()
+    s.admin_email = body.admin_email.strip().lower()
+    s.enabled = 1 if body.enabled else 0
+    s.smtp_host = body.smtp_host.strip()
+    s.smtp_port = body.smtp_port
+    s.smtp_user = body.smtp_user.strip() if body.smtp_user else None
+    if body.smtp_password is not None and body.smtp_password != '':
+        s.smtp_password = body.smtp_password.strip()
+    s.sender_name = body.sender_name.strip()
+    s.notify_on_high_risk = 1 if body.notify_on_high_risk else 0
+    s.notify_on_attack_detected = 1 if body.notify_on_attack_detected else 0
+    s.notify_on_reviews_queued = 1 if body.notify_on_reviews_queued else 0
+    s.updated_at = now_utc()
+    _log(db, 'Security Administrator', 'EMAIL_SETTINGS_UPDATED', s.admin_email,
+         f"Admin email alerts routed to {s.admin_email} via {s.smtp_host}:{s.smtp_port}")
+    db.commit()
+    return {'ok': True, 'message': 'Admin email settings updated successfully.'}
+
+
+class SendTestEmailBody(BaseModel):
+    recipient: str | None = None
+
+
+@app.post('/api/settings/email/test')
+def send_test_email(body: SendTestEmailBody, db: Session = Depends(get_session)):
+    """Send an immediate test security notification email to verify Gmail SMTP configuration."""
+    from email_service import send_security_alert_email, get_or_create_email_settings
+    s = get_or_create_email_settings(db)
+    target = body.recipient or s.admin_email
+
+    subject = "🔔 [TEST] AccessGuard Real Email Notification Verification"
+    html_b = f"""<div style="font-family:sans-serif;padding:20px;border-radius:10px;background:#f9fafb;border:1px solid #e5e7eb;">
+        <h2 style="color:#4f46e5;margin-top:0;">AccessGuard Automated Alert Test</h2>
+        <p>This email confirms that <b>AccessGuard Real Gmail SMTP</b> automated notifications are properly configured.</p>
+        <p><b>Target Admin:</b> {s.admin_name} ({target})</p>
+        <p><b>SMTP Server:</b> {s.smtp_host}:{s.smtp_port}</p>
+        <p style="color:#059669;font-weight:bold;">✓ Connection verified successfully.</p>
+    </div>"""
+    txt_b = f"AccessGuard Alert Test: Gmail SMTP verified for {s.admin_name} ({target})."
+
+    res = send_security_alert_email(
+        db=db,
+        subject=subject,
+        html_content=html_b,
+        text_content=txt_b,
+        trigger_type='test',
+        recipient_override=target
+    )
+    return res
+
+
+@app.get('/api/settings/email/logs')
+def get_email_logs(limit: int = 50, db: Session = Depends(get_session)):
+    """Retrieve history of dispatched security alert emails."""
+    from models import EmailAlertLog
+    logs = db.scalars(select(EmailAlertLog).order_by(EmailAlertLog.id.desc()).limit(limit)).all()
+    return [{
+        'id': l.id,
+        'recipient': l.recipient,
+        'subject': l.subject,
+        'body': l.body,
+        'status': l.status,
+        'error_message': l.error_message,
+        'trigger_type': l.trigger_type,
+        'sent_at': l.sent_at.isoformat() if l.sent_at else None,
+    } for l in logs]
+
+

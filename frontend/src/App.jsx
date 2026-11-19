@@ -7,7 +7,7 @@ import {
   Layers, LayoutDashboard, Lock, Menu, MoreHorizontal, Play, RefreshCw, Search, Server,
   Settings, Shield, ShieldAlert, ShieldCheck, Sparkles, TrendingUp,
   TrendingDown, Upload, Users, UsersRound, UserRoundX, X, Zap, BarChart3,
-  CircleCheck, Clock, AlertOctagon, Eye, Award, Target
+  CircleCheck, Clock, AlertOctagon, Eye, Award, Target, Mail, Send
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, CartesianGrid, Cell, Legend, LineChart,
@@ -31,7 +31,7 @@ const PRODUCTION_ITEMS = [
   { id: 'integrations', label: 'Integrations',         icon: Boxes },
   { id: 'audit',        label: 'Audit Reports',        icon: FileClock },
   { id: 'reports',      label: 'Research Reports',     icon: FileText },
-  { id: 'settings',     label: 'Settings',             icon: Settings },
+  { id: 'settings',     label: 'Settings & Admin Email', icon: Settings },
 ];
 
 const TEST_ENV_ITEMS = [
@@ -49,6 +49,7 @@ const TEST_ENV_ITEMS = [
   // Also include governance reviews and access tabs within test scope
   { id: 'reviews',         label: 'Simulated Reviews',   icon: ClipboardCheck },
   { id: 'access',          label: 'Simulated Inventory', icon: KeyRound },
+  { id: 'settings',        label: 'Admin Email Alerts',  icon: Mail },
 ];
 
 const HEADINGS = {
@@ -65,7 +66,7 @@ const HEADINGS = {
   integrations:    ['Integrations',         'Connected systems and data collection status'],
   audit:           ['Audit Trail',          'Decision history and simulated remediation events'],
   reports:         ['Research Reports',     'Project-wide metrics and connector provenance evidence'],
-  settings:        ['Settings',             'Prototype configuration, security policies, and database reset controls'],
+  settings:        ['Settings & Admin Email Notifications', 'Configure Main Admin Gmail SMTP credentials, automated breach alerts, and clean environment controls'],
   // Test Environment headings
   'test-overview':  ['Test Environment Overview', 'Isolated virtual testing laboratory connected to Enterprise Simulator'],
   'sim-companies':  ['Virtual Companies', 'Multi-tenant enterprise models generated for non-destructive security testing'],
@@ -319,7 +320,7 @@ export default function App() {
   const generateCampaign = async () => {
     setBusy('campaign'); setToast({ msg: '', ok: true });
     try {
-      const r = await request('/reviews/generate', { method: 'POST' });
+      const r = await request(`/reviews/generate?env=${environment}`, { method: 'POST' });
       await refresh(); showToast(`${r.created} new review(s) queued — no external access modified`);
     } catch (e) { showToast(`Error: ${e.message}`, false); } finally { setBusy(null); }
   };
@@ -509,14 +510,14 @@ export default function App() {
                 {page === 'accounts'     && <Accounts     rows={data.accounts} suggestions={data.suggestions} identities={data.identities} systems={data.integrations} busy={busy} linkAccount={linkAccount} createAccount={createAccount} />}
                 {page === 'access'       && <Access       data={data.access} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} />}
                 {page === 'risks'        && <Risks        data={data} mlPlatforms={data.mlPlatforms} navigate={navigate} />}
-                {page === 'reviews'      && <Reviews      rows={data.reviews} busy={busy} act={act} filter={filter} setFilter={setFilter} generateCampaign={generateCampaign} showToast={showToast} refresh={refresh} />}
+                {page === 'reviews'      && <Reviews      rows={data.reviews} busy={busy} act={act} filter={filter} setFilter={setFilter} generateCampaign={generateCampaign} showToast={showToast} refresh={refresh} environment={environment} />}
                 {page === 'alerts'       && <Alerts       rows={data.alerts} navigate={navigate} />}
                 {page === 'activity'     && <ActivityPage rows={data.activity} timeline={data.timeline} accesslogEvents={data.accesslogEvents} accesslogDevices={data.accesslogDevices} accesslogSummary={data.accesslogSummary} syncAccessLog={syncAccessLog} busy={busy} />}
                 {page === 'offboarding'  && <Offboarding  rows={data.offboarding} navigate={navigate} />}
                 {page === 'integrations' && <Integrations rows={data.integrations} runs={data.runs} mlStatus={data.mlStatus} pingMl={pingMl} busy={busy} />}
                 {page === 'audit'        && <Audit        rows={data.audit} />}
                 {page === 'reports'      && <Reports      data={data.reports} runs={data.runs} />}
-                {page === 'settings'     && <SettingsPage resetDb={resetDb} busy={busy} />}
+                {page === 'settings'     && <SettingsPage resetDb={resetDb} busy={busy} showToast={showToast} />}
                 {/* ─── Test Environment Views ─── */}
                 {[
                   'test-overview', 'sim-companies', 'sim-employees',
@@ -2198,8 +2199,8 @@ function QuarterlyAccountReviews({ showToast }) {
 }
 
 // ─── Access Reviews Main Container ───────────────────────────────────────────
-function Reviews({ rows, busy, act, filter, setFilter, generateCampaign, showToast, refresh }) {
-  const [tab, setTab] = useState('quarterly'); // 'quarterly' | 'legacy'
+function Reviews({ rows, busy, act, filter, setFilter, generateCampaign, showToast, refresh, environment }) {
+  const [tab, setTab] = useState(environment === 'test' ? 'legacy' : 'quarterly'); // default to legacy in Test Lab
 
   const visible = rows.filter(r => filter === 'All' || r.review_status === filter);
   const pend = rows.filter(r => r.review_status === 'Pending').length;
@@ -2870,70 +2871,352 @@ function Reports({ data, runs = [] }) {
   </>;
 }
 
-// ─── Settings ─────────────────────────────────────────────────────────────────
-function SettingsPage({ resetDb, busy }) {
+// ─── Settings & Admin Email Notifications ─────────────────────────────────
+function SettingsPage({ resetDb, busy, showToast }) {
+  const [emailForm, setEmailForm] = useState({
+    admin_name: '',
+    admin_email: '',
+    enabled: true,
+    smtp_host: 'smtp.gmail.com',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    sender_name: 'AccessGuard Security Sentinel',
+    notify_on_high_risk: true,
+    notify_on_attack_detected: true,
+    notify_on_reviews_queued: true,
+  });
+  const [hasPassword, setHasPassword] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+
+  // Load email configuration and alert logs
+  const loadEmailSettings = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/settings/email');
+      if (res.ok) {
+        const d = await res.json();
+        setEmailForm({
+          admin_name: d.admin_name || 'Main Security Administrator',
+          admin_email: d.admin_email || '',
+          enabled: d.enabled,
+          smtp_host: d.smtp_host || 'smtp.gmail.com',
+          smtp_port: d.smtp_port || 587,
+          smtp_user: d.smtp_user || '',
+          smtp_password: '',
+          sender_name: d.sender_name || 'AccessGuard Security Sentinel',
+          notify_on_high_risk: d.notify_on_high_risk,
+          notify_on_attack_detected: d.notify_on_attack_detected,
+          notify_on_reviews_queued: d.notify_on_reviews_queued,
+        });
+        setHasPassword(d.has_password);
+      }
+      const logsRes = await fetch('/api/settings/email/logs');
+      if (logsRes.ok) {
+        setLogs(await logsRes.json());
+      }
+    } catch (e) {
+      showToast(`Failed to load email settings: ${e.message}`, false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEmailSettings();
+  }, []);
+
+  // Save Settings
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload = { ...emailForm };
+      if (!payload.smtp_password && hasPassword) {
+        delete payload.smtp_password;
+      }
+      const res = await fetch('/api/settings/email', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Admin email settings updated successfully!');
+        await loadEmailSettings();
+      } else {
+        showToast(`Failed: ${data.detail || data.message}`, false);
+      }
+    } catch (e) {
+      showToast(`Error: ${e.message}`, false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Send Test Real Email
+  const handleSendTest = async () => {
+    setTesting(true);
+    try {
+      const res = await fetch('/api/settings/email/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipient: emailForm.admin_email }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (data.is_real_delivery) {
+          showToast(`Real email delivered successfully to ${data.recipient}! Check your inbox.`);
+        } else {
+          showToast(`Test alert logged to email dispatch drawer (${data.status}).`);
+        }
+        await loadEmailSettings();
+      } else {
+        showToast(`Send failed: ${data.error || data.message}`, false);
+      }
+    } catch (e) {
+      showToast(`Error sending test email: ${e.message}`, false);
+    } finally {
+      setTesting(false);
+    }
+  };
+
   return (
-    <div className="settings-grid">
-      <Panel title="Database & Clean Environment Controls">
-        <div style={{ padding: '8px 0' }}>
-          <p style={{ fontSize: 13, color: '#555', marginBottom: 14 }}>
-            Purge synthetic demo records to start with a fresh, production-like clean database for entering real employees and connecting devices.
-          </p>
-          <button
-            className="btn-danger"
-            disabled={busy === 'reset-db'}
-            onClick={resetDb}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <AlertTriangle size={15} />
-            {busy === 'reset-db' ? 'Purging records...' : 'Purge All Mock Data (Start Clean)'}
-          </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Real Gmail & Main Admin Email Configuration Panel */}
+      <Panel
+        title="Main Admin Automated Email Notifications (Gmail SMTP)"
+        description="Configure your real Gmail or corporate SMTP credentials to receive automated security alerts immediately when an attack or high-risk privilege escalation is detected."
+      >
+        <form onSubmit={handleSave}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            {/* Admin Identity */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#3730a3', marginBottom: 6 }}>
+                Main Admin Name
+              </label>
+              <input
+                required
+                type="text"
+                value={emailForm.admin_name}
+                onChange={(e) => setEmailForm({ ...emailForm, admin_name: e.target.value })}
+                placeholder="e.g. Chief Information Security Officer"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#3730a3', marginBottom: 6 }}>
+                Main Admin Email Address (Destination)
+              </label>
+              <input
+                required
+                type="email"
+                value={emailForm.admin_email}
+                onChange={(e) => setEmailForm({ ...emailForm, admin_email: e.target.value })}
+                placeholder="e.g. your-email@gmail.com"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+              />
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: 3, display: 'block' }}>
+                All high-risk breach advisories will be sent to this email.
+              </small>
+            </div>
+
+            {/* Gmail SMTP Server Details */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', marginBottom: 6 }}>
+                SMTP Host
+              </label>
+              <input
+                required
+                type="text"
+                value={emailForm.smtp_host}
+                onChange={(e) => setEmailForm({ ...emailForm, smtp_host: e.target.value })}
+                placeholder="smtp.gmail.com"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', marginBottom: 6 }}>
+                SMTP Port (587 TLS or 465 SSL)
+              </label>
+              <input
+                required
+                type="number"
+                value={emailForm.smtp_port}
+                onChange={(e) => setEmailForm({ ...emailForm, smtp_port: Number(e.target.value) })}
+                placeholder="587"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+              />
+            </div>
+
+            {/* Gmail User & App Password */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', marginBottom: 6 }}>
+                Sender Gmail Address (Username)
+              </label>
+              <input
+                type="email"
+                value={emailForm.smtp_user}
+                onChange={(e) => setEmailForm({ ...emailForm, smtp_user: e.target.value })}
+                placeholder="your.alert.bot@gmail.com"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', marginBottom: 6 }}>
+                Gmail App Password (16 characters)
+              </label>
+              <input
+                type="password"
+                value={emailForm.smtp_password}
+                onChange={(e) => setEmailForm({ ...emailForm, smtp_password: e.target.value })}
+                placeholder={hasPassword ? '•••••••••••••••• (Leave blank to keep existing)' : 'Enter 16-character App Password'}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+              />
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: 3, display: 'block' }}>
+                Generate via Google Account → Security → 2-Step Verification → App passwords.
+              </small>
+            </div>
+          </div>
+
+          {/* Trigger Toggles */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #eee9f7', display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+              <input
+                type="checkbox"
+                checked={emailForm.enabled}
+                onChange={(e) => setEmailForm({ ...emailForm, enabled: e.target.checked })}
+              />
+              Enable Automated Email Delivery
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+              <input
+                type="checkbox"
+                checked={emailForm.notify_on_attack_detected}
+                onChange={(e) => setEmailForm({ ...emailForm, notify_on_attack_detected: e.target.checked })}
+              />
+              🚨 Malicious Role Breach / Attack Detected
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+              <input
+                type="checkbox"
+                checked={emailForm.notify_on_high_risk}
+                onChange={(e) => setEmailForm({ ...emailForm, notify_on_high_risk: e.target.checked })}
+              />
+              ⚠️ High Risk Privilege Escalation (Score &ge; 60)
+            </label>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ marginTop: 22, display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="btn-light"
+              onClick={handleSendTest}
+              disabled={testing || !emailForm.admin_email}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Send size={14} className={testing ? 'spin' : ''} />
+              {testing ? 'Sending Test Email...' : 'Send Test Real Email'}
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={saving}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Check size={15} />
+              {saving ? 'Saving...' : 'Save Admin Email Settings'}
+            </button>
+          </div>
+        </form>
+      </Panel>
+
+      {/* Dispatched Email Audit Logs */}
+      <Panel title="Dispatched Security Email Log" description="Recent automated security alerts dispatched to the Main Administrator.">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TIME</th>
+                <th>RECIPIENT</th>
+                <th>SUBJECT</th>
+                <th>TRIGGER TYPE</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', color: '#999', padding: '24px 0' }}>
+                    No automated email alerts dispatched yet. Run an attack test scenario or click "Send Test Real Email".
+                  </td>
+                </tr>
+              ) : (
+                logs.map((l) => (
+                  <tr key={l.id}>
+                    <td>{new Date(l.sent_at).toLocaleString()}</td>
+                    <td><strong>{l.recipient}</strong></td>
+                    <td style={{ fontSize: '0.85rem' }}>{l.subject}</td>
+                    <td>
+                      <span className="badge" style={{ textTransform: 'capitalize' }}>
+                        {l.trigger_type.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td>
+                      <Badge
+                        value={l.status === 'sent' ? 'Sent (Real SMTP)' : (l.status === 'simulated' ? 'Simulated Log' : 'Failed')}
+                        tone={l.status === 'sent' ? 'active' : (l.status === 'failed' ? 'critical' : 'purple')}
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </Panel>
-      <Panel title="Demo Workspace">
-        {[
-          ['Workspace name', 'AccessGuard Research Lab'],
-          ['Data mode', <Badge key="dm" value="Synthetic + imports" tone="purple" />],
-          ['Database', 'PostgreSQL + Alembic migrations'],
-          ['AI/ML', 'IsolationForest + Rule engine (scikit-learn)'],
-          ['Remediation', <Badge key="rem" value="Simulated" tone="neutral" />],
-          ['API docs', <code key="api">http://127.0.0.1:8000/docs</code>],
-          ['Version', 'v2.0.0 — Complete Research Lab'],
-        ].map(([k, v]) => (
-          <div key={String(k)} className="setting-line"><span>{k}</span><strong>{v}</strong></div>
-        ))}
-      </Panel>
-      <Panel title="Security checklist before any production deployment">
-        <div className="security-items">
+
+      {/* Database Reset Controls */}
+      <div className="settings-grid">
+        <Panel title="Database & Clean Environment Controls">
+          <div style={{ padding: '8px 0' }}>
+            <p style={{ fontSize: 13, color: '#555', marginBottom: 14 }}>
+              Purge synthetic demo records to start with a fresh, production-like clean database for entering real employees and connecting devices.
+            </p>
+            <button
+              className="btn-danger"
+              disabled={busy === 'reset-db'}
+              onClick={resetDb}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <AlertTriangle size={15} />
+              {busy === 'reset-db' ? 'Purging records...' : 'Purge All Mock Data (Start Clean)'}
+            </button>
+          </div>
+        </Panel>
+        <Panel title="Demo Workspace">
           {[
-            'Enable OpenID Connect / OAuth 2.0 authentication',
-            'Implement RBAC — reviewer, admin and read-only roles',
-            'Protect every API endpoint with authorization middleware',
-            'Back up PostgreSQL and test schema migration rollbacks',
-            'Encrypt secrets — never commit credentials to source control',
-            'Integrate authoritative HR source-of-truth for identity data',
-            'Require manager sign-off and dual approval for access removal',
-            'Store audit events in an immutable, tamper-evident log store',
-            'Add Celery + Redis for background job processing at scale',
-            'Conduct a security review before any real data is ingested',
-          ].map(x => <div key={x}><Check size={15} />{x}</div>)}
-        </div>
-      </Panel>
-      <Panel title="Technology Stack" className="settings-stack">
-        {[
-          ['Frontend', 'React 19 + Tailwind CSS v4 + Recharts'],
-          ['Backend', 'Python FastAPI + Uvicorn'],
-          ['Database', 'PostgreSQL 17 (Docker) + SQLAlchemy 2 ORM'],
-          ['AI/ML', 'scikit-learn IsolationForest + rule engine'],
-          ['Windows', 'Windows Event Logs, Active Directory / MS Graph'],
-          ['Linux', 'auditd, journald, SSH (connectors planned)'],
-          ['GitHub', 'GitHub REST API (read-only connector available)'],
-          ['Auth (target)', 'OAuth 2.0 / OpenID Connect'],
-          ['Background jobs', 'Celery + Redis (not yet implemented)'],
-        ].map(([k, v]) => (
-          <div key={k} className="setting-line"><span>{k}</span><strong>{v}</strong></div>
-        ))}
-      </Panel>
+            ['Workspace name', 'AccessGuard Research Lab'],
+            ['Data mode', <Badge key="dm" value="Synthetic + imports" tone="purple" />],
+            ['Database', 'PostgreSQL + Alembic migrations'],
+            ['AI/ML', 'IsolationForest + Rule engine (scikit-learn)'],
+            ['Remediation', <Badge key="rem" value="Simulated" tone="neutral" />],
+            ['API docs', <code key="api">http://127.0.0.1:8200/docs</code>],
+            ['Version', 'v2.0.0 — Complete Research Lab'],
+          ].map(([k, v]) => (
+            <div key={String(k)} className="setting-line"><span>{k}</span><strong>{v}</strong></div>
+          ))}
+        </Panel>
+      </div>
     </div>
   );
 }
