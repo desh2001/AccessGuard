@@ -9,7 +9,7 @@ IMPORTANT: Research prototype only.
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, File, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -19,6 +19,9 @@ from database import get_session
 from models import (
     Identity, System, Account, AccessGrant,
     Review, AuditLog, ActivityEvent, ConnectorRun, now_utc,
+    QuarterlyReviewCycle, QuarterlyAccountReview,
+    ReviewOutcomeImportBatch, ReviewOutcomeImportRow,
+    QuarterlyReviewOutcome, MLTrainingRun,
 )
 from risk import access_dict, risk_level
 
@@ -745,31 +748,33 @@ def alerts(db: Session = Depends(get_session)):
 
 @app.get('/api/ai/summary')
 def ai_summary(db: Session = Depends(get_session)):
-    from ml_client import query_external_ml
+    """Legacy grant-level heuristic and baseline demo anomaly scoring.
+    
+    For live quarterly three-model access reviews, use /api/review-cycles.
+    """
     from ai_engine import rank_anomalies
     grants = grant_data(db)
-
-    # 1. Try external Dialog-Project-Final-ML microservice
-    ext_result = query_external_ml(grants)
-    if ext_result is not None:
-        return ext_result
-
-    # 2. Seamless fallback to local IsolationForest engine
     local_result = rank_anomalies(grants)
-    local_result['source'] = 'fallback-local-ml'
+    local_result['source'] = 'legacy-demo-rules'
+    local_result['quarterly_v10_notice'] = (
+        'Grant-level scoring is for legacy demonstration. '
+        'Quarterly account-level reviews run via /api/review-cycles with Aegis V8/V9 platform models.'
+    )
     return local_result
 
 
 @app.get('/api/ml/status')
 def ml_status():
-    from ml_client import check_external_ml_health
-    return check_external_ml_health()
+    """Actual live health and loaded model status from the quarterly ML microservice."""
+    from ml_client import check_ml_health
+    return check_ml_health()
 
 
 @app.get('/api/ml/platforms')
 def ml_platforms():
-    from ml_client import load_platform_metadata
-    return load_platform_metadata()
+    """Actual loaded platform models and real evaluation metadata from /v1/models."""
+    from ml_client import get_ml_models
+    return get_ml_models()
 
 
 class UpdateSentinelTokenBody(BaseModel):
@@ -1015,4 +1020,450 @@ def connector_runs(db: Session = Depends(get_session)):
         'completed_at': r.completed_at.isoformat() if r.completed_at else None,
         'records_imported': r.records_imported,
         'details': r.details,
+    } for r in runs]
+
+
+# ─── Quarterly Access Reviews & CSV Outcome Import (V10) ─────────────────────
+
+class CyclePreviewBody(BaseModel):
+    as_of: str | None = None
+    window_days: int = 90
+    budget_pct: int = 10
+    cycle_id: str | None = None
+
+
+class CycleCreateBody(BaseModel):
+    as_of: str | None = None
+    window_days: int = 90
+    budget_pct: int = 10
+    cycle_id: str | None = None
+    created_by: str = 'Admin'
+
+
+class AccountDecisionBody(BaseModel):
+    decision: str
+    reviewer_id: str
+    rationale: str
+
+
+class BatchCommitBody(BaseModel):
+    approver: str = 'Review Administrator'
+
+
+class PrepareTrainingBody(BaseModel):
+    platform: str
+    created_by: str = 'ML Admin'
+    cycle_ids: list[str] | None = None
+
+
+@app.post('/api/review-cycles/preview')
+def preview_cycle(body: CyclePreviewBody, db: Session = Depends(get_session)):
+    """Preview a quarterly 90-day review cycle without modifying database."""
+    from quarterly_review_service import build_cycle_preview
+    as_of_dt = None
+    if body.as_of:
+        try:
+            as_of_dt = datetime.fromisoformat(body.as_of.replace('Z', '+00:00'))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid as_of timestamp format")
+
+    try:
+        preview = build_cycle_preview(
+            db,
+            as_of=as_of_dt,
+            window_days=body.window_days,
+            budget_pct=body.budget_pct,
+            cycle_id=body.cycle_id,
+        )
+        return preview
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post('/api/review-cycles/create')
+def create_cycle(body: CycleCreateBody, db: Session = Depends(get_session)):
+    """Freeze and persist a quarterly review cycle and its account-level tasks."""
+    from quarterly_review_service import create_review_cycle
+    as_of_dt = None
+    if body.as_of:
+        try:
+            as_of_dt = datetime.fromisoformat(body.as_of.replace('Z', '+00:00'))
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid as_of timestamp format")
+
+    try:
+        cycle = create_review_cycle(
+            db,
+            as_of=as_of_dt,
+            window_days=body.window_days,
+            budget_pct=body.budget_pct,
+            cycle_id=body.cycle_id,
+            created_by=body.created_by,
+        )
+        return {
+            'ok': True,
+            'cycle_id': cycle.id,
+            'status': cycle.status,
+            'total_accounts': cycle.total_accounts,
+            'mandatory_count': cycle.mandatory_count,
+            'selected_count': cycle.selected_count,
+            'deferred_count': cycle.deferred_count,
+            'evidence_gap_count': cycle.evidence_gap_count,
+            'mode': cycle.mode,
+            'created_at': cycle.created_at.isoformat(),
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get('/api/review-cycles')
+def list_review_cycles(db: Session = Depends(get_session)):
+    """List all frozen quarterly review cycles with completion metrics."""
+    cycles = db.scalars(
+        select(QuarterlyReviewCycle).order_by(QuarterlyReviewCycle.created_at.desc())
+    ).all()
+
+    result = []
+    for c in cycles:
+        decided_count = db.scalar(
+            select(func.count(QuarterlyAccountReview.id)).where(
+                QuarterlyAccountReview.cycle_id == c.id,
+                QuarterlyAccountReview.state == 'decided'
+            )
+        ) or 0
+        total_tasks = db.scalar(
+            select(func.count(QuarterlyAccountReview.id)).where(
+                QuarterlyAccountReview.cycle_id == c.id,
+                QuarterlyAccountReview.priority.in_(['mandatory', 'selected'])
+            )
+        ) or 0
+        result.append({
+            'id': c.id,
+            'window_start': c.window_start.isoformat(),
+            'window_end': c.window_end.isoformat(),
+            'window_days': c.window_days,
+            'review_budget_pct': c.review_budget_pct,
+            'status': c.status,
+            'mode': c.mode,
+            'total_accounts': c.total_accounts,
+            'mandatory_count': c.mandatory_count,
+            'selected_count': c.selected_count,
+            'deferred_count': c.deferred_count,
+            'evidence_gap_count': c.evidence_gap_count,
+            'created_by': c.created_by,
+            'created_at': c.created_at.isoformat(),
+            'queue_size': c.mandatory_count + c.selected_count,
+            'decided_count': decided_count,
+            'progress_pct': round((decided_count / total_tasks * 100), 1) if total_tasks > 0 else 0,
+        })
+    return result
+
+
+@app.get('/api/review-cycles/{cycle_id}')
+def get_cycle_detail(cycle_id: str, db: Session = Depends(get_session)):
+    """Get single cycle metadata and overview."""
+    c = db.get(QuarterlyReviewCycle, cycle_id)
+    if not c:
+        raise HTTPException(status_code=404, detail="Review cycle not found")
+
+    decided_count = db.scalar(
+        select(func.count(QuarterlyAccountReview.id)).where(
+            QuarterlyAccountReview.cycle_id == c.id,
+            QuarterlyAccountReview.state == 'decided'
+        )
+    ) or 0
+    total_queue = db.scalar(
+        select(func.count(QuarterlyAccountReview.id)).where(
+            QuarterlyAccountReview.cycle_id == c.id,
+            QuarterlyAccountReview.priority.in_(['mandatory', 'selected'])
+        )
+    ) or 0
+
+    return {
+        'id': c.id,
+        'window_start': c.window_start.isoformat(),
+        'window_end': c.window_end.isoformat(),
+        'window_days': c.window_days,
+        'review_budget_pct': c.review_budget_pct,
+        'as_of': c.as_of.isoformat(),
+        'status': c.status,
+        'mode': c.mode,
+        'total_accounts': c.total_accounts,
+        'mandatory_count': c.mandatory_count,
+        'selected_count': c.selected_count,
+        'deferred_count': c.deferred_count,
+        'evidence_gap_count': c.evidence_gap_count,
+        'queue_size': total_queue,
+        'decided_count': decided_count,
+        'progress_pct': round((decided_count / total_queue * 100), 1) if total_queue > 0 else 0,
+        'created_by': c.created_by,
+        'created_at': c.created_at.isoformat(),
+        'model_versions': json.loads(c.model_versions) if c.model_versions else {},
+    }
+
+
+@app.get('/api/review-cycles/{cycle_id}/accounts')
+def list_cycle_accounts(
+    cycle_id: str,
+    priority: str | None = None,
+    platform: str | None = None,
+    state: str | None = None,
+    db: Session = Depends(get_session)
+):
+    """List account review tasks for a cycle with evidence and model details."""
+    query = (
+        select(QuarterlyAccountReview, Account, Identity)
+        .join(Account, QuarterlyAccountReview.account_id == Account.id)
+        .outerjoin(Identity, Account.identity_id == Identity.id)
+        .where(QuarterlyAccountReview.cycle_id == cycle_id)
+    )
+    if priority and priority != 'all':
+        query = query.where(QuarterlyAccountReview.priority == priority)
+    if platform and platform != 'all':
+        query = query.where(QuarterlyAccountReview.platform.ilike(f"%{platform}%"))
+    if state and state != 'all':
+        query = query.where(QuarterlyAccountReview.state == state)
+
+    rows = db.execute(query.order_by(QuarterlyAccountReview.id.asc())).all()
+
+    items = []
+    for task, acc, ident in rows:
+        reasons = []
+        if task.policy_reasons:
+            try:
+                reasons = json.loads(task.policy_reasons)
+            except Exception:
+                reasons = [task.policy_reasons]
+
+        items.append({
+            'task_id': task.id,
+            'account_id': acc.id,
+            'external_account_id': acc.external_account_id,
+            'username': acc.username,
+            'identity_id': ident.id if ident else None,
+            'identity_name': ident.name if ident else '[Unlinked Account]',
+            'department': ident.department if ident else 'Unmapped',
+            'job_title': ident.job_title if ident else 'N/A',
+            'identity_status': ident.status if ident else 'Unmapped',
+            'platform': task.platform,
+            'priority': task.priority,
+            'policy_score': task.policy_score,
+            'policy_reasons': reasons,
+            'ml_percentile': task.ml_percentile,
+            'ml_status': task.ml_status,
+            'ml_model_key': task.ml_model_key,
+            'ml_model_schema': task.ml_model_schema,
+            'ml_model_trained_utc': task.ml_model_trained_utc,
+            'coverage_days': task.coverage_days,
+            'coverage_known': bool(task.coverage_known),
+            'transfer_flag': bool(task.transfer_flag),
+            'state': task.state,
+            'decision': task.decision,
+            'decision_by': task.decision_by,
+            'decision_at': task.decision_at.isoformat() if task.decision_at else None,
+            'decision_rationale': task.decision_rationale,
+        })
+    return items
+
+
+@app.post('/api/review-cycles/accounts/{task_id}/decision')
+def submit_account_decision(
+    task_id: int,
+    body: AccountDecisionBody,
+    db: Session = Depends(get_session)
+):
+    """Record authorized reviewer decision (retain, revoke-request, reduce-access-request)."""
+    from quarterly_review_service import record_account_decision
+    try:
+        updated = record_account_decision(
+            db,
+            task_id=task_id,
+            decision=body.decision,
+            reviewer_id=body.reviewer_id,
+            rationale=body.rationale,
+        )
+        return {
+            'ok': True,
+            'task_id': updated.id,
+            'state': updated.state,
+            'decision': updated.decision,
+            'decision_by': updated.decision_by,
+            'decision_at': updated.decision_at.isoformat() if updated.decision_at else None,
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get('/api/review-cycles/{cycle_id}/outcomes/template.csv')
+def download_outcome_template(
+    cycle_id: str,
+    scope: str = 'review_queue',
+    db: Session = Depends(get_session)
+):
+    """Download pre-populated CSV review template for a cycle."""
+    from quarterly_review_service import generate_outcome_template_csv
+    try:
+        csv_str = generate_outcome_template_csv(db, cycle_id, scope=scope)
+        filename = f"review_template_{cycle_id}_{scope}.csv"
+        return Response(
+            content=csv_str,
+            media_type='text/csv; charset=utf-8',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.post('/api/review-cycles/{cycle_id}/outcomes/import/preview')
+async def preview_outcome_import(
+    cycle_id: str,
+    file: UploadFile = File(...),
+    scope: str = 'full_population',
+    uploader: str = 'Review Administrator',
+    db: Session = Depends(get_session)
+):
+    """Preview uploaded review outcome CSV. Zero writes to final outcomes/models."""
+    from quarterly_review_service import preview_outcome_csv
+    if not file.filename.lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only .csv files are supported on this endpoint")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10 MB limit
+        raise HTTPException(status_code=400, detail="File size exceeds maximum allowed 10MB")
+
+    try:
+        summary = preview_outcome_csv(
+            db,
+            cycle_id=cycle_id,
+            file_bytes=content,
+            original_filename=file.filename,
+            uploader=uploader,
+            scope=scope,
+        )
+        return summary
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get('/api/review-cycles/{cycle_id}/outcomes/import/{batch_id}')
+def get_import_batch_status(cycle_id: str, batch_id: str, db: Session = Depends(get_session)):
+    """Get staged batch status, counts and validation errors."""
+    batch = db.get(ReviewOutcomeImportBatch, batch_id)
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    rows = db.scalars(
+        select(ReviewOutcomeImportRow).where(
+            ReviewOutcomeImportRow.batch_id == batch_id,
+            ReviewOutcomeImportRow.is_valid == 0
+        ).limit(100)
+    ).all()
+
+    errors = [{
+        'row_number': r.csv_row_number,
+        'account_id': r.account_id,
+        'code': r.error_code,
+        'message': r.error_message,
+    } for r in rows]
+
+    return {
+        'batch_id': batch.id,
+        'cycle_id': batch.cycle_id,
+        'original_filename': batch.original_filename,
+        'file_sha256': batch.file_sha256,
+        'status': batch.status,
+        'total_rows': batch.total_rows,
+        'valid_rows': batch.valid_rows,
+        'invalid_rows': batch.invalid_rows,
+        'duplicate_rows': batch.duplicate_rows,
+        'can_commit': (batch.invalid_rows == 0 and batch.duplicate_rows == 0 and batch.status == 'previewed'),
+        'errors': errors,
+    }
+
+
+@app.post('/api/review-cycles/{cycle_id}/outcomes/import/{batch_id}/commit')
+def commit_outcome_import(
+    cycle_id: str,
+    batch_id: str,
+    body: BatchCommitBody,
+    db: Session = Depends(get_session)
+):
+    """Atomically commit all valid rows in a previewed batch into final outcomes."""
+    from quarterly_review_service import commit_outcome_batch
+    try:
+        res = commit_outcome_batch(db, batch_id=batch_id, approver=body.approver)
+        return res
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get('/api/review-cycles/{cycle_id}/outcomes/export.csv')
+def export_outcomes_csv(cycle_id: str, db: Session = Depends(get_session)):
+    """Audit export of all accepted review outcomes with safe CSV escaping."""
+    from quarterly_review_service import export_committed_outcomes_csv
+    csv_str = export_committed_outcomes_csv(db, cycle_id)
+    filename = f"review_outcomes_accepted_{cycle_id}.csv"
+    return Response(
+        content=csv_str,
+        media_type='text/csv; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
+
+
+@app.get('/api/ml/training-readiness/{platform}')
+def training_readiness(platform: str, db: Session = Depends(get_session)):
+    """Inspect counts of approved review outcomes available for candidate offline training."""
+    from quarterly_review_service import get_training_readiness
+    return get_training_readiness(db, platform)
+
+
+@app.post('/api/ml/training-runs/prepare')
+def prepare_training_run(body: PrepareTrainingBody, db: Session = Depends(get_session)):
+    """Prepare a frozen dataset snapshot record for offline model training."""
+    from quarterly_review_service import prepare_training_candidate_snapshot
+    try:
+        run = prepare_training_candidate_snapshot(
+            db,
+            platform=body.platform,
+            created_by=body.created_by,
+            cycle_ids=body.cycle_ids,
+        )
+        return {
+            'ok': True,
+            'run_id': run.id,
+            'platform': run.platform,
+            'status': run.status,
+            'training_normal_count': run.training_normal_count,
+            'training_concern_count': run.training_concern_count,
+            'created_at': run.created_at.isoformat(),
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get('/api/ml/training-runs')
+def list_training_runs(db: Session = Depends(get_session)):
+    """List model training snapshot runs."""
+    runs = db.scalars(select(MLTrainingRun).order_by(MLTrainingRun.created_at.desc())).all()
+    return [{
+        'id': r.id,
+        'platform': r.platform,
+        'status': r.status,
+        'model_schema': r.model_schema,
+        'training_normal_count': r.training_normal_count,
+        'training_concern_count': r.training_concern_count,
+        'created_by': r.created_by,
+        'created_at': r.created_at.isoformat(),
+        'approved_by': r.approved_by,
+        'promoted_at': r.promoted_at.isoformat() if r.promoted_at else None,
     } for r in runs]

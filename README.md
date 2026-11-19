@@ -64,13 +64,13 @@ The AccessGuard research suite integrates three specialized subsystems into a un
 └─────────────────────────────────┘              │  - Access Review Campaign Mgr    │
                                                  └────────┬──────────────────┬──────┘
                                                           │                  │
-                         SQLAlchemy / Alembic (Port 5434) │                  │ HTTP POST /predict-risk
-                                                          ▼                  ▼ (Port 8001)
+                         SQLAlchemy / Alembic (Port 5434) │                  │ HTTP POST /v1/score/accounts
+                                                          ▼                  ▼ (Port 8001, Bearer Auth)
                                                  ┌─────────────────┐ ┌──────────────────────────────┐
-                                                 │ PostgreSQL 17   │ │ Dialog Final ML (Hashan)     │
-                                                 │ (Docker Compose)│ │ - Multi-Platform Isolation   │
-                                                 │                 │ │   Forest (Win, Linux, GitHub)│
-                                                 │ accessguard_lab │ │ - Peer Ratio Anomaly Engine  │
+                                                 │ PostgreSQL 17   │ │ AccessGuard Quarterly ML     │
+                                                 │ (Docker Compose)│ │ (ml/backend)                 │
+                                                 │                 │ │ - 3 Platform Models:         │
+                                                 │ accessguard_lab │ │   Windows, Linux, GitHub     │
                                                  └─────────────────┘ └──────────────────────────────┘
 ```
 
@@ -81,8 +81,8 @@ The AccessGuard research suite integrates three specialized subsystems into a un
    - **Frontend:** React 19, Tailwind CSS v4, Lucide Icons, and Recharts. A dark-themed security operations dashboard featuring 12 interactive governance views.
 2. **Dialog Access Log (`accesslog-main/`):**
    - Syslog collector receiving TCP log events on port `5514`, normalizing authentication logs, observing active devices, and exposing logs via an API and FTP spool integration.
-3. **Dialog Final ML Engine (`ml/` & `backend/mock_ml_service.py`):**
-   - Advanced multi-platform quarterly Isolation Forest model (Windows AD, Linux PAM, GitHub OAuth) scoring entitlement anomalies against peer groups. Connects to AccessGuard via HTTP REST (`/predict-risk`). Includes fallback to local in-process Scikit-Learn if offline.
+3. **AccessGuard Quarterly ML Engine (ml/backend/):**
+   - Pure inference microservice on port 8001. Loads three independently trained, SHA-256 verified platform models (Windows AD, Linux, GitHub). Accepts 90-day account features, validates coverage, and returns anomaly percentiles. Never fits models on inference batches. Includes offline CLI training tools.
 
 ---
 

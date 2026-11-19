@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity, AlertCircle, AlertTriangle, ArrowDownToLine, ArrowRight,
   ArrowUpRight, Bell, Boxes, Check, CheckCheck, ChevronDown, ChevronRight,
-  CircleHelp, ClipboardCheck, Clock3, Cloud, Database, ExternalLink,
-  FileClock, FileText, Filter, Fingerprint, Github, HardDrive, KeyRound,
-  LayoutDashboard, Lock, Menu, MoreHorizontal, RefreshCw, Search, Server,
+  CircleHelp, ClipboardCheck, Clock3, Cloud, Database, Download, ExternalLink,
+  FileClock, FileSpreadsheet, FileText, Filter, Fingerprint, Github, HardDrive, KeyRound,
+  Layers, LayoutDashboard, Lock, Menu, MoreHorizontal, Play, RefreshCw, Search, Server,
   Settings, Shield, ShieldAlert, ShieldCheck, Sparkles, TrendingUp,
-  TrendingDown, Users, UsersRound, UserRoundX, X, Zap, BarChart3,
+  TrendingDown, Upload, Users, UsersRound, UserRoundX, X, Zap, BarChart3,
   CircleCheck, Clock, AlertOctagon, Eye, Award, Target
 } from 'lucide-react';
 import {
@@ -391,7 +391,7 @@ export default function App() {
                 {page === 'accounts'     && <Accounts     rows={data.accounts} suggestions={data.suggestions} identities={data.identities} systems={data.integrations} busy={busy} linkAccount={linkAccount} createAccount={createAccount} />}
                 {page === 'access'       && <Access       data={data.access} search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} />}
                 {page === 'risks'        && <Risks        data={data} mlPlatforms={data.mlPlatforms} navigate={navigate} />}
-                {page === 'reviews'      && <Reviews      rows={data.reviews} busy={busy} act={act} filter={filter} setFilter={setFilter} generateCampaign={generateCampaign} />}
+                {page === 'reviews'      && <Reviews      rows={data.reviews} busy={busy} act={act} filter={filter} setFilter={setFilter} generateCampaign={generateCampaign} showToast={showToast} refresh={refresh} />}
                 {page === 'alerts'       && <Alerts       rows={data.alerts} navigate={navigate} />}
                 {page === 'activity'     && <ActivityPage rows={data.activity} timeline={data.timeline} accesslogEvents={data.accesslogEvents} accesslogDevices={data.accesslogDevices} accesslogSummary={data.accesslogSummary} syncAccessLog={syncAccessLog} busy={busy} />}
                 {page === 'offboarding'  && <Offboarding  rows={data.offboarding} navigate={navigate} />}
@@ -1214,69 +1214,945 @@ function AIPanel({ ai, mlPlatforms }) {
   );
 }
 
-// ─── Access Reviews ───────────────────────────────────────────────────────────
-function Reviews({ rows, busy, act, filter, setFilter, generateCampaign }) {
+// ─── Quarterly Account Reviews (V10 Aegis ML & CSV Outcomes) ────────────────
+function QuarterlyAccountReviews({ showToast }) {
+  const [cycles, setCycles] = useState([]);
+  const [activeCycleId, setActiveCycleId] = useState('');
+  const [cycleDetail, setCycleDetail] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [subTab, setSubTab] = useState('queue'); // 'queue' | 'csv' | 'training'
+
+  // Filters
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [platformFilter, setPlatformFilter] = useState('all');
+  const [stateFilter, setStateFilter] = useState('all');
+
+  // New Cycle Modal
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [newCycleForm, setNewCycleForm] = useState({
+    cycle_id: `2026-Q${Math.floor(new Date().getMonth() / 3) + 1}`,
+    window_days: 90,
+    budget_pct: 10,
+    as_of: new Date().toISOString().split('T')[0],
+  });
+
+  // Decision Modal
+  const [decidingTask, setDecidingTask] = useState(null);
+  const [decisionForm, setDecisionForm] = useState({
+    decision: 'retain',
+    reviewer_id: 'REV-SEC-LEAD',
+    rationale: '',
+  });
+
+  // CSV Upload States
+  const [csvScope, setCsvScope] = useState('review_queue');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [csvPreview, setCsvPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [committing, setCommitting] = useState(false);
+
+  // Training Readiness States
+  const [trainingPlatform, setTrainingPlatform] = useState('windows');
+  const [readiness, setReadiness] = useState(null);
+  const [trainingRuns, setTrainingRuns] = useState([]);
+
+  // Load cycles
+  const loadCycles = useCallback(async () => {
+    try {
+      const data = await request('/review-cycles');
+      setCycles(data);
+      if (data.length > 0 && !activeCycleId) {
+        setActiveCycleId(data[0].id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [activeCycleId]);
+
+  useEffect(() => {
+    loadCycles();
+  }, [loadCycles]);
+
+  // Load cycle detail & accounts
+  const loadAccounts = useCallback(async (cid) => {
+    if (!cid) return;
+    setLoading(true);
+    try {
+      const [detail, accs] = await Promise.all([
+        request(`/review-cycles/${cid}`),
+        request(`/review-cycles/${cid}/accounts`),
+      ]);
+      setCycleDetail(detail);
+      setAccounts(accs);
+    } catch (e) {
+      showToast(`Error loading cycle: ${e.message}`, false);
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (activeCycleId) {
+      loadAccounts(activeCycleId);
+    }
+  }, [activeCycleId, loadAccounts]);
+
+  // Load training readiness
+  const loadTraining = useCallback(async () => {
+    try {
+      const [r, runs] = await Promise.all([
+        request(`/ml/training-readiness/${trainingPlatform}`),
+        request('/ml/training-runs'),
+      ]);
+      setReadiness(r);
+      setTrainingRuns(runs);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [trainingPlatform]);
+
+  useEffect(() => {
+    if (subTab === 'training') {
+      loadTraining();
+    }
+  }, [subTab, loadTraining]);
+
+  // Handle Cycle Preview
+  const handlePreviewCycle = async () => {
+    setPreviewLoading(true);
+    try {
+      const data = await request('/review-cycles/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cycle_id: newCycleForm.cycle_id,
+          window_days: parseInt(newCycleForm.window_days, 10),
+          budget_pct: parseInt(newCycleForm.budget_pct, 10),
+          as_of: newCycleForm.as_of ? `${newCycleForm.as_of}T00:00:00Z` : null,
+        }),
+      });
+      setPreviewData(data);
+      showToast('Cycle preview computed successfully.');
+    } catch (e) {
+      showToast(`Preview error: ${e.message}`, false);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  // Handle Cycle Create
+  const handleCreateCycle = async () => {
+    try {
+      const res = await request('/review-cycles/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cycle_id: newCycleForm.cycle_id,
+          window_days: parseInt(newCycleForm.window_days, 10),
+          budget_pct: parseInt(newCycleForm.budget_pct, 10),
+          as_of: newCycleForm.as_of ? `${newCycleForm.as_of}T00:00:00Z` : null,
+          created_by: 'Review Administrator',
+        }),
+      });
+      showToast(`Cycle ${res.cycle_id} frozen with ${res.total_accounts} accounts.`);
+      setShowNewModal(false);
+      setPreviewData(null);
+      setActiveCycleId(res.cycle_id);
+      await loadCycles();
+    } catch (e) {
+      showToast(`Creation error: ${e.message}`, false);
+    }
+  };
+
+  // Handle Account Decision
+  const handleDecisionSubmit = async () => {
+    if (!decisionForm.rationale.trim()) {
+      showToast('Rationale is mandatory for all access review decisions.', false);
+      return;
+    }
+    try {
+      await request(`/review-cycles/accounts/${decidingTask.task_id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(decisionForm),
+      });
+      showToast(`Decision recorded: ${decisionForm.decision}`);
+      setDecidingTask(null);
+      setDecisionForm({ decision: 'retain', reviewer_id: 'REV-SEC-LEAD', rationale: '' });
+      await loadAccounts(activeCycleId);
+    } catch (e) {
+      showToast(`Decision error: ${e.message}`, false);
+    }
+  };
+
+  // CSV Preview
+  const handleCsvPreview = async () => {
+    if (!selectedFile) {
+      showToast('Please select a CSV file first.', false);
+      return;
+    }
+    setUploading(true);
+    setCsvPreview(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const res = await fetch(`/api/review-cycles/${activeCycleId}/outcomes/import/preview?scope=${csvScope}`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(typeof data.detail === 'string' ? data.detail : 'CSV preview failed');
+      }
+      setCsvPreview(data);
+      showToast(`Previewed ${data.total_rows} rows: ${data.valid_rows} valid, ${data.invalid_rows} invalid.`);
+    } catch (e) {
+      showToast(`CSV preview error: ${e.message}`, false);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // CSV Commit
+  const handleCsvCommit = async () => {
+    if (!csvPreview || !csvPreview.can_commit) {
+      showToast('Cannot commit: file has errors or duplicates that must be resolved first.', false);
+      return;
+    }
+    setCommitting(true);
+    try {
+      const res = await request(`/review-cycles/${activeCycleId}/outcomes/import/${csvPreview.batch_id}/commit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approver: 'Review Administrator' }),
+      });
+      showToast(`Committed ${res.records_committed} review outcomes atomically!`);
+      setCsvPreview(null);
+      setSelectedFile(null);
+      await loadAccounts(activeCycleId);
+    } catch (e) {
+      showToast(`Commit error: ${e.message}`, false);
+    } finally {
+      setCommitting(false);
+    }
+  };
+
+  // Prepare Training Run
+  const handlePrepareTraining = async () => {
+    if (!window.confirm(`Prepare candidate dataset snapshot for ${trainingPlatform}? This will freeze reviewed normal and behavioral concern rows for offline training.`)) {
+      return;
+    }
+    try {
+      const res = await request('/ml/training-runs/prepare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: trainingPlatform,
+          created_by: 'ML Administrator',
+        }),
+      });
+      showToast(`Candidate run ${res.run_id} prepared! Ready for offline platform_train.`);
+      await loadTraining();
+    } catch (e) {
+      showToast(`Training preparation error: ${e.message}`, false);
+    }
+  };
+
+  // Filtered accounts
+  const visibleAccounts = useMemo(() => {
+    return accounts.filter((a) => {
+      if (priorityFilter !== 'all' && a.priority !== priorityFilter) return false;
+      if (platformFilter !== 'all' && !a.platform?.toLowerCase().includes(platformFilter)) return false;
+      if (stateFilter !== 'all' && a.state !== stateFilter) return false;
+      return true;
+    });
+  }, [accounts, priorityFilter, platformFilter, stateFilter]);
+
+  return (
+    <>
+      {/* Subtab Header */}
+      <div className="subtab-bar" style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '1px solid #e9e4f3', paddingBottom: '12px' }}>
+        <button
+          className={`btn-light ${subTab === 'queue' ? 'btn-primary' : ''}`}
+          onClick={() => setSubTab('queue')}
+        >
+          <ClipboardCheck size={15} /> Review Queue & Decisions
+        </button>
+        <button
+          className={`btn-light ${subTab === 'csv' ? 'btn-primary' : ''}`}
+          onClick={() => setSubTab('csv')}
+        >
+          <FileSpreadsheet size={15} /> Reviewed CSV Workflow
+        </button>
+        <button
+          className={`btn-light ${subTab === 'training' ? 'btn-primary' : ''}`}
+          onClick={() => setSubTab('training')}
+        >
+          <Layers size={15} /> Model Training Readiness
+        </button>
+      </div>
+
+      {/* Cycle Header & Switcher */}
+      <div className="cycle-header-card" style={{ background: '#ffffff', border: '1px solid #e2ddf2', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#f0eaff', color: '#7043cd', display: 'grid', placeItems: 'center' }}>
+            <Clock3 size={22} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '12px', color: '#8c859d', fontWeight: 600 }}>Active Review Cycle:</span>
+              <select
+                value={activeCycleId}
+                onChange={(e) => setActiveCycleId(e.target.value)}
+                style={{ padding: '6px 12px', borderRadius: '7px', border: '1px solid #d4cde6', fontWeight: 700, fontSize: '13px', background: '#fbf9fe' }}
+              >
+                {cycles.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.id} ({c.total_accounts} accounts · {c.status})
+                  </option>
+                ))}
+                {cycles.length === 0 && <option value="">No cycles created yet</option>}
+              </select>
+              {cycleDetail && <Badge value={cycleDetail.mode === 'hybrid' ? 'Aegis ML Hybrid' : 'Policy Only'} tone={cycleDetail.mode === 'hybrid' ? 'active' : 'medium'} />}
+            </div>
+            {cycleDetail && (
+              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#7b738c' }}>
+                Window: <b>{formatDate(cycleDetail.window_start)}</b> to <b>{formatDate(cycleDetail.window_end)}</b> (90 Days) · Budget: <b>{cycleDetail.review_budget_pct}%</b> · Created: {formatShortDate(cycleDetail.created_at)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <button className="btn-primary" onClick={() => setShowNewModal(true)}>
+          <RefreshCw size={14} /> + New 90-Day Cycle
+        </button>
+      </div>
+
+      {/* SUBTAB 1: REVIEW QUEUE */}
+      {subTab === 'queue' && (
+        <>
+          {cycleDetail ? (
+            <>
+              {/* Cycle KPI Grid */}
+              <div className="review-kpi-grid">
+                <div className="review-kpi">
+                  <Users size={18} />
+                  <div><strong>{cycleDetail.total_accounts}</strong><span>Total Accounts</span></div>
+                </div>
+                <div className="review-kpi approved" style={{ background: '#fff5f3', borderColor: '#ffd6cc' }}>
+                  <AlertTriangle size={18} style={{ color: '#d95959' }} />
+                  <div><strong style={{ color: '#d95959' }}>{cycleDetail.mandatory_count}</strong><span>Mandatory Cases</span></div>
+                </div>
+                <div className="review-kpi pct">
+                  <ShieldAlert size={18} />
+                  <div><strong>{cycleDetail.selected_count}</strong><span>Budget Selected</span></div>
+                </div>
+                <div className="review-kpi done">
+                  <Target size={18} />
+                  <div><strong>{cycleDetail.progress_pct}%</strong><span>Progress ({cycleDetail.decided_count} / {cycleDetail.queue_size})</span></div>
+                </div>
+              </div>
+
+              {/* Research Methodology Notice */}
+              <div className="review-summary" style={{ background: '#f8f6fc', border: '1px solid #ebe5f5', borderRadius: '10px', padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ShieldCheck size={20} style={{ color: '#6c36cc' }} />
+                  <span style={{ fontSize: '12px', color: '#443b59' }}>
+                    <strong>Mandatory policy cases bypass the review budget.</strong> ML anomaly percentiles represent statistical rarity relative to peer distributions, NOT probabilities of misuse. Human certification required.
+                  </span>
+                </div>
+                <span className="approval-pill"><Lock size={12} /> Human-In-The-Loop Only</span>
+              </div>
+
+              {/* Account Reviews Table */}
+              <Panel title="Quarterly Account Review Tasks" description={`Showing ${visibleAccounts.length} of ${accounts.length} in-scope accounts`}>
+                <div className="toolbar" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <div className="filter-select">
+                    <Filter size={15} />
+                    <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+                      <option value="all">Priority: All</option>
+                      <option value="mandatory">Priority: Mandatory</option>
+                      <option value="selected">Priority: Selected</option>
+                      <option value="deferred_candidate">Priority: Deferred</option>
+                      <option value="insufficient_evidence">Priority: Evidence Gap</option>
+                    </select>
+                    <ChevronDown size={13} />
+                  </div>
+
+                  <div className="filter-select">
+                    <Server size={15} />
+                    <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)}>
+                      <option value="all">Platform: All</option>
+                      <option value="windows">Platform: Windows AD</option>
+                      <option value="linux">Platform: Linux</option>
+                      <option value="github">Platform: GitHub</option>
+                    </select>
+                    <ChevronDown size={13} />
+                  </div>
+
+                  <div className="filter-select">
+                    <ClipboardCheck size={15} />
+                    <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
+                      <option value="all">State: All</option>
+                      <option value="pending">State: Pending</option>
+                      <option value="decided">State: Decided</option>
+                    </select>
+                    <ChevronDown size={13} />
+                  </div>
+                </div>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ACCOUNT / PLATFORM</th>
+                        <th>EMPLOYEE IDENTITY</th>
+                        <th>PRIORITY</th>
+                        <th>POLICY SCORE & REASONS</th>
+                        <th>ML ANOMALY %</th>
+                        <th>COVERAGE</th>
+                        <th>DECISION</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleAccounts.map((t) => (
+                        <tr key={t.task_id} style={{ background: t.priority === 'mandatory' ? '#fffbfc' : 'transparent' }}>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <strong>{t.username}</strong>
+                              <small style={{ color: '#8f88a0' }}>ACC-{t.account_id} · <b style={{ color: '#5b4c74' }}>{t.platform}</b></small>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <strong>{t.identity_name}</strong>
+                              <small style={{ color: '#7a708e' }}>{t.department} · {t.job_title}</small>
+                              {t.identity_status === 'Departed' && <Badge value="Departed" tone="critical" />}
+                            </div>
+                          </td>
+                          <td>
+                            <Badge
+                              value={t.priority === 'mandatory' ? 'Mandatory' : t.priority === 'selected' ? 'Selected' : t.priority === 'deferred_candidate' ? 'Deferred' : 'Evidence Gap'}
+                              tone={t.priority === 'mandatory' ? 'critical' : t.priority === 'selected' ? 'high' : t.priority === 'deferred_candidate' ? 'neutral' : 'medium'}
+                            />
+                          </td>
+                          <td style={{ maxWidth: '280px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '11px', color: t.policy_score >= 60 ? '#c73e3e' : '#554a6b' }}>
+                                Score: {t.policy_score} / 100
+                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '10.5px', color: '#685f79' }}>
+                                {t.policy_reasons?.map((r, i) => (
+                                  <span key={i}>• {r}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            {t.ml_percentile !== null && t.ml_percentile !== undefined ? (
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <Badge
+                                  value={`Rarity: ${t.ml_percentile}%`}
+                                  tone={t.ml_percentile >= 80 ? 'critical' : t.ml_percentile >= 50 ? 'medium' : 'active'}
+                                />
+                                <small style={{ fontSize: '9.5px', color: '#8f88a0', marginTop: '2px' }}>Relative rank</small>
+                              </div>
+                            ) : (
+                              <Badge value={t.ml_status || 'Unscored'} tone="neutral" />
+                            )}
+                          </td>
+                          <td>
+                            {t.coverage_known ? (
+                              <span style={{ fontSize: '11px', color: '#2a9e76', fontWeight: 600 }}>
+                                <Check size={12} style={{ display: 'inline' }} /> {t.coverage_days}d / 90d
+                              </span>
+                            ) : (
+                              <Badge value="Coverage Gap" tone="medium" />
+                            )}
+                          </td>
+                          <td>
+                            {t.state === 'decided' ? (
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <Badge value={t.decision} tone={t.decision === 'retain' ? 'active' : 'critical'} />
+                                <small style={{ fontSize: '10px', color: '#766e85' }}>by {t.decision_by}</small>
+                              </div>
+                            ) : (
+                              <button
+                                className="btn-light"
+                                style={{ padding: '5px 10px', fontSize: '11px', fontWeight: 700 }}
+                                onClick={() => setDecidingTask(t)}
+                              >
+                                Decide
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {visibleAccounts.length === 0 && (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#888' }}>
+                            No accounts match the selected filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px', background: '#fff', borderRadius: '12px', border: '1px solid #e2ddf2' }}>
+              <Clock3 size={36} style={{ color: '#8b849c', marginBottom: '12px' }} />
+              <h3 style={{ margin: 0, color: '#322b46' }}>No Quarterly Review Cycle Active</h3>
+              <p style={{ color: '#7d748f', fontSize: '12px' }}>Create your first 90-day review cycle to initiate account governance with Aegis V9 ML scoring.</p>
+              <button className="btn-primary" style={{ marginTop: '12px' }} onClick={() => setShowNewModal(true)}>
+                <RefreshCw size={14} /> Create 90-Day Review Cycle
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* SUBTAB 2: REVIEWED CSV WORKFLOW */}
+      {subTab === 'csv' && (
+        <>
+          <InfoNote Icon={FileSpreadsheet}>
+            <strong>Three Distinct CSV Types:</strong> Telemetry logs capture raw usage events. Entitlement snapshots record account inventory. <strong>This Reviewed Outcomes CSV</strong> stores final human certification decisions per account (1 row per account). Decisions are committed atomically.
+          </InfoNote>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+            {/* Template Card */}
+            <div style={{ background: '#ffffff', border: '1px solid #e2ddf2', borderRadius: '12px', padding: '20px' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: '15px', color: '#2e2646' }}>1. Export Review Template</h3>
+              <p style={{ fontSize: '11.5px', color: '#7f7791', margin: '0 0 16px' }}>
+                Download a pre-populated CSV template containing account IDs, system platforms, and cycle reference for offline review.
+              </p>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#4f4467', display: 'block', marginBottom: '5px' }}>Template Scope:</label>
+                <select
+                  value={csvScope}
+                  onChange={(e) => setCsvScope(e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6' }}
+                >
+                  <option value="review_queue">Review Queue (Mandatory + Selected candidates)</option>
+                  <option value="full_population">Full Population (All accounts — for Pilot A/B)</option>
+                </select>
+              </div>
+              <a
+                href={`/api/review-cycles/${activeCycleId}/outcomes/template.csv?scope=${csvScope}`}
+                className="btn-light"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                download
+              >
+                <Download size={15} /> Download Blank Template CSV
+              </a>
+            </div>
+
+            {/* Upload & Preview Card */}
+            <div style={{ background: '#ffffff', border: '1px solid #e2ddf2', borderRadius: '12px', padding: '20px' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: '15px', color: '#2e2646' }}>2. Upload Reviewed Outcomes</h3>
+              <p style={{ fontSize: '11.5px', color: '#7f7791', margin: '0 0 16px' }}>
+                Select completed review CSV. The system previews and validates all rows before any database writes.
+              </p>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                style={{ marginBottom: '14px', display: 'block', fontSize: '12px' }}
+              />
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  className="btn-primary"
+                  onClick={handleCsvPreview}
+                  disabled={uploading || !selectedFile}
+                >
+                  <Upload size={14} /> {uploading ? 'Validating…' : 'Preview CSV'}
+                </button>
+                <a
+                  href={`/api/review-cycles/${activeCycleId}/outcomes/export.csv`}
+                  className="btn-light"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                  download
+                >
+                  <Download size={14} /> Export Committed
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Preview Results Panel */}
+          {csvPreview && (
+            <Panel title="CSV Validation & Staging Preview" description={`Batch ID: ${csvPreview.batch_id}`}>
+              <div className="review-kpi-grid">
+                <div className="review-kpi">
+                  <div><strong>{csvPreview.total_rows}</strong><span>Total Rows</span></div>
+                </div>
+                <div className="review-kpi done">
+                  <div><strong style={{ color: '#2a9e76' }}>{csvPreview.valid_rows}</strong><span>Valid Rows</span></div>
+                </div>
+                <div className="review-kpi approved">
+                  <div><strong style={{ color: '#d95959' }}>{csvPreview.invalid_rows}</strong><span>Invalid Rows</span></div>
+                </div>
+                <div className="review-kpi pct">
+                  <div><strong>{csvPreview.duplicate_rows}</strong><span>Duplicates</span></div>
+                </div>
+              </div>
+
+              {csvPreview.errors?.length > 0 && (
+                <div style={{ background: '#fff0ed', border: '1px solid #ffd6cc', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
+                  <h4 style={{ margin: '0 0 8px', color: '#c73e3e', fontSize: '13px' }}>Validation Errors (Must be resolved before commit):</h4>
+                  <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '11.5px', color: '#883131' }}>
+                    {csvPreview.errors.map((err, i) => (
+                      <li key={i}>Row {err.row_number} [{err.field}]: {err.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: csvPreview.can_commit ? '#2a9e76' : '#d95959' }}>
+                  {csvPreview.can_commit ? '✓ Validation passed! All rows clean and ready for atomic commit.' : '✗ Cannot commit: fix validation errors in your CSV and re-upload.'}
+                </span>
+                <button
+                  className="btn-primary"
+                  onClick={handleCsvCommit}
+                  disabled={!csvPreview.can_commit || committing}
+                  style={{ background: csvPreview.can_commit ? '#2a9e76' : '#cccccc' }}
+                >
+                  <CheckCheck size={15} /> {committing ? 'Committing…' : 'Commit Reviewed Results Atomically'}
+                </button>
+              </div>
+            </Panel>
+          )}
+        </>
+      )}
+
+      {/* SUBTAB 3: MODEL TRAINING READINESS */}
+      {subTab === 'training' && (
+        <>
+          <InfoNote Icon={Layers}>
+            <strong>Controlled Offline Model Retraining:</strong> Models must never train on incoming inference requests. Candidate pipelines are trained offline from approved <code>verified_normal</code> records (label=0) only, while <code>confirmed_behavioral_concern</code> records (label=1) are held out for blind evaluation.
+          </InfoNote>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            {['windows', 'linux', 'github'].map((p) => (
+              <button
+                key={p}
+                className={`subtab-btn ${trainingPlatform === p ? 'active' : ''}`}
+                onClick={() => setTrainingPlatform(p)}
+                style={{ textTransform: 'capitalize' }}
+              >
+                {p} Model Readiness
+              </button>
+            ))}
+          </div>
+
+          {readiness && (
+            <Panel title={`${trainingPlatform.toUpperCase()} Training Readiness`} description="Counts derived from approved human review outcomes in root database">
+              <div className="review-kpi-grid">
+                <div className="review-kpi done">
+                  <div><strong>{readiness.verified_normal}</strong><span>Verified Normal (label=0)</span></div>
+                </div>
+                <div className="review-kpi approved">
+                  <div><strong>{readiness.confirmed_behavioral_concern}</strong><span>Behavioral Concern (label=1)</span></div>
+                </div>
+                <div className="review-kpi">
+                  <div><strong>{readiness.confirmed_policy_concern}</strong><span>Policy Only (Excluded)</span></div>
+                </div>
+                <div className="review-kpi pct">
+                  <div><strong>{readiness.insufficient_evidence}</strong><span>Evidence Gaps (Excluded)</span></div>
+                </div>
+              </div>
+
+              <div style={{ background: '#f8f6fc', border: '1px solid #ebe5f5', borderRadius: '10px', padding: '16px', marginBottom: '18px' }}>
+                <h4 style={{ margin: '0 0 6px', fontSize: '13px', color: '#2e2646' }}>Minimum Record Requirements for {trainingPlatform}:</h4>
+                <p style={{ margin: 0, fontSize: '12px', color: '#685f79' }}>
+                  • Baseline Normal Records: <b>{readiness.verified_normal}</b> / {readiness.minimum_normal_required} required ({readiness.has_minimum_normal_records ? '✓ Met' : '✗ Insufficient'})<br />
+                  • Total Available Records: <b>{readiness.total_reviewed_outcomes}</b> / {readiness.minimum_total_required} required ({readiness.has_minimum_total_records ? '✓ Met' : '✗ Insufficient'})
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: readiness.can_prepare_candidate ? '#2a9e76' : '#888', fontWeight: 600 }}>
+                  {readiness.can_prepare_candidate ? '✓ Baseline criteria met for candidate snapshot generation.' : 'Needs additional approved reviewed outcomes before preparing candidate model.'}
+                </span>
+                <button
+                  className="btn-primary"
+                  onClick={handlePrepareTraining}
+                  disabled={!readiness.can_prepare_candidate}
+                >
+                  <Play size={14} /> Prepare Candidate Training Snapshot
+                </button>
+              </div>
+
+              {trainingRuns.length > 0 && (
+                <div style={{ marginTop: '24px' }}>
+                  <h4 style={{ margin: '0 0 10px', fontSize: '13px', color: '#2e2646' }}>Prepared Training Snapshot Runs:</h4>
+                  <table style={{ width: '100%', fontSize: '11.5px' }}>
+                    <thead>
+                      <tr><th>RUN ID</th><th>PLATFORM</th><th>STATUS</th><th>NORMAL / CONCERN</th><th>CREATED BY</th><th>DATE</th></tr>
+                    </thead>
+                    <tbody>
+                      {trainingRuns.map((r) => (
+                        <tr key={r.id}>
+                          <td><code>{r.id}</code></td>
+                          <td>{r.platform}</td>
+                          <td><Badge value={r.status} tone={r.status === 'prepared' ? 'active' : 'neutral'} /></td>
+                          <td>{r.training_normal_count} / {r.training_concern_count}</td>
+                          <td>{r.created_by}</td>
+                          <td>{formatShortDate(r.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Panel>
+          )}
+        </>
+      )}
+
+      {/* NEW CYCLE MODAL */}
+      {showNewModal && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '580px' }}>
+            <div className="modal-header">
+              <h3>Create New 90-Day Review Cycle</h3>
+              <button className="icon-button" onClick={() => setShowNewModal(false)}><X size={16} /></button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>Cycle Identifier:</label>
+                <input
+                  type="text"
+                  value={newCycleForm.cycle_id}
+                  onChange={(e) => setNewCycleForm({ ...newCycleForm, cycle_id: e.target.value })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>Window Days:</label>
+                  <input
+                    type="number"
+                    value={newCycleForm.window_days}
+                    disabled
+                    style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px', background: '#f5f3f9' }}
+                  />
+                  <small style={{ color: '#888', fontSize: '10px' }}>Aegis models require exactly 90-day windows</small>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>Review Budget (%):</label>
+                  <input
+                    type="number"
+                    value={newCycleForm.budget_pct}
+                    onChange={(e) => setNewCycleForm({ ...newCycleForm, budget_pct: e.target.value })}
+                    style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px' }}
+                  />
+                  <small style={{ color: '#888', fontSize: '10px' }}>Target budget for non-mandatory candidates</small>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>As-Of Date:</label>
+                <input
+                  type="date"
+                  value={newCycleForm.as_of}
+                  onChange={(e) => setNewCycleForm({ ...newCycleForm, as_of: e.target.value })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px' }}
+                />
+              </div>
+
+              <button
+                className="btn-light"
+                onClick={handlePreviewCycle}
+                disabled={previewLoading}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                <Eye size={14} /> {previewLoading ? 'Computing Preview…' : 'Preview Cycle Breakdown'}
+              </button>
+
+              {previewData && (
+                <div style={{ background: '#f8f6fc', border: '1px solid #e5dff0', borderRadius: '9px', padding: '12px', fontSize: '11.5px', color: '#4b4260' }}>
+                  <strong>Preview Result ({previewData.mode.toUpperCase()}):</strong><br />
+                  • Total In-Scope Accounts: <b>{previewData.total_accounts}</b><br />
+                  • Mandatory Cases: <b style={{ color: '#c73e3e' }}>{previewData.mandatory_count}</b> (transfers, leavers, unlinked)<br />
+                  • Selected Candidates: <b>{previewData.selected_count}</b> (within {previewData.review_budget_pct}% budget)<br />
+                  • Deferred Candidates: <b>{previewData.deferred_count}</b><br />
+                  • Evidence Gaps: <b>{previewData.evidence_gap_count}</b>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn-light" onClick={() => setShowNewModal(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleCreateCycle} disabled={!previewData}>
+                Freeze & Create Review Cycle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DECISION MODAL */}
+      {decidingTask && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h3>Human Access Certification</h3>
+              <button className="icon-button" onClick={() => setDecidingTask(null)}><X size={16} /></button>
+            </div>
+
+            <div style={{ marginBottom: '14px', fontSize: '12px', color: '#443b59' }}>
+              Reviewing: <strong>{decidingTask.username}</strong> ({decidingTask.identity_name})<br />
+              Platform: <b>{decidingTask.platform}</b> · Priority: <b>{decidingTask.priority}</b>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>Reviewer Action:</label>
+                <select
+                  value={decisionForm.decision}
+                  onChange={(e) => setDecisionForm({ ...decisionForm, decision: e.target.value })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px' }}
+                >
+                  <option value="retain">Retain (Certify legitimate business need)</option>
+                  <option value="revoke_request">Revoke Request (Flag for simulated remediation)</option>
+                  <option value="reduce_access_request">Reduce Access Request (Excessive privileges)</option>
+                  <option value="defer">Defer (Awaiting additional telemetry/evidence)</option>
+                  <option value="escalate">Escalate (Escalate to Department Manager)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>Reviewer ID:</label>
+                <input
+                  type="text"
+                  value={decisionForm.reviewer_id}
+                  onChange={(e) => setDecisionForm({ ...decisionForm, reviewer_id: e.target.value })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#443b59' }}>Mandatory Rationale:</label>
+                <textarea
+                  rows={3}
+                  value={decisionForm.rationale}
+                  onChange={(e) => setDecisionForm({ ...decisionForm, rationale: e.target.value })}
+                  placeholder="State the explicit business or security reason for this decision…"
+                  style={{ width: '100%', padding: '8px', borderRadius: '7px', border: '1px solid #d4cde6', marginTop: '4px', fontSize: '12px' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn-light" onClick={() => setDecidingTask(null)}>Cancel</button>
+              <button className="btn-primary" onClick={handleDecisionSubmit}>Save Decision</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Access Reviews Main Container ───────────────────────────────────────────
+function Reviews({ rows, busy, act, filter, setFilter, generateCampaign, showToast, refresh }) {
+  const [tab, setTab] = useState('quarterly'); // 'quarterly' | 'legacy'
+
   const visible = rows.filter(r => filter === 'All' || r.review_status === filter);
   const pend = rows.filter(r => r.review_status === 'Pending').length;
   const approved = rows.filter(r => r.review_status === 'Approved').length;
   const remediated = rows.filter(r => r.review_status === 'Remediated').length;
   const completion = Math.round((rows.length - pend) / Math.max(1, rows.length) * 100);
 
-  return <>
-    <div className="campaign-actions">
-      <button className="btn-primary" onClick={generateCampaign} disabled={busy === 'campaign'}>
-        <RefreshCw size={15} /> Generate risk-based reviews
-      </button>
-      <span>Existing review decisions remain unchanged</span>
-    </div>
-    <div className="review-kpi-grid">
-      <div className="review-kpi"><ClipboardCheck size={18} /><div><strong>{pend}</strong><span>Pending decisions</span></div></div>
-      <div className="review-kpi approved"><CircleCheck size={18} /><div><strong>{approved}</strong><span>Approved for removal</span></div></div>
-      <div className="review-kpi done"><Award size={18} /><div><strong>{remediated}</strong><span>Remediated</span></div></div>
-      <div className="review-kpi pct"><Target size={18} /><div><strong>{completion}%</strong><span>Completion rate</span></div></div>
-    </div>
-    <div className="review-summary">
-      <div><ClipboardCheck size={22} /><span><b>{pend} reviews need decisions</b><small>Review evidence carefully before approving removal</small></span></div>
-      <span className="approval-pill"><Lock size={13} /> Human approval required</span>
-    </div>
-    <Panel title="Review Queue" description="Grant removal requires explicit approval then a simulation step">
-      <div className="toolbar">
-        <div className="filter-select">
-          <Filter size={16} />
-          <select value={filter} onChange={e => setFilter(e.target.value)}>
-            {['All', 'Pending', 'Approved', 'Retained', 'Remediated'].map(x => <option key={x}>{x}</option>)}
-          </select>
-          <ChevronDown size={14} />
-        </div>
+  return (
+    <>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '18px', borderBottom: '1px solid #e4def0', paddingBottom: '12px' }}>
+        <button
+          className={`btn-light ${tab === 'quarterly' ? 'btn-primary' : ''}`}
+          onClick={() => setTab('quarterly')}
+        >
+          <ClipboardCheck size={16} /> Quarterly Account Reviews (V10 Aegis ML)
+        </button>
+        <button
+          className={`btn-light ${tab === 'legacy' ? 'btn-primary' : ''}`}
+          onClick={() => setTab('legacy')}
+        >
+          <Award size={16} /> Legacy Grant Reviews
+        </button>
       </div>
-      <div className="review-list">
-        {visible.map(r => (
-          <article className="review-row" key={r.review_id}>
-            <div className="review-row-main">
-              <UserAvatar name={r.identity_name} size={41} />
-              <div className="review-content">
-                <div className="review-title"><strong>{r.identity_name}</strong><Badge value={r.review_status} /></div>
-                <div className="review-meta">{r.system_name} · <b>{r.permission}</b> · {r.department}</div>
-                <div className="review-evidence"><AlertCircle size={13} />{r.reasons?.length ? r.reasons.join(' · ') : 'Access verification required'}</div>
+
+      {tab === 'quarterly' ? (
+        <QuarterlyAccountReviews showToast={showToast} />
+      ) : (
+        <>
+          <InfoNote Icon={Award}>
+            <strong>Legacy Demonstration Queue:</strong> This view operates on per-grant risk heuristics. For complete 90-day account-level governance, transfer tracking, and reviewed CSV imports, use the <strong>Quarterly Account Reviews</strong> tab above.
+          </InfoNote>
+          <div className="campaign-actions">
+            <button className="btn-primary" onClick={generateCampaign} disabled={busy === 'campaign'}>
+              <RefreshCw size={15} /> Generate risk-based reviews
+            </button>
+            <span>Existing review decisions remain unchanged</span>
+          </div>
+          <div className="review-kpi-grid">
+            <div className="review-kpi"><ClipboardCheck size={18} /><div><strong>{pend}</strong><span>Pending decisions</span></div></div>
+            <div className="review-kpi approved"><CircleCheck size={18} /><div><strong>{approved}</strong><span>Approved for removal</span></div></div>
+            <div className="review-kpi done"><Award size={18} /><div><strong>{remediated}</strong><span>Remediated</span></div></div>
+            <div className="review-kpi pct"><Target size={18} /><div><strong>{completion}%</strong><span>Completion rate</span></div></div>
+          </div>
+          <div className="review-summary">
+            <div><ClipboardCheck size={22} /><span><b>{pend} reviews need decisions</b><small>Review evidence carefully before approving removal</small></span></div>
+            <span className="approval-pill"><Lock size={13} /> Human approval required</span>
+          </div>
+          <Panel title="Legacy Review Queue" description="Grant removal requires explicit approval then a simulation step">
+            <div className="toolbar">
+              <div className="filter-select">
+                <Filter size={16} />
+                <select value={filter} onChange={e => setFilter(e.target.value)}>
+                  {['All', 'Pending', 'Approved', 'Retained', 'Remediated'].map(x => <option key={x}>{x}</option>)}
+                </select>
+                <ChevronDown size={14} />
               </div>
             </div>
-            <div className="review-actions">
-              <RiskBar risk={r.risk_score} />
-              {r.review_status === 'Pending'
-                ? <div className="action-pair">
-                  <button disabled={busy === r.review_id} className="btn-soft-green" onClick={() => act(r.review_id, 'retain')}><Check size={14} /> Retain</button>
-                  <button disabled={busy === r.review_id} className="btn-danger" onClick={() => act(r.review_id, 'approve')}>Approve removal</button>
-                </div>
-                : r.review_status === 'Approved'
-                  ? <button disabled={busy === r.review_id} className="btn-danger" onClick={() => act(r.review_id, 'revoke')}><Shield size={14} /> Simulate revoke</button>
-                  : <span className="completed"><CheckCheck size={15} /> {r.review_status === 'Remediated' ? 'Simulated' : 'Decided'}</span>}
+            <div className="review-list">
+              {visible.map(r => (
+                <article className="review-row" key={r.review_id}>
+                  <div className="review-row-main">
+                    <UserAvatar name={r.identity_name} size={41} />
+                    <div className="review-content">
+                      <div className="review-title"><strong>{r.identity_name}</strong><Badge value={r.review_status} /></div>
+                      <div className="review-meta">{r.system_name} · <b>{r.permission}</b> · {r.department}</div>
+                      <div className="review-evidence"><AlertCircle size={13} />{r.reasons?.length ? r.reasons.join(' · ') : 'Access verification required'}</div>
+                    </div>
+                  </div>
+                  <div className="review-actions">
+                    <RiskBar risk={r.risk_score} />
+                    {r.review_status === 'Pending'
+                      ? <div className="action-pair">
+                        <button disabled={busy === r.review_id} className="btn-soft-green" onClick={() => act(r.review_id, 'retain')}><Check size={14} /> Retain</button>
+                        <button disabled={busy === r.review_id} className="btn-danger" onClick={() => act(r.review_id, 'approve')}>Approve removal</button>
+                      </div>
+                      : r.review_status === 'Approved'
+                        ? <button disabled={busy === r.review_id} className="btn-danger" onClick={() => act(r.review_id, 'revoke')}><Shield size={14} /> Simulate revoke</button>
+                        : <span className="completed"><CheckCheck size={15} /> {r.review_status === 'Remediated' ? 'Simulated' : 'Decided'}</span>}
+                  </div>
+                </article>
+              ))}
+              {visible.length === 0 && <TableEmpty message="No access reviews with this status." />}
             </div>
-          </article>
-        ))}
-        {visible.length === 0 && <TableEmpty message="No access reviews with this status." />}
-      </div>
-    </Panel>
-  </>;
+          </Panel>
+        </>
+      )}
+    </>
+  );
 }
 
 // ─── Offboarding ──────────────────────────────────────────────────────────────

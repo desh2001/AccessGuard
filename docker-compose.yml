@@ -21,10 +21,16 @@ services:
 
   ml-service:
     build:
-      context: .
-      dockerfile: backend/Dockerfile.ml
+      context: ./ml/backend
+      dockerfile: Dockerfile
     container_name: accessguard-ml-service
     restart: unless-stopped
+    environment:
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-development-token-32-chars-long-minimum-key}
+      AEGIS_PLATFORM_MODEL_DIR: /app/ml_artifacts/platforms
+      MIN_MODEL_COVERAGE_FRACTION: "0.995"
+    volumes:
+      - ./ml/backend/ml_artifacts:/app/ml_artifacts:ro
     ports:
       - '127.0.0.1:8001:8001'
     networks:
@@ -51,6 +57,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://accessguard_lab:research-local-only@postgres:5432/accessguard_lab
       ML_SERVICE_URL: http://ml-service:8001
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-development-token-32-chars-long-minimum-key}
       ACCESSLOG_SERVICE_URL: http://accesslog-service:8002
       SENTINEL_API_URL: https://host.pasinduudana.me
       SENTINEL_INGESTION_TOKEN: sentinel_ingest_CKg9Olm8VbdcaOHFdHXj3OK1666q0qdbjA30U9MKgMQ

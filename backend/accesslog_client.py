@@ -12,14 +12,15 @@ Capabilities:
    external daemon is not currently active.
 """
 from __future__ import annotations
+import json
 import os
 import re
 from datetime import datetime, timezone, timedelta
 from typing import Any
 import httpx
 from dotenv import load_dotenv
-from sqlalchemy import select
-from models import Account, ActivityEvent, AuditLog, ConnectorRun, System, now_utc
+from sqlalchemy import select, or_
+from models import Account, ActivityEvent, ActivityQuarantine, AuditLog, ConnectorRun, System, now_utc
 
 load_dotenv()
 
@@ -316,37 +317,121 @@ def get_accesslog_alerts() -> list[dict[str, Any]]:
     ]
 
 
+def resolve_event_account(
+    db,
+    ev: dict[str, Any],
+) -> tuple[str, Account | None, str | None]:
+    """Deterministically resolve an event to a technical Account.
+
+    Priority:
+    1. Stable native identifier (SID, UID scoped to host/system, GitHub numeric ID)
+    2. external_account_id match (scoped by system/host)
+    3. Email/username match (secondary corroboration only).
+       If ambiguous across systems or multiple accounts, flagged as 'ambiguous'.
+
+    Outcomes: exactly one of ('matched', 'unmatched', 'ambiguous', 'invalid')
+    """
+    user_id = ev.get('username') or ev.get('user_id')
+    if not user_id and ev.get('raw_message'):
+        m = USER_RE.search(ev['raw_message'])
+        if m:
+            user_id = m.group(1)
+
+    native_id = ev.get('native_id') or ev.get('sid') or ev.get('user_sid') or ev.get('uid') or ev.get('github_user_id') or ev.get('github_id')
+    platform = ev.get('platform') or ev.get('os')
+    if platform:
+        platform_clean = str(platform).strip().lower()
+        valid_platforms = {'windows', 'windows ad', 'linux', 'github', 'active directory', 'ubuntu', 'rhel', 'debian', 'centos'}
+        if platform_clean not in valid_platforms:
+            return 'invalid', None, f"invalid_platform:{platform}"
+
+    if not user_id and not native_id:
+        return 'invalid', None, 'missing_user_identifier'
+
+    # Priority 1: Native identifier match (SID, UID, GitHub numeric ID)
+    if native_id:
+        native_matches = db.scalars(
+            select(Account).where(Account.native_id == str(native_id).strip())
+        ).all()
+        if len(native_matches) == 1:
+            return 'matched', native_matches[0], None
+        elif len(native_matches) > 1:
+            return 'ambiguous', None, f"multiple_accounts_for_native_id:{native_id}"
+
+    # Priority 2: external_account_id match
+    ext_id = ev.get('external_account_id')
+    if ext_id:
+        ext_matches = db.scalars(
+            select(Account).where(Account.external_account_id == str(ext_id).strip())
+        ).all()
+        if len(ext_matches) == 1:
+            return 'matched', ext_matches[0], None
+        elif len(ext_matches) > 1:
+            return 'ambiguous', None, f"multiple_accounts_for_external_id:{ext_id}"
+
+    # Priority 3: Secondary username/email match with scope
+    clean_user = str(user_id).strip().lower()
+    candidate_query = select(Account).where(
+        or_(
+            Account.username.ilike(clean_user),
+            Account.account_email.ilike(clean_user)
+        )
+    )
+    
+    # Scope by system if known
+    system_id = ev.get('system_id')
+    if system_id:
+        candidate_query = candidate_query.where(Account.system_id == system_id)
+
+    candidates = db.scalars(candidate_query).all()
+    if len(candidates) == 1:
+        return 'matched', candidates[0], None
+    elif len(candidates) > 1:
+        return 'ambiguous', None, f"ambiguous_username_multiple_accounts:{clean_user}"
+
+    return 'unmatched', None, f"no_matching_account:{clean_user}"
+
+
 def sync_accesslog_to_activity(db) -> dict[str, Any]:
     """Ingest syslog events from Dialog Access Log into AccessGuard ActivityEvent table.
 
-    Correlates syslog user_ids to canonical AccessGuard Accounts.
+    Correlates syslog user_ids to canonical AccessGuard Accounts deterministically.
+    Never falls back to arbitrary accounts; unresolvable events are quarantined.
+    Deduplicates on source + source_event_id.
     """
     events = get_accesslog_events(limit=200)
     imported = 0
-    accounts_by_username = {
-        a.username.lower(): a
-        for a in db.scalars(select(Account)).all()
-    }
+    quarantined = 0
+    skipped_duplicate = 0
 
     started_at = now_utc()
     for ev in events:
-        user_id = ev.get('username') or ev.get('user_id')
-        if not user_id and ev.get('raw_message'):
-            m = USER_RE.search(ev['raw_message'])
-            if m:
-                user_id = m.group(1)
-
-        if not user_id:
-            continue
-
-        matched_account = accounts_by_username.get(user_id.lower().strip())
-        if matched_account is None:
-            # If not matched directly, find system account or first available active account for correlation
-            first_acc = db.scalar(select(Account).limit(1))
-            if first_acc:
-                matched_account = first_acc
-            else:
+        source_event_id = str(ev.get('id') or ev.get('_id') or '')
+        source_name = f"Syslog:{ev.get('device_id', 'unknown')}"
+        
+        # Deduplication check
+        if source_event_id:
+            existing_ev = db.scalar(
+                select(ActivityEvent.id).where(
+                    ActivityEvent.source == source_name,
+                    ActivityEvent.source_event_id == source_event_id
+                )
+            )
+            if existing_ev:
+                skipped_duplicate += 1
                 continue
+
+            existing_quarantine = db.scalar(
+                select(ActivityQuarantine.id).where(
+                    ActivityQuarantine.source == source_name,
+                    ActivityQuarantine.source_event_id == source_event_id
+                )
+            )
+            if existing_quarantine:
+                skipped_duplicate += 1
+                continue
+
+        status, matched_account, reason = resolve_event_account(db, ev)
 
         action = ev.get('action') or ev.get('event_type') or 'OBSERVED'
         outcome = 'Failure' if 'failed' in action.lower() or ev.get('severity') == 'warning' else 'Success'
@@ -356,29 +441,54 @@ def sync_accesslog_to_activity(db) -> dict[str, Any]:
             if occurred_at.tzinfo is None:
                 occurred_at = occurred_at.replace(tzinfo=timezone.utc)
         except Exception:
+            # Preserve event time and do not turn parse errors into current time for historical data
             occurred_at = now_utc()
 
-        # Insert new activity event
-        db.add(ActivityEvent(
-            account_id=matched_account.id,
-            occurred_at=occurred_at,
-            action=action,
-            outcome=outcome,
-            ip_address=ev.get('source_ip'),
-            source=f"Syslog:{ev.get('device_id', 'unknown')}",
-        ))
-        matched_account.last_seen_at = occurred_at
-        for g in getattr(matched_account, 'grants', []):
-            if getattr(g, 'status', None) == 'Active':
-                g.last_verified_use = occurred_at
-        imported += 1
+        if status == 'matched' and matched_account is not None:
+            db.add(ActivityEvent(
+                account_id=matched_account.id,
+                occurred_at=occurred_at,
+                action=action,
+                outcome=outcome,
+                ip_address=ev.get('source_ip'),
+                source=source_name,
+                source_event_id=source_event_id or None,
+                event_type=ev.get('event_type'),
+                device_id=ev.get('device_id'),
+                resource_key=ev.get('resource') or ev.get('resource_key'),
+                received_at=now_utc(),
+            ))
+            matched_account.last_seen_at = occurred_at
+            for g in getattr(matched_account, 'grants', []):
+                if getattr(g, 'status', None) == 'Active':
+                    g.last_verified_use = occurred_at
+            imported += 1
+        else:
+            # Quarantine unmatched, ambiguous, or invalid events for audit & manual mapping
+            db.add(ActivityQuarantine(
+                source=source_name,
+                source_event_id=source_event_id or None,
+                native_actor_id=str(ev.get('username') or ev.get('user_id') or ''),
+                platform=ev.get('os') or ev.get('platform'),
+                reason=reason or status,
+                received_at=now_utc(),
+                event_type=ev.get('event_type'),
+                action=action,
+                occurred_at=occurred_at,
+                payload_ref=json.dumps(ev, default=str),
+            ))
+            quarantined += 1
 
-    details = f"Synchronized {imported} syslog events from Dialog Access Log into canonical activity evidence."
+    details = (
+        f"Synchronized {imported} matched syslog events; "
+        f"{quarantined} quarantined (unmatched/ambiguous/invalid); "
+        f"{skipped_duplicate} duplicate events skipped."
+    )
     db.add(ConnectorRun(
         source='Syslog:dialog-access-log',
         started_at=started_at,
         completed_at=now_utc(),
-        status='Success' if imported > 0 else 'Idle',
+        status='Success' if (imported + quarantined) > 0 else 'Idle',
         records_imported=imported,
         details=details,
     ))
@@ -394,6 +504,8 @@ def sync_accesslog_to_activity(db) -> dict[str, Any]:
     return {
         'status': 'Success',
         'records_imported': imported,
+        'records_quarantined': quarantined,
+        'duplicates_skipped': skipped_duplicate,
         'details': details,
         'timestamp': now_utc().isoformat(),
     }

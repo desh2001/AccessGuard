@@ -70,10 +70,31 @@ Browser: `http://127.0.0.1:5173`, API docs: `http://127.0.0.1:8000/docs`.
 4. **Activity Evidence**: Sample event logs සහ unusual behavior flags බලන්න. Logs නැති එක access භාවිතා වුණේ නැහැ කියන සාක්ෂියක් නෙමෙයි.
 5. **AI Risk Analysis**: Rule score එක සහ Isolation Forest anomaly percentile එක compare කරන්න. මේක statistical research demo model එකක්, confirmed maliciousness prediction එකක් නෙමෙයි.
 6. **Risk Alerts**: Review කරන්න ඕන grants පෙන්නයි.
-7. **Access Reviews**: **Generate risk-based reviews** → **Retain** නැත්නම් **Approve removal** → **Simulate revoke**. Real system permissions වෙනස් වෙන්නේ නැහැ.
+7. **Access Reviews (V10 Quarterly Account Reviews)**:
+   - **Review Queue**: 90-day review cycle එකක mandatory policy triggers (Departed employees, Department transfers, Unlinked accounts) සහ ML high-risk accounts review කරන්න.
+   - **Manual Decisions**: Retain, Request Revoke, නැත්නම් Reduce Access තීරණ ලබා දෙන්න. Review rationale එක අනිවාර්යයි.
+   - **Reviewed CSV Workflow**: Cycle template එක CSV එකක් ලෙස download කර, reviewer outcomes ඇතුළත් කර, upload කර preview එක බලන්න. සියලුම rows නිවැරදි නම් atomic commit එකක් ලෙස database එකට save කරන්න.
+   - **Model Training Readiness**: Review outcomes වලින් `verified_normal` සහ `confirmed_behavioral_concern` වෙන් කර offline ML model retraining සඳහා export කරන්න. කිසිවිටෙක live inference එකේදී auto-train නොවේ.
 8. **Offboarding**: Departed employee ලාගේ active permissions බලන්න.
 9. **Audit Reports**: Reviewer decisions ඇතුළු events history බලන්න.
 10. **Research Reports**: Counts, review progress, connector provenance export කරන්න.
+
+## V10 ML Microservice Start කිරීම
+
+AccessGuard Quarterly ML service එක Port `8001` එකේ ධාවනය වේ:
+
+```powershell
+# PowerShell එකෙන්:
+.\scripts\start-ml.ps1
+```
+
+නැත්නම් manually:
+
+```powershell
+cd ml\backend
+$env:ML_SERVICE_TOKEN="development-token-32-chars-long-minimum-key"
+uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
 
 ## CSV import example
 

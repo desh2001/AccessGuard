@@ -10,25 +10,27 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from models import (
     Identity, System, Account, AccessGrant, Review,
-    AuditLog, ActivityEvent, ConnectorRun, now_utc
+    AuditLog, ActivityEvent, ConnectorRun, ActivityCoverage,
+    ADGroupCatalog, ADGroupMembershipHistory, EmployeeTransfer,
+    ManagedResourcePolicy, now_utc
 )
 from risk import calculate_risk
 
 SYSTEMS = [
-    ('GH',  'GitHub',           'Development'),
-    ('LIN', 'Linux Servers',    'Infrastructure'),
-    ('WIN', 'Windows AD',       'Identity'),
-    ('AWS', 'AWS Cloud',        'Cloud'),
-    ('SLK', 'Slack',            'Collaboration'),
-    ('JRA', 'Jira',             'Project Management'),
-    ('PG',  'PostgreSQL DB',    'Data'),
-    ('CRM', 'Salesforce CRM',   'Business'),
-    ('NTO', 'Notion',           'Collaboration'),
-    ('ZOM', 'Zoom',             'Collaboration'),
-    ('GRA', 'Grafana',          'Monitoring'),
-    ('GCL', 'Google Cloud',     'Cloud'),
-    ('SNW', 'Snowflake DW',     'Data'),
-    ('K8S', 'Kubernetes',       'Infrastructure'),
+    ('GH',  'GitHub',           'Development',    'github'),
+    ('LIN', 'Linux Servers',    'Infrastructure', 'linux'),
+    ('WIN', 'Windows AD',       'Identity',       'windows'),
+    ('AWS', 'AWS Cloud',        'Cloud',          None),
+    ('SLK', 'Slack',            'Collaboration',  None),
+    ('JRA', 'Jira',             'Project Management', None),
+    ('PG',  'PostgreSQL DB',    'Data',           None),
+    ('CRM', 'Salesforce CRM',   'Business',       None),
+    ('NTO', 'Notion',           'Collaboration',  None),
+    ('ZOM', 'Zoom',             'Collaboration',  None),
+    ('GRA', 'Grafana',          'Monitoring',     None),
+    ('GCL', 'Google Cloud',     'Cloud',          None),
+    ('SNW', 'Snowflake DW',     'Data',           None),
+    ('K8S', 'Kubernetes',       'Infrastructure', None),
 ]
 
 GIVEN = [
@@ -78,9 +80,9 @@ def seed_demo(session: Session) -> bool:
     rng = random.Random(42)
 
     # ── Systems ──────────────────────────────────────────────────────────────
-    for id_, name, category in SYSTEMS:
+    for id_, name, category, platform in SYSTEMS:
         if session.get(System, id_) is None:
-            session.add(System(id=id_, name=name, category=category))
+            session.add(System(id=id_, name=name, category=category, platform=platform))
     session.flush()
 
     identities: list[Identity] = []
@@ -145,7 +147,7 @@ def seed_demo(session: Session) -> bool:
         )
         chosen_systems = rng.sample(SYSTEMS, min(n_systems, len(SYSTEMS)))
 
-        for sys_id, sys_name, _ in chosen_systems:
+        for sys_id, sys_name, _, plat in chosen_systems:
             # For Finance employees, force some to have Dev/Infra access
             emp_num = int(identity.id.split('-')[1])
             is_cross = (
@@ -153,6 +155,18 @@ def seed_demo(session: Session) -> bool:
                 and sys_id in ('GH', 'LIN', 'PG', 'K8S')
                 and emp_num in FINANCE_IN_DEV
             )
+
+            native_id = None
+            native_id_type = None
+            if plat == 'windows':
+                native_id = f"S-1-5-21-3623811015-3361044348-30300820-1{emp_num:03d}"
+                native_id_type = 'windows_sid'
+            elif plat == 'linux':
+                native_id = f"uid:10{emp_num:02d}@prod-lin"
+                native_id_type = 'linux_uid'
+            elif plat == 'github':
+                native_id = f"gh-usr-{emp_num:05d}"
+                native_id_type = 'github_numeric_id'
 
             account = Account(
                 identity_id=identity.id,
@@ -163,6 +177,8 @@ def seed_demo(session: Session) -> bool:
                 status='Active',
                 source='DemoSeed',
                 mapping_method='DemoSeed',
+                native_id=native_id,
+                native_id_type=native_id_type,
                 last_seen_at=now_utc() - timedelta(days=rng.randrange(1, 50)),
             )
             session.add(account)
@@ -201,7 +217,7 @@ def seed_demo(session: Session) -> bool:
                 high_risk_grants.append(grant.id)
 
     # ── Deliberately UNLINKED accounts (identity resolution exercise) ─────────
-    for idx, (sys_id, sys_name, _) in enumerate(SYSTEMS[:5], start=1):
+    for idx, (sys_id, sys_name, _, _) in enumerate(SYSTEMS[:5], start=1):
         email = (
             f'identity{idx:03d}@demo.example' if idx <= 2
             else f'unknown{idx}@external.demo.example'
@@ -284,6 +300,105 @@ def seed_demo(session: Session) -> bool:
             f'{len(high_risk_grants)} initial high-risk reviews.'
         ),
     ))
+
+    # ── V10: Telemetry Coverage Attestations (90-day complete window) ────────
+    for plat in ('windows', 'linux', 'github'):
+        session.add(ActivityCoverage(
+            platform=plat,
+            source=f"Collector:{plat}",
+            event_type='all_usage',
+            start_at=now_utc() - timedelta(days=90),
+            end_at=now_utc(),
+            is_complete=1,
+            attested_by='SecOps Platform Lead',
+            attested_at=now_utc() - timedelta(days=1),
+            record_count=1200,
+        ))
+
+    # ── V10: AD Group Catalog & History ──────────────────────────────────────
+    ad_groups = [
+        ('default', 'corp.dialog.lk', 'Domain Admins', 'Domain Admins', 'access', 'tier_0', 'IT,Engineering'),
+        ('default', 'corp.dialog.lk', 'DevOps Leads', 'DevOps Leads', 'access', 'tier_1', 'Engineering'),
+        ('default', 'corp.dialog.lk', 'Finance Analysts', 'Finance Analysts', 'access', 'standard', 'Finance'),
+        ('default', 'corp.dialog.lk', 'General Employees', 'General Employees', 'non_access', None, None),
+    ]
+    for org, dir_id, key, disp, rel, tier, depts in ad_groups:
+        session.add(ADGroupCatalog(
+            org_id=org,
+            directory_id=dir_id,
+            group_key=key,
+            display_name=disp,
+            access_relevance=rel,
+            privilege_tier=tier,
+            allowed_departments=depts,
+            owner='Identity Governance Lead',
+            approver='CISO Office',
+        ))
+
+    # Assign some AD group memberships
+    for human_id in identities[:20]:
+        session.add(ADGroupMembershipHistory(
+            identity_id=human_id.id,
+            org_id='default',
+            directory_id='corp.dialog.lk',
+            group_key='General Employees',
+            is_active=1,
+            observed_at=now_utc() - timedelta(days=80),
+            source='AD-Connector',
+        ))
+    # Give EMP-0001 and EMP-0002 Domain Admins
+    session.add(ADGroupMembershipHistory(
+        identity_id='EMP-0001',
+        org_id='default',
+        directory_id='corp.dialog.lk',
+        group_key='Domain Admins',
+        is_active=1,
+        observed_at=now_utc() - timedelta(days=45),
+        source='AD-Connector',
+    ))
+
+    # ── V10: HR Employee Transfers ───────────────────────────────────────────
+    # EMP-0004 transferred from Engineering to Finance 15 days ago
+    session.add(EmployeeTransfer(
+        identity_id='EMP-0004',
+        effective_at=now_utc() - timedelta(days=15),
+        occurred_at=now_utc() - timedelta(days=15),
+        from_department='Engineering',
+        to_department='Finance',
+        from_manager='Alex Morgan',
+        to_manager='Jamie Chen',
+        source_reference='HRIS-REQ-9812',
+        status='pending',
+    ))
+    # EMP-0012 transferred from Operations to Marketing 40 days ago
+    session.add(EmployeeTransfer(
+        identity_id='EMP-0012',
+        effective_at=now_utc() - timedelta(days=40),
+        occurred_at=now_utc() - timedelta(days=40),
+        from_department='Operations',
+        to_department='Marketing',
+        from_manager='Taylor Reyes',
+        to_manager='Jordan Patel',
+        source_reference='HRIS-REQ-7643',
+        status='reviewed',
+        reviewer_disposition='Role transition approved in Q3',
+    ))
+
+    # ── V10: Managed Resource Policies ───────────────────────────────────────
+    policies = [
+        ('Domain Controllers / Production', 'Active Directory Domain Controllers', 'Identity Team', 'IT,Engineering', 'critical'),
+        ('Production Linux / Infrastructure', 'Core Host Cluster / SSH', 'DevOps Lead', 'Engineering', 'high'),
+        ('GitHub / Main Org Repos', 'Dialog Enterprise GitHub Repositories', 'AppSec Lead', 'Engineering', 'standard'),
+        ('Financial Ledger / Core ERP', 'SAP/ERP Financial Database', 'Finance Controller', 'Finance', 'critical'),
+    ]
+    for key, name, owner, depts, sens in policies:
+        session.add(ManagedResourcePolicy(
+            resource_key=key,
+            display_name=name,
+            business_owner=owner,
+            permitted_departments=depts,
+            sensitivity=sens,
+        ))
 
     session.commit()
     return True
