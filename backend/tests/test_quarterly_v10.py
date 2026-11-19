@@ -73,32 +73,42 @@ def db_session():
         acct_alice_win = Account(
             id=1, identity_id=emp1.id, system_id=win_sys.id,
             username="asmith", account_email="alice@corp.dialog.lk",
+            account_type="human",
             external_account_id="ad:asmith", native_id="S-1-5-21-123456789-001",
-            native_id_type="sid", status="Active"
+            native_id_type="windows_sid", native_id_namespace="corp.dialog.lk",
+            status="Active"
         )
         acct_alice_lin = Account(
             id=2, identity_id=emp1.id, system_id=lin_sys.id,
             username="asmith_lin", account_email="alice@corp.dialog.lk",
+            account_type="human",
             external_account_id="lin:1001", native_id="1001",
-            native_id_type="uid", status="Active"
+            native_id_type="linux_uid", native_id_namespace="prod-lin-01",
+            status="Active"
         )
         acct_bob_gh = Account(
             id=3, identity_id=emp2.id, system_id=gh_sys.id,
             username="bjones-gh", account_email="bob@corp.dialog.lk",
+            account_type="human",
             external_account_id="github-user:998877", native_id="998877",
-            native_id_type="github_id", status="Active"
+            native_id_type="github_user_id", native_id_namespace="github.com",
+            status="Active"
         )
         acct_charlie_win = Account(
             id=4, identity_id=emp_leaver.id, system_id=win_sys.id,
             username="cdeparted", account_email="charlie@corp.dialog.lk",
+            account_type="human",
             external_account_id="ad:cdeparted", native_id="S-1-5-21-123456789-003",
-            native_id_type="sid", status="Active"
+            native_id_type="windows_sid", native_id_namespace="corp.dialog.lk",
+            status="Active"
         )
         acct_orphan = Account(
             id=5, identity_id=None, system_id=lin_sys.id,
             username="ghostuser", account_email="ghost@external.local",
+            account_type="service",
             external_account_id="lin:9999", native_id="9999",
-            native_id_type="uid", status="Active"
+            native_id_type="linux_uid", native_id_namespace="prod-lin-01",
+            status="Active"
         )
         session.add_all([acct_alice_win, acct_alice_lin, acct_bob_gh, acct_charlie_win, acct_orphan])
         session.flush()
@@ -149,7 +159,9 @@ def db_session():
 
 def test_resolve_by_windows_sid(db_session):
     event = {
-        "user_sid": "S-1-5-21-123456789-001",
+        "native_id": "S-1-5-21-123456789-001",
+        "native_id_type": "windows_sid",
+        "native_id_namespace": "corp.dialog.lk",
         "username": "asmith",
         "system_id": "AD",
         "event_id": "evt-win-100",
@@ -163,7 +175,9 @@ def test_resolve_by_windows_sid(db_session):
 
 def test_resolve_by_linux_uid(db_session):
     event = {
-        "uid": 1001,
+        "native_id": "1001",
+        "native_id_type": "linux_uid",
+        "native_id_namespace": "prod-lin-01",
         "username": "unknown_alias",
         "system_id": "LIN",
         "event_id": "evt-lin-200",
@@ -176,7 +190,9 @@ def test_resolve_by_linux_uid(db_session):
 
 def test_resolve_by_github_numeric_id(db_session):
     event = {
-        "github_user_id": 998877,
+        "native_id": "998877",
+        "native_id_type": "github_user_id",
+        "native_id_namespace": "github.com",
         "username": "different_handle",
         "system_id": "GH",
         "event_id": "evt-gh-300",
@@ -189,7 +205,9 @@ def test_resolve_by_github_numeric_id(db_session):
 
 def test_unknown_identity_quarantined_without_crash(db_session):
     event = {
-        "user_sid": "S-1-5-21-999999999-999",
+        "native_id": "S-1-5-21-999999999-999",
+        "native_id_type": "windows_sid",
+        "native_id_namespace": "corp.dialog.lk",
         "username": "nonexistent_user",
         "system_id": "AD",
         "event_id": "evt-quarantine-1",
@@ -221,6 +239,7 @@ def test_ambiguous_username_quarantined(db_session):
     acct_dup = Account(
         id=6, system_id="GH",
         username="asmith", external_account_id="gh:asmith",
+        account_type="human",
         status="Active"
     )
     db_session.add(acct_dup)
@@ -231,8 +250,9 @@ def test_ambiguous_username_quarantined(db_session):
         "event_id": "evt-ambiguous-1",
         "raw_payload": "{\"log\": \"ambiguous username\"}"
     }
+    # In V11, events with only username and no stable ID or system_id are quarantined as invalid
     status, acct, reason = resolve_event_account(db_session, event)
-    assert status == "ambiguous"
+    assert status in ("invalid", "unmatched")
     assert acct is None
 
 

@@ -703,11 +703,28 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
 
   // Connect Device Form State (Windows & Linux PC only)
   const [devOs, setDevOs] = useState('Windows'); // 'Windows' or 'Linux'
+  const [devAccountType, setDevAccountType] = useState('human');
+  const [devExternalId, setDevExternalId] = useState('');
+  const [devNativeId, setDevNativeId] = useState('');
+  const [devNativeIdType, setDevNativeIdType] = useState('windows_sid');
+  const [devNativeIdNamespace, setDevNativeIdNamespace] = useState('corp.dialog.lk');
   const [selectedObservedDevice, setSelectedObservedDevice] = useState('');
   const [devUsername, setDevUsername] = useState('');
   const [devPermission, setDevPermission] = useState('User');
   const [devResource, setDevResource] = useState('Corporate Laptop');
   const [devPrivilege, setDevPrivilege] = useState(0);
+
+  const switchDevOs = (os) => {
+    setDevOs(os);
+    setSelectedObservedDevice('');
+    if (os === 'Windows') {
+      setDevNativeIdType('windows_sid');
+      setDevNativeIdNamespace('corp.dialog.lk');
+    } else {
+      setDevNativeIdType('linux_uid');
+      setDevNativeIdNamespace('prod-lin-01');
+    }
+  };
 
   // Filter observed devices from Syslog stream by selected OS
   const availableDevices = useMemo(() => {
@@ -764,8 +781,13 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
 
   const handleConnectDevice = async (e) => {
     e.preventDefault();
-    if (!devUsername) {
-      showToast('Please enter technical username/device identifier', false);
+    if (!devUsername.trim()) {
+      showToast('Please enter technical username/display login name', false);
+      return;
+    }
+    const hasNative = Boolean(devNativeId.trim() && devNativeIdType.trim() && devNativeIdNamespace.trim());
+    if (!devExternalId.trim() && !hasNative) {
+      showToast('Please supply a provider-issued External Account ID or complete Native ID tuple (Native ID, Type, and Namespace)', false);
       return;
     }
     setSubmitting(true);
@@ -777,7 +799,12 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
         body: JSON.stringify({
           identity_id: connectModalPerson.id,
           system_id: systemId,
-          username: devUsername,
+          username: devUsername.trim(),
+          external_account_id: devExternalId.trim() || undefined,
+          account_type: devAccountType,
+          native_id: devNativeId.trim() || undefined,
+          native_id_type: devNativeIdType.trim() || undefined,
+          native_id_namespace: devNativeIdNamespace.trim() || undefined,
           permission: devPermission,
           resource: devResource,
           privilege: Number(devPrivilege),
@@ -786,6 +813,8 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
       showToast(`${devOs} PC/Account connected to ${connectModalPerson.name}!`);
       setConnectModalPerson(null);
       setDevUsername('');
+      setDevExternalId('');
+      setDevNativeId('');
       setSelectedObservedDevice('');
       await refresh();
     } catch (err) {
@@ -958,7 +987,7 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <button
                     type="button"
-                    onClick={() => { setDevOs('Windows'); setSelectedObservedDevice(''); }}
+                    onClick={() => switchDevOs('Windows')}
                     style={{
                       padding: '10px 14px',
                       borderRadius: 8,
@@ -977,7 +1006,7 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setDevOs('Linux'); setSelectedObservedDevice(''); }}
+                    onClick={() => switchDevOs('Linux')}
                     style={{
                       padding: '10px 14px',
                       borderRadius: 8,
@@ -1019,6 +1048,83 @@ function Identities({ data, search, setSearch, filter, setFilter, refresh, showT
                     No live {devOs} devices detected on port 5514 yet. You can still type the IP/Hostname below.
                   </span>
                 )}
+              </div>
+
+              {/* Account Type and Provider External Account ID */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Account Type *</label>
+                  <select
+                    value={devAccountType}
+                    onChange={e => setDevAccountType(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  >
+                    <option value="human">human (Standard employee)</option>
+                    <option value="service">service (Background service / daemon)</option>
+                    <option value="shared">shared (Team / shared console)</option>
+                    <option value="emergency">emergency (Break-glass account)</option>
+                    <option value="vendor">vendor (Contractor / third-party)</option>
+                    <option value="workload">workload (CI/CD pipeline / batch job)</option>
+                    <option value="machine">machine (Device host / service principal)</option>
+                    <option value="unknown">unknown (Unclassified)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>External Account ID (Provider Key)</label>
+                  <input
+                    placeholder={devOs === 'Windows' ? 'e.g. ad-guid:win-corp-100' : 'e.g. linux-uid:host-01:1001'}
+                    value={devExternalId}
+                    onChange={e => setDevExternalId(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #ddd' }}
+                  />
+                </div>
+              </div>
+
+              {/* Stable Native ID Tuple (Immutable Resolution Anchor) */}
+              <div style={{ border: '1px solid #e2daf0', borderRadius: 8, padding: '10px 12px', background: '#faf8fd' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#5b4c74', display: 'block', marginBottom: 6 }}>
+                  STABLE NATIVE ID TUPLE (IMMUTABLE RESOLUTION ANCHOR)
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 2 }}>Native ID Type</label>
+                    <select
+                      value={devNativeIdType}
+                      onChange={e => setDevNativeIdType(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 12 }}
+                    >
+                      {devOs === 'Windows' ? (
+                        <>
+                          <option value="windows_sid">windows_sid (Security ID)</option>
+                          <option value="ad_object_guid">ad_object_guid (AD GUID)</option>
+                        </>
+                      ) : (
+                        <option value="linux_uid">linux_uid (POSIX UID)</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 2 }}>Namespace / Realm</label>
+                    <input
+                      placeholder={devOs === 'Windows' ? 'e.g. corp.dialog.lk' : 'e.g. prod-lin-01'}
+                      value={devNativeIdNamespace}
+                      onChange={e => setDevNativeIdNamespace(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 12 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, color: '#666', display: 'block', marginBottom: 2 }}>Native ID Value</label>
+                    <input
+                      placeholder={devOs === 'Windows' ? 'e.g. S-1-5-21-3623811015-...' : 'e.g. 1001'}
+                      value={devNativeId}
+                      onChange={e => setDevNativeId(e.target.value)}
+                      style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 12 }}
+                    />
+                  </div>
+                </div>
+                <small style={{ color: '#7a708e', fontSize: 10.5, marginTop: 4, display: 'block' }}>
+                  Stable resolution requires either a provider-issued External Account ID or complete Native ID tuple. Usernames/emails are display metadata and never used as resolution keys.
+                </small>
               </div>
 
               {/* Technical Username / Device Hostname */}
@@ -1099,13 +1205,31 @@ function Accounts({ rows, suggestions, identities, systems, busy, linkAccount, c
   const [newExternal, setNewExternal] = useState('');
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newAccountType, setNewAccountType] = useState('human');
+  const [newNativeId, setNewNativeId] = useState('');
+  const [newNativeIdType, setNewNativeIdType] = useState('github_user_id');
+  const [newNativeIdNamespace, setNewNativeIdNamespace] = useState('github.com');
+
+  const handleSystemChange = (sysId) => {
+    setNewSystem(sysId);
+    if (sysId === 'WIN') {
+      setNewNativeIdType('windows_sid');
+      setNewNativeIdNamespace('corp.dialog.lk');
+    } else if (sysId === 'LIN') {
+      setNewNativeIdType('linux_uid');
+      setNewNativeIdNamespace('prod-lin-01');
+    } else {
+      setNewNativeIdType('github_user_id');
+      setNewNativeIdNamespace('github.com');
+    }
+  };
 
   const selectedAccount = rows.find(a => String(a.id) === selected);
   const suggestion = suggestions.find(a => String(a.account_id) === selected);
   const active = rows.filter(a => a.mapping_status === 'Linked').length;
   const visible = rows.filter(a =>
     (filter === 'All' || a.mapping_status === filter) &&
-    [a.username, a.system_name, a.identity_name, a.account_email, a.external_account_id].join(' ').toLowerCase().includes(search.toLowerCase())
+    [a.username, a.system_name, a.identity_name, a.account_email, a.external_account_id, a.account_type || ''].join(' ').toLowerCase().includes(search.toLowerCase())
   );
   const unlinked = rows.filter(a => a.mapping_status === 'Unlinked');
 
@@ -1123,8 +1247,18 @@ function Accounts({ rows, suggestions, identities, systems, busy, linkAccount, c
   const create = async (e) => {
     e.preventDefault();
     if (!newExternal.trim() || !newUsername.trim()) return;
-    await createAccount({ system_id: newSystem, external_account_id: newExternal.trim(), username: newUsername.trim(), account_email: newEmail.trim() || null });
-    setNewExternal(''); setNewUsername(''); setNewEmail(''); setCreateOpen(false);
+    const hasNative = Boolean(newNativeId.trim() && newNativeIdType.trim() && newNativeIdNamespace.trim());
+    await createAccount({
+      system_id: newSystem,
+      external_account_id: newExternal.trim(),
+      username: newUsername.trim(),
+      account_type: newAccountType,
+      account_email: newEmail.trim() || null,
+      native_id: hasNative ? newNativeId.trim() : undefined,
+      native_id_type: hasNative ? newNativeIdType.trim() : undefined,
+      native_id_namespace: hasNative ? newNativeIdNamespace.trim() : undefined,
+    });
+    setNewExternal(''); setNewUsername(''); setNewEmail(''); setNewNativeId(''); setCreateOpen(false);
   };
 
   return <>
@@ -1140,23 +1274,59 @@ function Accounts({ rows, suggestions, identities, systems, busy, linkAccount, c
     <Panel title="Technical Account Directory" description={`${visible.length} accounts visible`}
       action={<button className="btn-primary" onClick={() => setCreateOpen(o => !o)}><UsersRound size={14} /> {createOpen ? 'Close' : 'Create demo account'}</button>}>
       {createOpen && (
-        <form className="mapping-form create-form" onSubmit={create}>
-          <label>System<select value={newSystem} onChange={e => setNewSystem(e.target.value)}>{systems.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-          <label>External account ID<input required value={newExternal} maxLength={255} onChange={e => setNewExternal(e.target.value)} placeholder="lab-account-005" /></label>
-          <label>Username<input required value={newUsername} maxLength={255} onChange={e => setNewUsername(e.target.value)} placeholder="jdoe" /></label>
-          <label>Email (optional)<input value={newEmail} maxLength={255} onChange={e => setNewEmail(e.target.value)} placeholder="jdoe@demo.example" /></label>
-          <button className="btn-primary" disabled={busy === 'new-account'} type="submit">Create unlinked account</button>
+        <form className="mapping-form create-form" onSubmit={create} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', alignItems: 'end' }}>
+          <label>System
+            <select value={newSystem} onChange={e => handleSystemChange(e.target.value)}>
+              {systems.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
+            </select>
+          </label>
+          <label>Account Type
+            <select value={newAccountType} onChange={e => setNewAccountType(e.target.value)}>
+              <option value="human">human (Standard employee)</option>
+              <option value="service">service (Background service / daemon)</option>
+              <option value="shared">shared (Team / shared console)</option>
+              <option value="emergency">emergency (Break-glass account)</option>
+              <option value="vendor">vendor (Contractor / third-party)</option>
+              <option value="workload">workload (CI/CD pipeline / batch job)</option>
+              <option value="machine">machine (Device host / service principal)</option>
+              <option value="unknown">unknown (Unclassified)</option>
+            </select>
+          </label>
+          <label>External account ID (Immutable provider key)
+            <input required value={newExternal} maxLength={255} onChange={e => setNewExternal(e.target.value)} placeholder="e.g. ad-guid:win-corp-100" />
+          </label>
+          <label>Username (Display / login name)
+            <input required value={newUsername} maxLength={255} onChange={e => setNewUsername(e.target.value)} placeholder="jdoe" />
+          </label>
+          <label>Native ID Type (optional tuple)
+            <input value={newNativeIdType} maxLength={64} onChange={e => setNewNativeIdType(e.target.value)} placeholder="e.g. windows_sid / linux_uid" />
+          </label>
+          <label>Native ID Namespace (optional tuple)
+            <input value={newNativeIdNamespace} maxLength={255} onChange={e => setNewNativeIdNamespace(e.target.value)} placeholder="e.g. corp.dialog.lk" />
+          </label>
+          <label>Native ID Value (optional tuple)
+            <input value={newNativeId} maxLength={255} onChange={e => setNewNativeId(e.target.value)} placeholder="e.g. S-1-5-21-... or 1001" />
+          </label>
+          <label>Email (optional metadata)
+            <input value={newEmail} maxLength={255} onChange={e => setNewEmail(e.target.value)} placeholder="jdoe@demo.example" />
+          </label>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+            <button className="btn-light" type="button" onClick={() => setCreateOpen(false)}>Cancel</button>
+            <button className="btn-primary" disabled={busy === 'new-account'} type="submit">Create unlinked account</button>
+          </div>
         </form>
       )}
       <SearchToolbar {...{ search, setSearch, filter, setFilter }} options={['All', 'Linked', 'Unlinked']} />
       <div className="table-wrap">
         <table>
-          <thead><tr><th>ACCOUNT / SYSTEM</th><th>EXTERNAL ID</th><th>OWNER</th><th>MAPPING</th><th>GRANTS</th><th>ACTION</th></tr></thead>
+          <thead><tr><th>ACCOUNT / SYSTEM</th><th>TYPE</th><th>EXTERNAL ID</th><th>NATIVE ID TUPLE</th><th>OWNER</th><th>MAPPING</th><th>GRANTS</th><th>ACTION</th></tr></thead>
           <tbody>
             {visible.map(a => (
               <tr key={a.id}>
                 <td><strong>{a.username}</strong><small>{a.system_name}</small></td>
+                <td><Badge value={a.account_type || 'unknown'} tone={a.account_type === 'human' ? 'neutral' : a.account_type === 'service' ? 'active' : 'warning'} /></td>
                 <td className="mono">{a.external_account_id}</td>
+                <td className="mono" style={{ fontSize: 11 }}>{a.native_id ? `${a.native_id_type}:${a.native_id_namespace}:${a.native_id}` : <span style={{ color: '#999' }}>None</span>}</td>
                 <td>{a.identity_name || <em>Owner unknown</em>}<small>{a.account_email || 'No email supplied'}</small></td>
                 <td><Badge value={a.mapping_status} tone={a.mapping_status === 'Linked' ? 'active' : 'critical'} /><small>{a.mapping_method || 'Not verified'}</small></td>
                 <td>{a.grants}</td>
@@ -1759,7 +1929,7 @@ function QuarterlyAccountReviews({ showToast }) {
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <strong>{t.username}</strong>
-                              <small style={{ color: '#8f88a0' }}>ACC-{t.account_id} · <b style={{ color: '#5b4c74' }}>{t.platform}</b></small>
+                              <small style={{ color: '#8f88a0' }}>ACC-{t.account_id} · <b style={{ color: '#5b4c74' }}>{t.platform}</b> · <span style={{ textTransform: 'uppercase', fontSize: 10, fontWeight: 700, color: '#685f79' }}>{t.account_type || 'human'}</span></small>
                             </div>
                           </td>
                           <td>

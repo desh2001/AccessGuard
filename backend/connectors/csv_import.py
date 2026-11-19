@@ -7,7 +7,7 @@ import argparse
 import csv
 from pathlib import Path
 from sqlalchemy import select
-from models import Account, AccessGrant, System, ConnectorRun, AuditLog, now_utc
+from models import Account, AccessGrant, System, ConnectorRun, AuditLog, ACCOUNT_TYPES, now_utc
 from database import SessionLocal
 
 REQUIRED = {'external_account_id','username','permission','resource'}
@@ -22,30 +22,72 @@ def import_csv(db, path: Path, system_id: str):
         reader=csv.DictReader(f)
         if not REQUIRED.issubset(set(reader.fieldnames or [])):
             raise ValueError(f'CSV must contain {", ".join(sorted(REQUIRED))}')
-        for i,row in enumerate(reader, start=2):
-            if i>1002: raise ValueError('Maximum 1,000 rows per import to protect the demo database')
-            external=(row['external_account_id'] or '').strip()
-            username=(row['username'] or '').strip()
-            permission=(row['permission'] or '').strip()
-            resource=(row['resource'] or '').strip()
-            if not all((external,username,permission,resource)) or any(len(v)>255 for v in (external,username,permission,resource)) or len(permission)>80:
+        for i, row in enumerate(reader, start=2):
+            if i > 1002:
+                raise ValueError('Maximum 1,000 rows per import to protect the demo database')
+            
+            row_sys = (row.get('system_id') or system_id).strip()
+            if not db.get(System, row_sys):
+                raise ValueError(f'Unknown system ID: {row_sys} on row {i}')
+
+            external = (row.get('external_account_id') or '').strip()
+            username = (row.get('username') or '').strip()
+            permission = (row.get('permission') or '').strip()
+            resource = (row.get('resource') or '').strip()
+            if not all((external, username, permission, resource)) or any(len(v) > 255 for v in (external, username, permission, resource)) or len(permission) > 80:
                 raise ValueError(f'Invalid or overlong field on row {i}')
-            account=db.scalar(select(Account).where(Account.system_id==system_id,
-                         Account.external_account_id==external))
+
+            raw_type = (row.get('account_type') or 'unknown').strip().lower()
+            if raw_type not in ACCOUNT_TYPES:
+                raise ValueError(f"Invalid account_type '{raw_type}' on row {i}. Must be one of {ACCOUNT_TYPES}")
+
+            native_id = (row.get('native_id') or '').strip() or None
+            native_id_type = (row.get('native_id_type') or '').strip() or None
+            native_id_namespace = (row.get('native_id_namespace') or '').strip() or None
+            has_any_native = any((native_id, native_id_type, native_id_namespace))
+            has_full_native = all((native_id, native_id_type, native_id_namespace))
+            if has_any_native and not has_full_native:
+                raise ValueError(f'Incomplete native ID tuple on row {i}: native_id, native_id_type, and native_id_namespace are all required')
+
+            account = db.scalar(select(Account).where(
+                Account.system_id == row_sys,
+                Account.external_account_id == external
+            ))
             if account is None:
-                account=Account(identity_id=None,system_id=system_id,
-                    external_account_id=external,username=username,
+                account = Account(
+                    identity_id=None,
+                    system_id=row_sys,
+                    external_account_id=external,
+                    username=username,
+                    account_type=raw_type,
+                    native_id=native_id,
+                    native_id_type=native_id_type,
+                    native_id_namespace=native_id_namespace,
                     account_email=(row.get('account_email') or '').strip() or None,
-                    status='Active',source='CSVImport',mapping_method=None,created_at=now_utc())
-                db.add(account);db.flush()
-            # Don't overwrite manual verified links or simulated grant decisions.
-            exists=db.scalar(select(AccessGrant).where(AccessGrant.account_id==account.id,
-                             AccessGrant.permission==permission,AccessGrant.resource==resource))
+                    status='Active',
+                    source='CSVImport',
+                    mapping_method=None,
+                    created_at=now_utc()
+                )
+                db.add(account)
+                db.flush()
+            # Immutable identifier contract: Never overwrite immutable IDs, native IDs, or identity_id on repeat import!
+            exists = db.scalar(select(AccessGrant).where(
+                AccessGrant.account_id == account.id,
+                AccessGrant.permission == permission,
+                AccessGrant.resource == resource
+            ))
             if exists is None:
-                db.add(AccessGrant(account_id=account.id,permission=permission,
-                    resource=resource,privilege=int(permission.lower() in ('admin','owner','root')),
-                    cross_department=0,last_verified_use=None,status='Active'))
-                count+=1
+                db.add(AccessGrant(
+                    account_id=account.id,
+                    permission=permission,
+                    resource=resource,
+                    privilege=int(permission.lower() in ('admin', 'owner', 'root')),
+                    cross_department=0,
+                    last_verified_use=None,
+                    status='Active'
+                ))
+                count += 1
     db.add(ConnectorRun(source=f'CSV:{system_id}',started_at=started,completed_at=now_utc(),
         status='Success',records_imported=count,
         details=f'Imported a local operator-supplied file ({path.name}), source completeness unknown.'))

@@ -21,7 +21,13 @@ def generate_synthetic_data(samples_per_platform: int = 200, seed: int = 42) -> 
     np.random.seed(seed)
 
     departments = ["IT", "Engineering", "Finance", "HR", "Operations", "Sales", "Legal"]
-    account_types = ["human", "human", "human", "machine", "vendor"]
+    account_types = [
+        "human", "human", "human", "human",
+        "service", "service",
+        "workload", "vendor",
+        "shared", "emergency",
+        "machine", "unknown"
+    ]
     profiles = ["standard", "standard", "standard", "elevated", "admin"]
 
     rows = []

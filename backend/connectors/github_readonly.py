@@ -60,6 +60,10 @@ def sync(db, org, token, max_repos=10, max_collaborators=100, client=None):
                 if account is None:
                     account=Account(system_id='GH',identity_id=None,external_account_id=ext_id,
                         username=person.get('login','unknown')[:255],account_email=None,
+                        account_type='human',
+                        native_id=str(user_id),
+                        native_id_type='github_user_id',
+                        native_id_namespace='github.com',
                         status='Active',source='GitHubREST',mapping_method=None,created_at=now_utc())
                     db.add(account);db.flush()
                 role=(person.get('role_name') or 'read')[:80]

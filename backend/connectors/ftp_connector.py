@@ -13,7 +13,7 @@ from ftplib import FTP, error_perm
 from pathlib import Path
 from typing import Any
 from sqlalchemy import select
-from models import Account, AccessGrant, ActivityEvent, System, ConnectorRun, AuditLog, now_utc
+from models import Account, AccessGrant, ActivityEvent, System, ConnectorRun, AuditLog, ACCOUNT_TYPES, now_utc
 
 REQUIRED_ENTITLEMENT_COLS = {'external_account_id', 'username', 'permission', 'resource', 'system_id'}
 REQUIRED_ACTIVITY_COLS = {'external_account_id', 'system_id', 'action', 'outcome'}
@@ -51,17 +51,31 @@ def process_csv_content(db, content: str, filename: str) -> tuple[int, int]:
             is_entitlements = True
 
     for row in reader:
-        sys_id = (row.get('system_id') or 'GH').strip()
+        sys_id = (row.get('system_id') or '').strip()
+        if not sys_id:
+            # Reject rows without system_id
+            continue
         if not db.get(System, sys_id):
-            # Fallback to GH or create default if not found
-            sys_id = 'GH'
+            # Unknown system ID in FTP import is rejected; never silently changed to GH
+            continue
 
         ext_id = (row.get('external_account_id') or '').strip()
         if not ext_id:
             continue
 
-        username = (row.get('username') or ext_id).strip()
+        username = (row.get('username') or 'unnamed_account').strip()
         email = (row.get('account_email') or '').strip() or None
+        raw_type = (row.get('account_type') or 'unknown').strip().lower()
+        if raw_type not in ACCOUNT_TYPES:
+            raw_type = 'unknown'
+
+        native_id = (row.get('native_id') or '').strip() or None
+        native_id_type = (row.get('native_id_type') or '').strip() or None
+        native_id_namespace = (row.get('native_id_namespace') or '').strip() or None
+        if not (native_id and native_id_type and native_id_namespace):
+            native_id = None
+            native_id_type = None
+            native_id_namespace = None
 
         # Look up or register unlinked account
         account = db.scalar(
@@ -76,6 +90,10 @@ def process_csv_content(db, content: str, filename: str) -> tuple[int, int]:
                 system_id=sys_id,
                 external_account_id=ext_id,
                 username=username,
+                account_type=raw_type,
+                native_id=native_id,
+                native_id_type=native_id_type,
+                native_id_namespace=native_id_namespace,
                 account_email=email,
                 status='Active',
                 source='FTP:dialog-access-log',
