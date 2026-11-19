@@ -461,6 +461,8 @@ For comprehensive details on scoring formulas and validation metrics, consult [d
 
 ## Documentation Links
 
+- [English Architecture Blueprint & Video Guide](docs/ARCHITECTURE_AND_VIDEO_GUIDE.md)
+- [Video Presentation & Demo Guide (වීඩියෝ මාර්ගෝපදේශය)](docs/VIDEO_PRESENTATION_GUIDE.md)
 - [Research Methodology & Metrics](docs/RESEARCH_METHODOLOGY.md)
 - [Sinhala Operations Guide (සිංහල මාර්ගෝපදේශය)](docs/SINHALA_GUIDE.md)
 - [Dialog Final ML Guide](ml/V8_THREE_PLATFORM_MODELS_GUIDE.md)
