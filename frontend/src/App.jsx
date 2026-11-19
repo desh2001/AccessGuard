@@ -2985,13 +2985,13 @@ function SettingsPage({ resetDb, busy, showToast }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Real Gmail & Main Admin Email Configuration Panel */}
       <Panel
         title="Main Admin Automated Email Notifications (Gmail SMTP)"
         description="Configure your real Gmail or corporate SMTP credentials to receive automated security alerts immediately when an attack or high-risk privilege escalation is detected."
       >
-        <form onSubmit={handleSave}>
+        <form onSubmit={handleSave} style={{ padding: '20px 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             {/* Admin Identity */}
             <div>
@@ -3004,7 +3004,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
                 value={emailForm.admin_name}
                 onChange={(e) => setEmailForm({ ...emailForm, admin_name: e.target.value })}
                 placeholder="e.g. Chief Information Security Officer"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd', color: '#1e1b2e' }}
               />
             </div>
 
@@ -3018,9 +3018,9 @@ function SettingsPage({ resetDb, busy, showToast }) {
                 value={emailForm.admin_email}
                 onChange={(e) => setEmailForm({ ...emailForm, admin_email: e.target.value })}
                 placeholder="e.g. your-email@gmail.com"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd', color: '#1e1b2e' }}
               />
-              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: 3, display: 'block' }}>
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: 4, display: 'block' }}>
                 All high-risk breach advisories will be sent to this email.
               </small>
             </div>
@@ -3036,7 +3036,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
                 value={emailForm.smtp_host}
                 onChange={(e) => setEmailForm({ ...emailForm, smtp_host: e.target.value })}
                 placeholder="smtp.gmail.com"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd', color: '#1e1b2e' }}
               />
             </div>
 
@@ -3050,7 +3050,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
                 value={emailForm.smtp_port}
                 onChange={(e) => setEmailForm({ ...emailForm, smtp_port: Number(e.target.value) })}
                 placeholder="587"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd', color: '#1e1b2e' }}
               />
             </div>
 
@@ -3064,7 +3064,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
                 value={emailForm.smtp_user}
                 onChange={(e) => setEmailForm({ ...emailForm, smtp_user: e.target.value })}
                 placeholder="your.alert.bot@gmail.com"
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd', color: '#1e1b2e' }}
               />
             </div>
 
@@ -3077,17 +3077,17 @@ function SettingsPage({ resetDb, busy, showToast }) {
                 value={emailForm.smtp_password}
                 onChange={(e) => setEmailForm({ ...emailForm, smtp_password: e.target.value })}
                 placeholder={hasPassword ? '•••••••••••••••• (Leave blank to keep existing)' : 'Enter 16-character App Password'}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #d4cde6', background: '#faf9fd', color: '#1e1b2e' }}
               />
-              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: 3, display: 'block' }}>
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', marginTop: 4, display: 'block' }}>
                 Generate via Google Account → Security → 2-Step Verification → App passwords.
               </small>
             </div>
           </div>
 
           {/* Trigger Toggles */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #eee9f7', display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+          <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid #eee9f7', display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}>
               <input
                 type="checkbox"
                 checked={emailForm.enabled}
@@ -3096,7 +3096,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
               Enable Automated Email Delivery
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.88rem' }}>
               <input
                 type="checkbox"
                 checked={emailForm.notify_on_attack_detected}
@@ -3105,7 +3105,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
               🚨 Malicious Role Breach / Attack Detected
             </label>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.88rem' }}>
               <input
                 type="checkbox"
                 checked={emailForm.notify_on_high_risk}
@@ -3116,24 +3116,24 @@ function SettingsPage({ resetDb, busy, showToast }) {
           </div>
 
           {/* Action buttons */}
-          <div style={{ marginTop: 22, display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+          <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
             <button
               type="button"
               className="btn-light"
               onClick={handleSendTest}
               disabled={testing || !emailForm.admin_email}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 18px', fontWeight: 600 }}
             >
-              <Send size={14} className={testing ? 'spin' : ''} />
+              <Send size={15} className={testing ? 'spin' : ''} />
               {testing ? 'Sending Test Email...' : 'Send Test Real Email'}
             </button>
             <button
               type="submit"
               className="btn-primary"
               disabled={saving}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', fontWeight: 700 }}
             >
-              <Check size={15} />
+              <Check size={16} />
               {saving ? 'Saving...' : 'Save Admin Email Settings'}
             </button>
           </div>
@@ -3142,7 +3142,7 @@ function SettingsPage({ resetDb, busy, showToast }) {
 
       {/* Dispatched Email Audit Logs */}
       <Panel title="Dispatched Security Email Log" description="Recent automated security alerts dispatched to the Main Administrator.">
-        <div className="table-wrap">
+        <div className="table-wrap" style={{ padding: '0 4px' }}>
           <table>
             <thead>
               <tr>

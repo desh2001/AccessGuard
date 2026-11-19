@@ -680,6 +680,16 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             db.flush()
             db.add(Review(grant_id=grant.id, status='Pending'))
 
+            # Calculate exact risk score dynamically using AccessGuard risk engine
+            grant_dict = {
+                'identity_id': identity.id if identity else None,
+                'status': identity.status if identity else 'Active',
+                'privilege': 1,
+                'cross_department': 1,
+                'last_verified_use': now_utc().isoformat(),
+            }
+            exact_score, _ = calculate_risk(grant_dict)
+
             # Trigger automated email notification for High Risk Privilege Escalation
             try:
                 from email_service import (
@@ -690,7 +700,7 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
                     subj, html_b, txt_b = build_attack_alert_email_template(
                         employee_name=identity.name if identity else account.username,
                         department=identity.department if identity else 'Unknown',
-                        risk_score=75,
+                        risk_score=exact_score,
                         platform=plat,
                         detection_rule='High Risk Privilege Escalation / Admin Role Creep',
                         scenario_name=scen['name']
@@ -739,6 +749,16 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             db.flush()
             db.add(Review(grant_id=orphan_grant.id, status='Pending'))
 
+            # Calculate exact risk score dynamically using AccessGuard risk engine
+            orphan_grant_dict = {
+                'identity_id': None,
+                'status': 'Active',
+                'privilege': 1,
+                'cross_department': 0,
+                'last_verified_use': None,
+            }
+            exact_orphan_score, _ = calculate_risk(orphan_grant_dict)
+
             # Trigger automated email notification to Main Admin for Orphan / Unlinked account
             try:
                 from email_service import (
@@ -749,7 +769,7 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
                     subj, html_b, txt_b = build_attack_alert_email_template(
                         employee_name='[Unlinked account] (svc-untracked-daemon)',
                         department='Unmapped / Unknown Technical Service',
-                        risk_score=73,
+                        risk_score=exact_orphan_score,
                         platform='linux',
                         detection_rule='Orphaned / Unlinked Account Holding Root Privileges (sudo ALL)',
                         scenario_name=scen['name']
@@ -842,6 +862,16 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             # Auto-queue into Access Reviews as Pending
             db.add(Review(grant_id=attack_grant.id, status='Pending'))
 
+            # Calculate exact risk score dynamically using AccessGuard risk engine
+            grant_dict = {
+                'identity_id': identity.id if identity else None,
+                'status': identity.status if identity else 'Active',
+                'privilege': 1,
+                'cross_department': 1,
+                'last_verified_use': (now - timedelta(days=95)).isoformat(),
+            }
+            exact_score, reasons = calculate_risk(grant_dict)
+
             # Trigger automated email notification to Main Admin
             try:
                 from email_service import (
@@ -852,7 +882,7 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
                     subj, html_b, txt_b = build_attack_alert_email_template(
                         employee_name=identity.name if identity else account.username,
                         department=identity.department if identity else 'Unknown',
-                        risk_score=79,
+                        risk_score=exact_score,
                         platform=plat,
                         detection_rule='Unauthorized Role Breach + Off-hours Console Login',
                         scenario_name=scen['name']
@@ -869,7 +899,7 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
 
             detection_result = 'Detected'
             details_map['grant_id'] = attack_grant.id
-            details_map['risk_score_impact'] = 'Jumped to 60+ (High Risk)'
+            details_map['risk_score_impact'] = f'Jumped to {exact_score} ({"Critical Risk" if exact_score >= 85 else "High Risk"})'
             details_map['target_employee'] = identity.name if identity else account.username
             details_map['detection_rule'] = 'Role breach + Cross-Dept Admin + Brute-force/Off-hours activity sequence'
 
