@@ -368,6 +368,9 @@ def sync_accesslog_to_activity(db) -> dict[str, Any]:
             source=f"Syslog:{ev.get('device_id', 'unknown')}",
         ))
         matched_account.last_seen_at = occurred_at
+        for g in getattr(matched_account, 'grants', []):
+            if getattr(g, 'status', None) == 'Active':
+                g.last_verified_use = occurred_at
         imported += 1
 
     details = f"Synchronized {imported} syslog events from Dialog Access Log into canonical activity evidence."

@@ -132,6 +132,7 @@ backend/ml_artifacts/*.json
 
 # Keep placeholder .gitkeep in artifact directories if present
 !**/ml_artifacts/.gitkeep
+!ml/backend/ml_artifacts/platforms/*.json
 
 # ------------------------------------------------------------------------------
 # 6. Logs & Spool Files
