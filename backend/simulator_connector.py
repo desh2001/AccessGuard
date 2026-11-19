@@ -679,6 +679,32 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             db.add(grant)
             db.flush()
             db.add(Review(grant_id=grant.id, status='Pending'))
+
+            # Trigger automated email notification for High Risk Privilege Escalation
+            try:
+                from email_service import (
+                    send_security_alert_email, build_attack_alert_email_template, get_or_create_email_settings
+                )
+                settings = get_or_create_email_settings(db)
+                if settings.enabled and settings.notify_on_high_risk:
+                    subj, html_b, txt_b = build_attack_alert_email_template(
+                        employee_name=identity.name if identity else account.username,
+                        department=identity.department if identity else 'Unknown',
+                        risk_score=75,
+                        platform=plat,
+                        detection_rule='High Risk Privilege Escalation / Admin Role Creep',
+                        scenario_name=scen['name']
+                    )
+                    send_security_alert_email(
+                        db=db,
+                        subject=subj,
+                        html_content=html_b,
+                        text_content=txt_b,
+                        trigger_type='privilege_creep_high_risk'
+                    )
+            except Exception as mail_ex:
+                logger.warning(f"Failed to dispatch automated privcreep email: {mail_ex}")
+
             details_map['grant_id'] = grant.id
             details_map['detection_rule'] = 'Privileged Administrator + Cross-Department policy match'
 
@@ -701,15 +727,45 @@ def execute_test_scenario(db: Session, company_id: int, scenario_id: str) -> dic
             )
             db.add(orphan_acc)
             db.flush()
-            db.add(AccessGrant(
+            orphan_grant = AccessGrant(
                 account_id=orphan_acc.id,
                 permission='sudo ALL',
                 resource='cluster-worker-01',
                 privilege=1,
                 cross_department=0,
                 status='Active',
-            ))
+            )
+            db.add(orphan_grant)
+            db.flush()
+            db.add(Review(grant_id=orphan_grant.id, status='Pending'))
+
+            # Trigger automated email notification to Main Admin for Orphan / Unlinked account
+            try:
+                from email_service import (
+                    send_security_alert_email, build_attack_alert_email_template, get_or_create_email_settings
+                )
+                settings = get_or_create_email_settings(db)
+                if settings.enabled and (settings.notify_on_high_risk or settings.notify_on_attack_detected):
+                    subj, html_b, txt_b = build_attack_alert_email_template(
+                        employee_name='[Unlinked account] (svc-untracked-daemon)',
+                        department='Unmapped / Unknown Technical Service',
+                        risk_score=73,
+                        platform='linux',
+                        detection_rule='Orphaned / Unlinked Account Holding Root Privileges (sudo ALL)',
+                        scenario_name=scen['name']
+                    )
+                    send_security_alert_email(
+                        db=db,
+                        subject=subj,
+                        html_content=html_b,
+                        text_content=txt_b,
+                        trigger_type='orphan_high_risk'
+                    )
+            except Exception as mail_ex:
+                logger.warning(f"Failed to dispatch automated orphan email: {mail_ex}")
+
             details_map['orphan_account_id'] = orphan_acc.id
+            details_map['grant_id'] = orphan_grant.id
             details_map['detection_rule'] = 'Unlinked technical account (+40 risk)'
 
         elif scenario_id == 'scen-log-safe-baseline':
