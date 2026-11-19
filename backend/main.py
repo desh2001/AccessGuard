@@ -7,12 +7,13 @@ IMPORTANT: Research prototype only.
 - Do NOT deploy on the public internet.
 """
 from __future__ import annotations
+import os
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from fastapi import Depends, FastAPI, HTTPException, Query, File, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import func, select, not_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from database import get_session
@@ -45,30 +46,38 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def access_rows(db: Session):
-    return db.execute(
+def access_rows(db: Session, env: str = 'production'):
+    q = (
         select(AccessGrant, Account, Identity, System)
         .join(Account, AccessGrant.account_id == Account.id)
         .outerjoin(Identity, Account.identity_id == Identity.id)
         .join(System, Account.system_id == System.id)
-        .order_by(AccessGrant.id.desc())
-    ).all()
+    )
+    if env == 'test':
+        q = q.where(Account.source == 'EnterpriseSimulator')
+    else:
+        q = q.where(Account.source != 'EnterpriseSimulator')
+    return db.execute(q.order_by(AccessGrant.id.desc())).all()
 
 
-def grant_data(db: Session) -> list[dict]:
+def grant_data(db: Session, env: str = 'production') -> list[dict]:
     return [
         access_dict(grant, account, identity, system)
-        for grant, account, identity, system in access_rows(db)
+        for grant, account, identity, system in access_rows(db, env=env)
     ]
 
 
-def account_data(db: Session) -> list[dict]:
-    rows = db.execute(
+def account_data(db: Session, env: str = 'production') -> list[dict]:
+    q = (
         select(Account, Identity, System)
         .outerjoin(Identity, Account.identity_id == Identity.id)
         .join(System, Account.system_id == System.id)
-        .order_by(Account.id.desc())
-    ).all()
+    )
+    if env == 'test':
+        q = q.where(Account.source == 'EnterpriseSimulator')
+    else:
+        q = q.where(Account.source != 'EnterpriseSimulator')
+    rows = db.execute(q.order_by(Account.id.desc())).all()
     return [{
         'id': a.id,
         'identity_id': a.identity_id,
@@ -113,27 +122,37 @@ def health(db: Session = Depends(get_session)):
 # ─── Overview ─────────────────────────────────────────────────────────────────
 
 @app.get('/api/overview')
-def overview(db: Session = Depends(get_session)):
-    persons = db.scalars(select(Identity)).all()
-    grants = grant_data(db)
+def overview(env: str = Query('production'), db: Session = Depends(get_session)):
+    if env == 'test':
+        persons = db.scalars(select(Identity).where(Identity.id.like('sim-%'))).all()
+        systems = db.scalars(select(System).where(System.id.like('SIM_%'))).all()
+        accounts_all = db.scalars(select(Account).where(Account.source == 'EnterpriseSimulator')).all()
+    else:
+        persons = db.scalars(select(Identity).where(not_(Identity.id.like('sim-%')))).all()
+        systems = db.scalars(select(System).where(not_(System.id.like('SIM_%')))).all()
+        accounts_all = db.scalars(select(Account).where(Account.source != 'EnterpriseSimulator')).all()
+
+    grants = grant_data(db, env=env)
     active = [g for g in grants if g['grant_status'] == 'Active']
     risks = {
         name: sum(g['risk_level'] == name for g in active)
         for name in ['Critical', 'High', 'Medium', 'Low']
     }
-    systems = db.scalars(select(System)).all()
     system_counts = [
         {'name': s.name, 'total': sum(g['system_id'] == s.id for g in active), 'id': s.id}
         for s in systems
     ]
     system_counts.sort(key=lambda r: r['total'], reverse=True)
-    review_rows = db.scalars(select(Review)).all()
+    active_grant_ids = {g['id'] for g in grants}
+    review_rows = [
+        r for r in db.scalars(select(Review)).all()
+        if r.grant_id in active_grant_ids
+    ]
     review_stats = [
         {'status': status, 'total': sum(r.status == status for r in review_rows)}
         for status in ['Pending', 'Approved', 'Retained', 'Remediated']
         if any(r.status == status for r in review_rows)
     ]
-    accounts_all = db.scalars(select(Account)).all()
     dept_risk: dict[str, dict] = defaultdict(lambda: {'total': 0, 'high': 0})
     for g in active:
         dept = g.get('department', 'Unknown')
@@ -318,8 +337,13 @@ def reset_database(db: Session = Depends(get_session)):
 # ─── Identities ───────────────────────────────────────────────────────────────
 
 @app.get('/api/identities')
-def identities(db: Session = Depends(get_session)):
-    all_ids = db.scalars(select(Identity).order_by(Identity.id)).all()
+def identities(env: str = Query('production'), db: Session = Depends(get_session)):
+    q = select(Identity)
+    if env == 'test':
+        q = q.where(Identity.id.like('sim-%'))
+    else:
+        q = q.where(not_(Identity.id.like('sim-%')))
+    all_ids = db.scalars(q.order_by(Identity.id)).all()
     result = []
     for person in all_ids:
         accounts = db.scalars(
@@ -426,8 +450,8 @@ def identity_accounts(identity_id: str, db: Session = Depends(get_session)):
 # ─── Accounts ─────────────────────────────────────────────────────────────────
 
 @app.get('/api/accounts')
-def accounts(db: Session = Depends(get_session)):
-    return account_data(db)
+def accounts(env: str = Query('production'), db: Session = Depends(get_session)):
+    return account_data(db, env=env)
 
 
 @app.get('/api/accounts/suggestions')
@@ -546,15 +570,18 @@ def unlink_account(account_id: int, body: UnlinkBody, db: Session = Depends(get_
 # ─── Access Grants ────────────────────────────────────────────────────────────
 
 @app.get('/api/access')
-def access(db: Session = Depends(get_session)):
-    return grant_data(db)
+def access(env: str = Query('production'), db: Session = Depends(get_session)):
+    return grant_data(db, env=env)
 
 
 # ─── Integrations ─────────────────────────────────────────────────────────────
 
 @app.get('/api/integrations')
-def integrations(db: Session = Depends(get_session)):
-    systems = db.scalars(select(System).order_by(System.id)).all()
+def integrations(env: str = Query('production'), db: Session = Depends(get_session)):
+    if env == 'test':
+        systems = db.scalars(select(System).where(System.id.like('SIM_%')).order_by(System.id)).all()
+    else:
+        systems = db.scalars(select(System).where(not_(System.id.like('SIM_%'))).order_by(System.id)).all()
     result = []
     for s in systems:
         total = db.scalar(
@@ -567,8 +594,8 @@ def integrations(db: Session = Depends(get_session)):
             'name': s.name,
             'category': s.category,
             'total_active_grants': total,
-            'connection': 'Demo data',
-            'sync': 'Not connected',
+            'connection': 'Enterprise Simulator' if env == 'test' else 'Demo data',
+            'sync': 'Connected' if env == 'test' else 'Not connected',
         })
     return result
 
@@ -576,8 +603,8 @@ def integrations(db: Session = Depends(get_session)):
 # ─── Reviews ─────────────────────────────────────────────────────────────────
 
 @app.get('/api/reviews')
-def reviews(db: Session = Depends(get_session)):
-    grants = {a['id']: a for a in grant_data(db)}
+def reviews(env: str = Query('production'), db: Session = Depends(get_session)):
+    grants = {a['id']: a for a in grant_data(db, env=env)}
     rows = db.scalars(select(Review).order_by(Review.id.desc())).all()
     result = []
     for r in rows:
@@ -629,6 +656,21 @@ def simulate_revoke(review_id: int, db: Session = Depends(get_session)):
         raise HTTPException(404, 'Grant not found')
     if grant.status != 'Active':
         raise HTTPException(409, 'Grant is not active')
+
+    account = db.get(Account, grant.account_id)
+    if account and account.source == 'EnterpriseSimulator':
+        # Route to Enterprise Simulator remediation engine
+        from simulator_connector import remediate_simulator_grant
+        # Extract company_id from external_account_id: sim-acc-{company_id}-{id}
+        cid = 1
+        try:
+            parts = account.external_account_id.split('-')
+            if len(parts) >= 3 and parts[2].isdigit():
+                cid = int(parts[2])
+        except Exception:
+            cid = 1
+        return remediate_simulator_grant(db, row, cid)
+
     grant.status = 'Revoked'
     row.status = 'Remediated'
     _log(db, 'Demo Simulator', 'SIMULATED_REVOKE', f'Grant #{row.grant_id}',
@@ -638,9 +680,9 @@ def simulate_revoke(review_id: int, db: Session = Depends(get_session)):
 
 
 @app.post('/api/reviews/generate')
-def generate_reviews(db: Session = Depends(get_session)):
+def generate_reviews(env: str = Query('production'), db: Session = Depends(get_session)):
     """Idempotent policy campaign. Existing decisions are NOT overwritten."""
-    grants = grant_data(db)
+    grants = grant_data(db, env=env)
     existing = set(db.scalars(select(Review.grant_id)).all())
     requested = [
         r for r in grants
@@ -650,7 +692,7 @@ def generate_reviews(db: Session = Depends(get_session)):
     ]
     for r in requested:
         db.add(Review(grant_id=r['id'], status='Pending'))
-    _log(db, 'Demo Policy Engine', 'REVIEW_CAMPAIGN_CREATED', 'Risk review queue',
+    _log(db, 'Access Review Engine', 'REVIEW_CAMPAIGN_CREATED', f'Risk review queue ({env})',
          f'Created {len(requested)} new reviews for high-risk or departed-owner access. '
          f'Existing decisions unchanged.')
     db.commit()
@@ -678,10 +720,13 @@ def audit(limit: int = Query(default=100, le=500), db: Session = Depends(get_ses
 # ─── Offboarding ──────────────────────────────────────────────────────────────
 
 @app.get('/api/offboarding')
-def offboarding(db: Session = Depends(get_session)):
-    leavers = db.scalars(
-        select(Identity).where(Identity.status == 'Departed').order_by(Identity.id)
-    ).all()
+def offboarding(env: str = Query('production'), db: Session = Depends(get_session)):
+    q = select(Identity).where(Identity.status == 'Departed')
+    if env == 'test':
+        q = q.where(Identity.id.like('sim-%'))
+    else:
+        q = q.where(not_(Identity.id.like('sim-%')))
+    leavers = db.scalars(q.order_by(Identity.id)).all()
     result = []
     for p in leavers:
         account_ids = db.scalars(
@@ -712,12 +757,15 @@ def offboarding(db: Session = Depends(get_session)):
 # ─── Activity ─────────────────────────────────────────────────────────────────
 
 @app.get('/api/activity')
-def activity(limit: int = Query(default=200, le=500), db: Session = Depends(get_session)):
+def activity(limit: int = Query(default=200, le=500), env: str = Query('production'), db: Session = Depends(get_session)):
     from activity import summarize_activity
     limit = max(1, min(limit, 500))
-    events = db.scalars(
-        select(ActivityEvent).order_by(ActivityEvent.occurred_at.desc()).limit(limit)
-    ).all()
+    q = select(ActivityEvent)
+    if env == 'test':
+        q = q.where(ActivityEvent.source == 'EnterpriseSimulator')
+    else:
+        q = q.where(ActivityEvent.source != 'EnterpriseSimulator')
+    events = db.scalars(q.order_by(ActivityEvent.occurred_at.desc()).limit(limit)).all()
     account_ids = {e.account_id for e in events}
     accts = (
         {a.id: a for a in db.scalars(select(Account).where(Account.id.in_(account_ids))).all()}
@@ -729,8 +777,8 @@ def activity(limit: int = Query(default=200, le=500), db: Session = Depends(get_
 # ─── Alerts ───────────────────────────────────────────────────────────────────
 
 @app.get('/api/alerts')
-def alerts(db: Session = Depends(get_session)):
-    rows = [a for a in grant_data(db) if a['grant_status'] == 'Active' and a['risk_score'] >= 60]
+def alerts(env: str = Query('production'), db: Session = Depends(get_session)):
+    rows = [a for a in grant_data(db, env=env) if a['grant_status'] == 'Active' and a['risk_score'] >= 60]
     return [{
         'id': r['id'],
         'identity_name': r['identity_name'],
@@ -747,13 +795,13 @@ def alerts(db: Session = Depends(get_session)):
 # ─── AI Summary & ML Microservice ─────────────────────────────────────────────
 
 @app.get('/api/ai/summary')
-def ai_summary(db: Session = Depends(get_session)):
+def ai_summary(env: str = Query('production'), db: Session = Depends(get_session)):
     """Legacy grant-level heuristic and baseline demo anomaly scoring.
     
     For live quarterly three-model access reviews, use /api/review-cycles.
     """
     from ai_engine import rank_anomalies
-    grants = grant_data(db)
+    grants = grant_data(db, env=env)
     local_result = rank_anomalies(grants)
     local_result['source'] = 'legacy-demo-rules'
     local_result['quarterly_v10_notice'] = (
@@ -958,8 +1006,8 @@ def stats_timeline(days: int = Query(default=30, le=90), db: Session = Depends(g
 # ─── Reports ──────────────────────────────────────────────────────────────────
 
 @app.get('/api/reports/summary')
-def report_summary(db: Session = Depends(get_session)):
-    summary = overview(db)
+def report_summary(env: str = Query('production'), db: Session = Depends(get_session)):
+    summary = overview(env=env, db=db)
     activity_count = db.scalar(select(func.count(ActivityEvent.id))) or 0
     runs = db.scalars(
         select(ConnectorRun).order_by(ConnectorRun.id.desc()).limit(15)
@@ -1467,3 +1515,169 @@ def list_training_runs(db: Session = Depends(get_session)):
         'approved_by': r.approved_by,
         'promoted_at': r.promoted_at.isoformat() if r.promoted_at else None,
     } for r in runs]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST ENVIRONMENT / ENTERPRISE SIMULATOR BUILT-IN INTEGRATION ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+class SimulatorCompanyCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    industry: str = 'Technology'
+    count: int = Field(100, ge=1, le=100000)
+    locations: str = 'Colombo'
+    platforms: list[str] = ['github', 'aws', 'windows', 'linux']
+    seed: int = 42
+    start_hour: int = 8
+    end_hour: int = 18
+    speed: float = 60.0
+    eps: int = 10
+    active_pct: int = 80
+    exception_pct: int = 2
+
+
+@app.get('/api/simulator/health')
+def simulator_health():
+    """Verify connectivity with internal Enterprise Simulator service."""
+    import httpx
+    sim_url = os.getenv('SIMULATOR_URL', 'http://enterprise-simulator:8000')
+    try:
+        with httpx.Client(timeout=3.0) as client:
+            r = client.get(f"{sim_url}/api/health")
+            if r.status_code == 200:
+                return {'online': True, 'url': sim_url, **r.json()}
+    except Exception as ex:
+        return {'online': False, 'url': sim_url, 'error': str(ex)}
+    return {'online': False, 'url': sim_url}
+
+
+@app.get('/api/simulator/companies')
+def simulator_list_companies():
+    """Proxy list of virtual companies in Enterprise Simulator."""
+    import httpx
+    sim_url = os.getenv('SIMULATOR_URL', 'http://enterprise-simulator:8000')
+    with httpx.Client(timeout=5.0) as client:
+        r = client.get(f"{sim_url}/api/companies")
+        if r.status_code != 200:
+            raise HTTPException(r.status_code, r.text)
+        return r.json()
+
+
+@app.post('/api/simulator/companies')
+def simulator_create_company(body: SimulatorCompanyCreate, db: Session = Depends(get_session)):
+    """One-click setup: Create company in simulator, generate virtual infrastructure, auto-sync to AccessGuard."""
+    import httpx
+    from simulator_connector import sync_company_inventory
+    sim_url = os.getenv('SIMULATOR_URL', 'http://enterprise-simulator:8000')
+    with httpx.Client(timeout=30.0) as client:
+        r = client.post(f"{sim_url}/api/companies", json=body.model_dump())
+        if r.status_code != 200:
+            raise HTTPException(r.status_code, f"Failed to create company: {r.text}")
+        co = r.json()
+        cid = co['id']
+        # Automatically start the simulation
+        client.post(f"{sim_url}/api/companies/{cid}/simulation/start")
+
+    # Auto-sync inventory into AccessGuard Test Environment
+    sync_res = sync_company_inventory(db, cid)
+    return {
+        'ok': True,
+        'company': co,
+        'sync': sync_res,
+        'message': f"Created virtual company '{body.name}' ({body.count} employees) and synchronized into AccessGuard Test Environment."
+    }
+
+
+@app.get('/api/simulator/companies/{company_id}/summary')
+def simulator_company_summary(company_id: int):
+    """Get live simulation stats from simulator backend."""
+    import httpx
+    sim_url = os.getenv('SIMULATOR_URL', 'http://enterprise-simulator:8000')
+    with httpx.Client(timeout=5.0) as client:
+        r = client.get(f"{sim_url}/api/companies/{company_id}/summary")
+        if r.status_code != 200:
+            raise HTTPException(r.status_code, r.text)
+        return r.json()
+
+
+@app.get('/api/simulator/companies/{company_id}/collection')
+def simulator_company_collection(
+    company_id: int,
+    table: str = Query('employees'),
+    offset: int = 0,
+    limit: int = 50,
+    q: str = '',
+    platform: str = '',
+):
+    """Proxy entity collection querying (employees, resources, accounts, grants, events)."""
+    import httpx
+    sim_url = os.getenv('SIMULATOR_URL', 'http://enterprise-simulator:8000')
+    with httpx.Client(timeout=10.0) as client:
+        r = client.get(
+            f"{sim_url}/api/companies/{company_id}/{table}",
+            params={'offset': offset, 'limit': limit, 'q': q, 'platform': platform}
+        )
+        if r.status_code != 200:
+            raise HTTPException(r.status_code, r.text)
+        return r.json()
+
+
+@app.post('/api/simulator/companies/{company_id}/simulation/{action}')
+def simulator_control_simulation(company_id: int, action: str):
+    """Control simulation engine (start, pause, resume, stop, reset)."""
+    import httpx
+    sim_url = os.getenv('SIMULATOR_URL', 'http://enterprise-simulator:8000')
+    with httpx.Client(timeout=5.0) as client:
+        r = client.post(f"{sim_url}/api/companies/{company_id}/simulation/{action}")
+        if r.status_code != 200:
+            raise HTTPException(r.status_code, r.text)
+        return r.json()
+
+
+@app.post('/api/simulator/companies/{company_id}/sync')
+def simulator_sync_now(company_id: int, db: Session = Depends(get_session)):
+    """Trigger on-demand full synchronization of simulator company into AccessGuard."""
+    from simulator_connector import sync_company_inventory
+    try:
+        return sync_company_inventory(db, company_id)
+    except Exception as ex:
+        raise HTTPException(500, f"Sync failed: {str(ex)}")
+
+
+@app.post('/api/simulator/companies/{company_id}/poll-events')
+def simulator_poll_events(company_id: int, db: Session = Depends(get_session)):
+    """Poll latest activity logs from simulator stream into AccessGuard database."""
+    from simulator_connector import poll_and_ingest_live_events
+    return poll_and_ingest_live_events(db, company_id)
+
+
+@app.get('/api/simulator/scenarios')
+def simulator_list_scenarios():
+    """List available automated security test scenarios."""
+    from simulator_connector import SCENARIOS_CATALOG
+    return SCENARIOS_CATALOG
+
+
+@app.post('/api/simulator/companies/{company_id}/scenarios/{scenario_id}/run')
+def simulator_run_scenario(company_id: int, scenario_id: str, db: Session = Depends(get_session)):
+    """Run predefined automated attack or governance test scenario."""
+    from simulator_connector import execute_test_scenario
+    try:
+        return execute_test_scenario(db, company_id, scenario_id)
+    except Exception as ex:
+        raise HTTPException(400, f"Scenario execution failed: {str(ex)}")
+
+
+@app.get('/api/simulator/companies/{company_id}/ml-metrics')
+def simulator_ml_metrics(company_id: int, db: Session = Depends(get_session)):
+    """Retrieve actual ML test evaluation metrics (Precision, Recall, F1, Latency)."""
+    from simulator_connector import calculate_ml_test_metrics
+    return calculate_ml_test_metrics(db, company_id)
+
+
+@app.post('/api/simulator/companies/{company_id}/reset')
+def simulator_reset_env(company_id: int, db: Session = Depends(get_session)):
+    """Reset virtual company state and AccessGuard test environment completely."""
+    from simulator_connector import reset_simulator_environment
+    return reset_simulator_environment(db, company_id)
+

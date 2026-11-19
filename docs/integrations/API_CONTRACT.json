@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AccessGuard - Enterprise Simulator API Contracts",
+  "version": "1.0.0",
+  "endpoints": {
+    "list_companies": {
+      "method": "GET",
+      "path": "/api/companies",
+      "headers": {
+        "Authorization": "Bearer <TOKEN>",
+        "Accept": "application/json"
+      },
+      "response_example": [
+        {
+          "id": "comp-7890",
+          "name": "Acme Global Dynamics",
+          "domain": "acmeglobal.com",
+          "employee_count": 1250,
+          "created_at": "2026-01-15T08:00:00Z"
+        }
+      ]
+    },
+    "get_employees": {
+      "method": "GET",
+      "path": "/api/companies/{company_id}/employees",
+      "query_parameters": {
+        "limit": 100,
+        "offset": 0,
+        "status": "active"
+      },
+      "response_example": {
+        "total": 1250,
+        "items": [
+          {
+            "id": "emp-10492",
+            "first_name": "Eleanor",
+            "last_name": "Vance",
+            "work_email": "evance@acmeglobal.com",
+            "department": "Engineering",
+            "job_title": "Senior Cloud Infrastructure Engineer",
+            "manager_email": "rpatel@acmeglobal.com",
+            "status": "active",
+            "start_date": "2024-03-01"
+          }
+        ]
+      }
+    },
+    "get_accounts": {
+      "method": "GET",
+      "path": "/api/companies/{company_id}/accounts",
+      "query_parameters": {
+        "limit": 100,
+        "offset": 0,
+        "platform": "aws"
+      },
+      "response_example": {
+        "total": 3500,
+        "items": [
+          {
+            "id": "acc-9941",
+            "employee_id": "emp-10492",
+            "platform": "aws",
+            "account_name": "eleanor.vance",
+            "email": "evance@acmeglobal.com",
+            "is_active": true,
+            "created_at": "2024-03-02T10:14:00Z"
+          }
+        ]
+      }
+    },
+    "get_grants": {
+      "method": "GET",
+      "path": "/api/companies/{company_id}/grants",
+      "query_parameters": {
+        "limit": 100,
+        "offset": 0
+      },
+      "response_example": {
+        "total": 7200,
+        "items": [
+          {
+            "id": "grt-3312",
+            "account_id": "acc-9941",
+            "permission_name": "AdministratorAccess",
+            "resource_name": "arn:aws:iam::123456789012:role/ProductionInfraAdmin",
+            "is_privileged": true,
+            "granted_at": "2024-03-05T09:00:00Z"
+          }
+        ]
+      }
+    },
+    "stream_events": {
+      "method": "GET",
+      "path": "/api/companies/{company_id}/stream/events",
+      "transport": "Server-Sent Events (SSE)",
+      "headers": {
+        "Accept": "text/event-stream"
+      },
+      "sse_payload_example": {
+        "event_id": "evt-772199",
+        "timestamp": "2026-11-19T10:30:15Z",
+        "company_id": "comp-7890",
+        "employee_id": "emp-10492",
+        "account_id": "acc-9941",
+        "platform": "aws",
+        "action": "AssumeRole",
+        "status": "SUCCESS",
+        "source_ip": "198.51.100.45",
+        "details": {
+          "role_arn": "arn:aws:iam::123456789012:role/ProductionInfraAdmin",
+          "mfa_used": true
+        }
+      }
+    },
+    "remediate_action": {
+      "method": "POST",
+      "path": "/api/companies/{company_id}/remediate",
+      "headers": {
+        "Authorization": "Bearer <TOKEN>",
+        "Content-Type": "application/json"
+      },
+      "request_example": {
+        "action_type": "REVOKE_GRANT",
+        "platform": "aws",
+        "account_id": "acc-9941",
+        "grant_id": "grt-3312",
+        "reason": "AccessGuard AI Flag: Unused administrative privilege detected during quarterly audit",
+        "remediated_by": "secops-reviewer@accessguard.local"
+      },
+      "response_example": {
+        "status": "success",
+        "remediation_id": "rem-88129",
+        "executed_at": "2026-11-19T10:31:00Z",
+        "message": "Policy AdministratorAccess detached from virtual account eleanor.vance"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - simulator-data:/data
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - '127.0.0.1:8081:80'
+    depends_on: [backend]
+    restart: unless-stopped
+volumes:
+  simulator-data:

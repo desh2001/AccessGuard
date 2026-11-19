@@ -61,6 +61,7 @@ services:
       ACCESSLOG_SERVICE_URL: http://accesslog-service:8002
       SENTINEL_API_URL: https://host.pasinduudana.me
       SENTINEL_INGESTION_TOKEN: sentinel_ingest_CKg9Olm8VbdcaOHFdHXj3OK1666q0qdbjA30U9MKgMQ
+      SIMULATOR_URL: http://enterprise-simulator:8000
     ports:
       - '127.0.0.1:8000:8000'
     depends_on:
@@ -70,6 +71,19 @@ services:
         condition: service_started
       accesslog-service:
         condition: service_started
+      enterprise-simulator:
+        condition: service_started
+    networks:
+      - accessguard-net
+
+  enterprise-simulator:
+    build:
+      context: ./enterprise-simulator/backend
+      dockerfile: Dockerfile
+    container_name: accessguard-enterprise-simulator
+    restart: unless-stopped
+    volumes:
+      - accessguard_simulator_data:/data
     networks:
       - accessguard-net
 
@@ -88,6 +102,7 @@ services:
 
 volumes:
   accessguard_complete_pgdata:
+  accessguard_simulator_data:
 
 networks:
   accessguard-net:

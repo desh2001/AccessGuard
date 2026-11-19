@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AccessGuard - Enterprise Simulator Data Mapping Specification",
+  "version": "1.0.0",
+  "mappings": {
+    "Employee_to_Identity": {
+      "target_table": "identities",
+      "fields": [
+        {
+          "source_field": "employee.id",
+          "target_field": "id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('sim-emp-', source_val)",
+          "validation": "not_null, unique"
+        },
+        {
+          "source_field": "employee.first_name + ' ' + employee.last_name",
+          "target_field": "name",
+          "data_type": "string",
+          "required": true,
+          "transformation": "trim(concat(first_name, ' ', last_name))",
+          "validation": "length > 1"
+        },
+        {
+          "source_field": "employee.work_email",
+          "target_field": "email",
+          "data_type": "string",
+          "required": true,
+          "transformation": "lowercase(trim(source_val))",
+          "validation": "valid_email"
+        },
+        {
+          "source_field": "employee.department",
+          "target_field": "department",
+          "data_type": "string",
+          "required": true,
+          "transformation": "trim(source_val)",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "employee.job_title",
+          "target_field": "job_title",
+          "data_type": "string",
+          "required": true,
+          "transformation": "trim(source_val)",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "employee.manager_email",
+          "target_field": "manager",
+          "data_type": "string",
+          "required": false,
+          "transformation": "lowercase(trim(source_val))",
+          "validation": "optional_email"
+        },
+        {
+          "source_field": "employee.status",
+          "target_field": "status",
+          "data_type": "string",
+          "required": true,
+          "transformation": "switch(source_val, {'active': 'Active', 'terminated': 'Departed', 'on_leave': 'Suspended'}, 'Active')",
+          "validation": "in_enum(['Active', 'Departed', 'Suspended'])"
+        },
+        {
+          "source_field": "constant:'Human'",
+          "target_field": "type",
+          "data_type": "string",
+          "required": true,
+          "transformation": "literal('Human')",
+          "validation": "in_enum(['Human', 'Service'])"
+        }
+      ]
+    },
+    "Account_to_Account": {
+      "target_table": "accounts",
+      "fields": [
+        {
+          "source_field": "account.id",
+          "target_field": "id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('sim-acc-', source_val)",
+          "validation": "not_null, unique"
+        },
+        {
+          "source_field": "account.employee_id",
+          "target_field": "identity_id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('sim-emp-', source_val)",
+          "validation": "foreign_key(identities.id)"
+        },
+        {
+          "source_field": "account.platform",
+          "target_field": "system_id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('simulator-', lowercase(source_val))",
+          "validation": "in_enum(['simulator-github', 'simulator-aws', 'simulator-windows', 'simulator-linux'])"
+        },
+        {
+          "source_field": "account.account_name",
+          "target_field": "username",
+          "data_type": "string",
+          "required": true,
+          "transformation": "trim(source_val)",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "account.email",
+          "target_field": "email",
+          "data_type": "string",
+          "required": true,
+          "transformation": "lowercase(trim(source_val))",
+          "validation": "valid_email"
+        },
+        {
+          "source_field": "account.is_active",
+          "target_field": "status",
+          "data_type": "string",
+          "required": true,
+          "transformation": "if(source_val, 'Active', 'Suspended')",
+          "validation": "in_enum(['Active', 'Suspended'])"
+        },
+        {
+          "source_field": "constant:'EnterpriseSimulator'",
+          "target_field": "source",
+          "data_type": "string",
+          "required": true,
+          "transformation": "literal('EnterpriseSimulator')",
+          "validation": "not_null"
+        }
+      ]
+    },
+    "Grant_to_AccessGrant": {
+      "target_table": "access_grants",
+      "fields": [
+        {
+          "source_field": "grant.id",
+          "target_field": "id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('sim-grt-', source_val)",
+          "validation": "not_null, unique"
+        },
+        {
+          "source_field": "grant.account_id",
+          "target_field": "account_id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('sim-acc-', source_val)",
+          "validation": "foreign_key(accounts.id)"
+        },
+        {
+          "source_field": "grant.permission_name",
+          "target_field": "permission",
+          "data_type": "string",
+          "required": true,
+          "transformation": "trim(source_val)",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "grant.resource_name",
+          "target_field": "resource",
+          "data_type": "string",
+          "required": true,
+          "transformation": "trim(source_val)",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "grant.is_privileged",
+          "target_field": "privilege",
+          "data_type": "boolean",
+          "required": true,
+          "transformation": "bool(source_val)",
+          "validation": "boolean"
+        },
+        {
+          "source_field": "calculated: cross_dept_check",
+          "target_field": "cross_department",
+          "data_type": "boolean",
+          "required": true,
+          "transformation": "check_cross_department(employee_dept, resource_dept)",
+          "validation": "boolean"
+        },
+        {
+          "source_field": "constant:'Active'",
+          "target_field": "status",
+          "data_type": "string",
+          "required": true,
+          "transformation": "literal('Active')",
+          "validation": "in_enum(['Active', 'Revoked'])"
+        },
+        {
+          "source_field": "constant:'EnterpriseSimulator'",
+          "target_field": "source",
+          "data_type": "string",
+          "required": true,
+          "transformation": "literal('EnterpriseSimulator')",
+          "validation": "not_null"
+        }
+      ]
+    },
+    "Event_to_ActivityEvent": {
+      "target_table": "activity_events",
+      "fields": [
+        {
+          "source_field": "auto_increment",
+          "target_field": "id",
+          "data_type": "integer",
+          "required": true,
+          "transformation": "database_auto_pk()",
+          "validation": "primary_key"
+        },
+        {
+          "source_field": "event.account_id",
+          "target_field": "account_id",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('sim-acc-', source_val)",
+          "validation": "foreign_key(accounts.id)"
+        },
+        {
+          "source_field": "event.timestamp",
+          "target_field": "occurred_at",
+          "data_type": "datetime",
+          "required": true,
+          "transformation": "iso8601_to_utc_timestamp(source_val)",
+          "validation": "valid_timestamp"
+        },
+        {
+          "source_field": "event.action",
+          "target_field": "action",
+          "data_type": "string",
+          "required": true,
+          "transformation": "upper(trim(source_val))",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "event.status",
+          "target_field": "outcome",
+          "data_type": "string",
+          "required": true,
+          "transformation": "upper(trim(source_val))",
+          "validation": "in_enum(['SUCCESS', 'FAILURE', 'DENIED', 'ERROR'])"
+        },
+        {
+          "source_field": "event.source_ip",
+          "target_field": "ip_address",
+          "data_type": "string",
+          "required": false,
+          "transformation": "trim(source_val)",
+          "validation": "valid_ip_or_null"
+        },
+        {
+          "source_field": "event.platform",
+          "target_field": "source",
+          "data_type": "string",
+          "required": true,
+          "transformation": "concat('simulator-', lowercase(source_val))",
+          "validation": "not_null"
+        },
+        {
+          "source_field": "raw_event_json",
+          "target_field": "raw_message",
+          "data_type": "string",
+          "required": true,
+          "transformation": "json_dumps(source_val)",
+          "validation": "not_null"
+        }
+      ]
+    }
+  }
+}

@@ -469,3 +469,27 @@ class MLTrainingRun(Base):
             name='training_run_status_valid',
         ),
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST ENVIRONMENT / SIMULATOR SCENARIO TABLES
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestScenarioResult(Base):
+    """Execution results for automated built-in simulator security scenarios."""
+    __tablename__ = 'test_scenario_results'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    scenario_id: Mapped[str] = mapped_column(String(60), nullable=False)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    category: Mapped[str] = mapped_column(String(60), nullable=False)
+    platform: Mapped[str] = mapped_column(String(30), nullable=False)
+    company_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    target_identity: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    target_account: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    expected_behavior: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default='completed', nullable=False)
+    detection_result: Mapped[str] = mapped_column(String(30), nullable=False)
+    details: Mapped[str] = mapped_column(Text, nullable=False, default='{}')
+    execution_time_ms: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, nullable=False)
+

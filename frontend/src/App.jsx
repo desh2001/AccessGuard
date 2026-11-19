@@ -14,9 +14,10 @@ import {
   Line, PieChart, Pie, RadarChart, Radar, PolarGrid, PolarAngleAxis,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
+import TestEnvironmentView from './TestEnvironmentView';
 
 // ─── Nav Items ───────────────────────────────────────────────────────────────
-const ITEMS = [
+const PRODUCTION_ITEMS = [
   { id: 'overview',     label: 'Overview',            icon: LayoutDashboard },
   { id: 'identities',   label: 'Employees / Directory', icon: Fingerprint },
   { id: 'devices',      label: 'Live Devices & Logs', icon: Server },
@@ -33,21 +34,50 @@ const ITEMS = [
   { id: 'settings',     label: 'Settings',             icon: Settings },
 ];
 
+const TEST_ENV_ITEMS = [
+  { id: 'test-overview',   label: 'Test Overview',       icon: LayoutDashboard },
+  { id: 'sim-companies',   label: 'Virtual Companies',   icon: Boxes },
+  { id: 'sim-employees',   label: 'Virtual Employees',   icon: Users },
+  { id: 'sim-github',      label: 'GitHub Simulator',    icon: Github },
+  { id: 'sim-aws',         label: 'AWS Simulator',       icon: Cloud },
+  { id: 'sim-windows',     label: 'Windows Simulator',   icon: HardDrive },
+  { id: 'sim-linux',       label: 'Linux Simulator',     icon: Server },
+  { id: 'sim-controls',    label: 'Simulation Controls', icon: Zap },
+  { id: 'sim-activity',    label: 'Generated Activity',  icon: Activity },
+  { id: 'test-scenarios',  label: 'Test Scenarios',      icon: AlertTriangle },
+  { id: 'test-results',    label: 'Test & ML Results',   icon: Award },
+  // Also include governance reviews and access tabs within test scope
+  { id: 'reviews',         label: 'Simulated Reviews',   icon: ClipboardCheck },
+  { id: 'access',          label: 'Simulated Inventory', icon: KeyRound },
+];
+
 const HEADINGS = {
-  overview:     ['Overview',             'Real-time view of verified identities, connected devices and risk across all systems'],
-  identities:   ['Employees & Identity Directory', 'Register verified employees, assign unique IDs, and bind technical devices/accounts'],
-  devices:      ['Live Devices & Syslog Stream', 'Real-time network endpoints and TCP port 5514 syslog telemetry from accesslog-main'],
-  accounts:     ['Account Mapping',      'Resolve technical accounts across platforms and verify ownership'],
-  access:       ['Access Inventory',     'All permissions — explore who can access what and assess risk'],
-  risks:        ['AI Risk Analysis',     'Explainable rule-based flags combined with unsupervised ML ranking'],
-  reviews:      ['Access Reviews',       'Review risky permissions — human approval required before any action'],
-  alerts:       ['Risk Alerts',          'Policy-based findings requiring investigation — not automatic action'],
-  activity:     ['Activity Evidence',    'Sampled authentication telemetry and correlated login history'],
-  offboarding:  ['Offboarding Center',   'Departed employees with outstanding access — verify before removal'],
-  integrations: ['Integrations',         'Connected systems and data collection status'],
-  audit:        ['Audit Trail',          'Decision history and simulated remediation events'],
-  reports:      ['Research Reports',     'Project-wide metrics and connector provenance evidence'],
-  settings:     ['Settings',             'Prototype configuration, security policies, and database reset controls'],
+  overview:        ['Overview',             'Real-time view of verified identities, connected devices and risk across all systems'],
+  identities:      ['Employees & Identity Directory', 'Register verified employees, assign unique IDs, and bind technical devices/accounts'],
+  devices:         ['Live Devices & Syslog Stream', 'Real-time network endpoints and TCP port 5514 syslog telemetry from accesslog-main'],
+  accounts:        ['Account Mapping',      'Resolve technical accounts across platforms and verify ownership'],
+  access:          ['Access Inventory',     'All permissions — explore who can access what and assess risk'],
+  risks:           ['AI Risk Analysis',     'Explainable rule-based flags combined with unsupervised ML ranking'],
+  reviews:         ['Access Reviews',       'Review risky permissions — human approval required before any action'],
+  alerts:          ['Risk Alerts',          'Policy-based findings requiring investigation — not automatic action'],
+  activity:        ['Activity Evidence',    'Sampled authentication telemetry and correlated login history'],
+  offboarding:     ['Offboarding Center',   'Departed employees with outstanding access — verify before removal'],
+  integrations:    ['Integrations',         'Connected systems and data collection status'],
+  audit:           ['Audit Trail',          'Decision history and simulated remediation events'],
+  reports:         ['Research Reports',     'Project-wide metrics and connector provenance evidence'],
+  settings:        ['Settings',             'Prototype configuration, security policies, and database reset controls'],
+  // Test Environment headings
+  'test-overview':  ['Test Environment Overview', 'Isolated virtual testing laboratory connected to Enterprise Simulator'],
+  'sim-companies':  ['Virtual Companies', 'Multi-tenant enterprise models generated for non-destructive security testing'],
+  'sim-employees':  ['Virtual Employees', 'Synthetic workforce hierarchies, organizational units and job assignments'],
+  'sim-github':     ['GitHub Enterprise Simulator', 'Virtual repositories, branches, collaborator grants and commit audit logs'],
+  'sim-aws':        ['AWS Cloud Simulator', 'Virtual IAM users, roles, policies, and S3/EC2 resource models'],
+  'sim-windows':    ['Windows AD Simulator', 'Simulated Active Directory domains, security groups and Kerberos/NTLM logins'],
+  'sim-linux':      ['Linux Enterprise Simulator', 'Virtual Linux instances, sudoers authorizations, PAM auth and SSH sessions'],
+  'sim-controls':   ['Simulation Control Center', 'Real-time controls for synthetic clock, time acceleration, and event generation frequency'],
+  'sim-activity':   ['Generated Activity Telemetry', 'Continuous synthetic access logs streaming from Enterprise Simulator'],
+  'test-scenarios': ['Automated Security Scenarios', 'Pre-packaged brute-force, privilege creep, leaver risk, and orphan account tests'],
+  'test-results':   ['Test & ML Evaluation Results', 'Live Precision, Recall, F1 score and latency metrics against Aegis V8 models'],
 };
 
 const RISK_COLORS   = { Critical: '#dc425d', High: '#f27b46', Medium: '#edae36', Low: '#27a78a' };
@@ -175,6 +205,7 @@ function InfoNote({ children, warn = false, Icon = AlertCircle }) {
 
 // ─── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
+  const [environment, setEnvironment] = useState('production'); // 'production' | 'test'
   const [page, setPage] = useState('overview');
   const [menuOpen, setMenuOpen] = useState(false);
   const [data, setData] = useState(null);
@@ -184,6 +215,10 @@ export default function App() {
   const [filter, setFilter] = useState('All');
   const [busy, setBusy] = useState(null);
   const [toast, setToast] = useState({ msg: '', ok: true });
+
+  // Simulator specific state
+  const [simCompanies, setSimCompanies] = useState([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(1);
 
   const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast({ msg: '', ok: true }), 5000); };
 
@@ -195,18 +230,46 @@ export default function App() {
         'alerts', 'ai', 'reports', 'runs', 'metrics', 'timeline', 'ftpStatus', 'mlStatus',
         'accesslogStatus', 'accesslogSummary', 'accesslogEvents', 'accesslogDevices', 'accesslogAlerts', 'mlPlatforms'];
       const urlMap = {
-        suggestions: '/accounts/suggestions', ai: '/ai/summary',
-        reports: '/reports/summary', runs: '/connectors/runs',
-        metrics: '/metrics', timeline: '/stats/timeline?days=30',
-        ftpStatus: '/connectors/ftp/status', mlStatus: '/ml/status',
-        accesslogStatus: '/accesslog/status', accesslogSummary: '/accesslog/summary',
-        accesslogEvents: '/accesslog/events', accesslogDevices: '/accesslog/devices',
-        accesslogAlerts: '/accesslog/alerts', mlPlatforms: '/ml/platforms',
+        overview: `/overview?env=${environment}`,
+        identities: `/identities?env=${environment}`,
+        accounts: `/accounts?env=${environment}`,
+        suggestions: '/accounts/suggestions',
+        access: `/access?env=${environment}`,
+        reviews: `/reviews?env=${environment}`,
+        integrations: `/integrations?env=${environment}`,
+        audit: '/audit',
+        offboarding: `/offboarding?env=${environment}`,
+        activity: `/activity?env=${environment}`,
+        alerts: `/alerts?env=${environment}`,
+        ai: `/ai/summary?env=${environment}`,
+        reports: '/reports/summary',
+        runs: '/connectors/runs',
+        metrics: '/metrics',
+        timeline: '/stats/timeline?days=30',
+        ftpStatus: '/connectors/ftp/status',
+        mlStatus: '/ml/status',
+        accesslogStatus: '/accesslog/status',
+        accesslogSummary: '/accesslog/summary',
+        accesslogEvents: '/accesslog/events',
+        accesslogDevices: '/accesslog/devices',
+        accesslogAlerts: '/accesslog/alerts',
+        mlPlatforms: '/ml/platforms',
       };
       const results = await Promise.all(paths.map(p => request(urlMap[p] || '/' + p)));
       setData(Object.fromEntries(paths.map((p, i) => [p, results[i]])));
+
+      // Load simulator companies
+      try {
+        const cos = await request('/simulator/companies');
+        setSimCompanies(cos || []);
+        if (cos && cos.length > 0 && !selectedCompanyId) {
+          setSelectedCompanyId(cos[0].id);
+        }
+      } catch (simErr) {
+        // Simulator might be initializing
+      }
     } catch (e) { setError(e.message); } finally { setLoading(false); }
-  }, []);
+  }, [environment, selectedCompanyId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -314,24 +377,71 @@ export default function App() {
   };
 
   const pending = data?.overview?.stats?.pending_reviews || 0;
+  const currentNavItems = environment === 'test' ? TEST_ENV_ITEMS : PRODUCTION_ITEMS;
+
+  const handleEnvChange = (newEnv) => {
+    setEnvironment(newEnv);
+    if (newEnv === 'test') {
+      setPage('test-overview');
+    } else {
+      setPage('overview');
+    }
+  };
 
   return (
     <div className="app-frame">
       <header className="chrome">
         <div className="dots"><i /><i /><i /></div>
         <div className="chrome-center">ACCESSGUARD <span>RESEARCH LAB</span></div>
-        <div className="chrome-right"><span className="online-dot" /> Demo Workspace · v2.0</div>
+        <div className="chrome-right">
+          {/* Environment Switcher */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(0,0,0,0.25)', padding: '2px 4px', borderRadius: 20, marginRight: 16 }}>
+            <button
+              onClick={() => handleEnvChange('production')}
+              style={{
+                background: environment === 'production' ? 'var(--primary)' : 'transparent',
+                color: '#fff',
+                border: 'none',
+                padding: '3px 12px',
+                borderRadius: 16,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              Production
+            </button>
+            <button
+              onClick={() => handleEnvChange('test')}
+              style={{
+                background: environment === 'test' ? '#10b981' : 'transparent',
+                color: '#fff',
+                border: 'none',
+                padding: '3px 12px',
+                borderRadius: 16,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              Test Lab
+            </button>
+          </div>
+          <span className="online-dot" /> {environment === 'test' ? 'Virtual Test Lab' : 'Production Lab'} · v2.0
+        </div>
       </header>
       <div className="shell">
         <aside className={`sidebar ${menuOpen ? 'is-open' : ''}`}>
           <div className="brand">
             <div className="brand-symbol"><ShieldCheck size={21} /></div>
-            <div className="brand-title">access<span>guard</span><small>IDENTITY GOVERNANCE</small></div>
+            <div className="brand-title">access<span>guard</span><small>{environment === 'test' ? 'TEST ENVIRONMENT' : 'IDENTITY GOVERNANCE'}</small></div>
             <button className="mobile-menu-close" onClick={() => setMenuOpen(false)} aria-label="Close menu"><X size={19} /></button>
           </div>
-          <div className="side-caption">WORKSPACE</div>
+          <div className="side-caption">{environment === 'test' ? 'TEST LAB NAVIGATION' : 'WORKSPACE'}</div>
           <nav aria-label="Main navigation">
-            {ITEMS.map(item => {
+            {currentNavItems.map(item => {
               const Icon = item.icon;
               return (
                 <button key={item.id} onClick={() => navigate(item.id)} className={`nav-item ${page === item.id ? 'active' : ''}`}>
@@ -344,19 +454,27 @@ export default function App() {
           <div className="sidebar-bottom">
             <div className="sidebar-abstract">
               <div className="abstract-icon"><Sparkles size={21} /></div>
-              <strong>Govern smarter.</strong>
-              <span>Review, approve and remediate access with confidence and full audit evidence.</span>
-              <button onClick={() => navigate('reviews')}>Go to reviews <ArrowRight size={14} /></button>
+              <strong>{environment === 'test' ? 'Virtual Sandbox' : 'Govern smarter.'}</strong>
+              <span>{environment === 'test' ? 'Non-destructive access testing against 100 to 100,000 synthetic employees.' : 'Review, approve and remediate access with confidence and full audit evidence.'}</span>
+              <button onClick={() => navigate(environment === 'test' ? 'test-scenarios' : 'reviews')}>
+                {environment === 'test' ? 'Run Scenarios' : 'Go to reviews'} <ArrowRight size={14} />
+              </button>
             </div>
-            <div className="side-footer"><span className="online-dot" /> Local research workspace</div>
+            <div className="side-footer"><span className="online-dot" /> {environment === 'test' ? 'Enterprise Simulator Mode' : 'Local research workspace'}</div>
           </div>
         </aside>
         <main className="main">
           <div className="top-nav">
             <button className="menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Open menu"><Menu size={22} /></button>
-            <div className="crumbs"><span>Workspace</span><ChevronRight size={15} /><strong>{ITEMS.find(x => x.id === page)?.label}</strong></div>
+            <div className="crumbs">
+              <span>{environment === 'test' ? 'Test Environment' : 'Workspace'}</span>
+              <ChevronRight size={15} />
+              <strong>{HEADINGS[page] ? HEADINGS[page][0] : page}</strong>
+            </div>
             <div className="nav-tools">
-              <span className="top-chip"><span className="online-dot" /> Demo Mode</span>
+              <span className="top-chip" style={{ background: environment === 'test' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)', color: environment === 'test' ? '#10b981' : 'var(--primary)', borderColor: environment === 'test' ? '#10b981' : 'transparent' }}>
+                <span className="online-dot" style={{ background: environment === 'test' ? '#10b981' : undefined }} /> {environment === 'test' ? 'Test Environment' : 'Production Mode'}
+              </span>
               <button className="icon-button" title="Help" onClick={() => navigate('settings')}><CircleHelp size={18} /></button>
               <button className="icon-button notification" onClick={() => navigate('reviews')} title="Review notifications">
                 <Bell size={18} />{pending > 0 && <i />}
@@ -399,6 +517,23 @@ export default function App() {
                 {page === 'audit'        && <Audit        rows={data.audit} />}
                 {page === 'reports'      && <Reports      data={data.reports} runs={data.runs} />}
                 {page === 'settings'     && <SettingsPage resetDb={resetDb} busy={busy} />}
+                {/* ─── Test Environment Views ─── */}
+                {[
+                  'test-overview', 'sim-companies', 'sim-employees',
+                  'sim-github', 'sim-aws', 'sim-windows', 'sim-linux',
+                  'sim-controls', 'sim-activity', 'test-scenarios', 'test-results'
+                ].includes(page) && (
+                  <TestEnvironmentView
+                    subpage={page}
+                    companies={simCompanies}
+                    selectedCompanyId={selectedCompanyId}
+                    setSelectedCompanyId={setSelectedCompanyId}
+                    onRefresh={refresh}
+                    showToast={showToast}
+                    busy={busy}
+                    setBusy={setBusy}
+                  />
+                )}
               </>
             }
             <footer className="footer">AccessGuard Research Prototype · PostgreSQL · Local demo only <span>v2.0.0</span></footer>
