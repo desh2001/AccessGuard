@@ -265,8 +265,8 @@ threading.Thread(target=start_syslog_listener, daemon=True).start()
 
 if __name__ == "__main__":
     print("==================================================================")
-    print("  Dialog Access Log API running at http://127.0.0.1:8002")
+    print("  Dialog Access Log API running at http://0.0.0.0:8002")
     print("  Syslog listener active on TCP port 5514")
     print("==================================================================")
-    uvicorn.run("standalone_api:app", host="127.0.0.1", port=8002, reload=False)
+    uvicorn.run("standalone_api:app", host="0.0.0.0", port=8002, reload=False)
 
