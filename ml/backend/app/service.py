@@ -172,6 +172,20 @@ def score_accounts(
             results[index] = base
             continue
 
+        # Check for unseen account_type category in loaded model
+        acct_type = str(features.get("account_type", "")).strip().lower()
+        if artifact and "pipeline" in artifact:
+            try:
+                preproc = artifact["pipeline"].named_steps.get("preprocessor")
+                cat_encoder = preproc.named_transformers_.get("categorical")
+                known_acct_types = set(cat_encoder.categories_[0])
+                if acct_type not in known_acct_types:
+                    base["reason"] = f"unseen_account_type_category:{acct_type}"
+                    results[index] = base
+                    continue
+            except Exception:
+                pass
+
         row = {**features, "platform": raw_platform}
         try:
             # Validate one row independently, so a malformed row does not block

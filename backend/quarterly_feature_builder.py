@@ -182,12 +182,10 @@ def build_account_features(
         identity = acc.identity or (db.get(Identity, acc.identity_id) if acc.identity_id else None)
         department = identity.department.lower().strip() if identity else 'unmapped'
         
-        # account_type
-        if identity:
-            itype = identity.type.lower().strip()
-            account_type = 'human' if itype == 'human' else ('machine' if itype == 'machine' else 'vendor')
-        else:
-            account_type = 'service' if 'svc' in acc.username.lower() or 'bot' in acc.username.lower() else 'unknown'
+        # V11: Read explicit Account.account_type directly. No username/identity heuristics.
+        raw_act = (getattr(acc, 'account_type', None) or 'unknown').strip().lower()
+        valid_types = {'human', 'service', 'shared', 'emergency', 'vendor', 'workload', 'machine', 'unknown'}
+        account_type = raw_act if raw_act in valid_types else 'unknown'
 
         # Entitlements & grants
         grants = acc.grants or db.scalars(

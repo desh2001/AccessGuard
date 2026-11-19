@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from sqlalchemy import (
     CheckConstraint, DateTime, Float, ForeignKey, Index, Integer,
-    String, Text, UniqueConstraint,
+    String, Text, UniqueConstraint, text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -52,6 +52,24 @@ class System(Base):
     platform: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
 
+ACCOUNT_TYPES = (
+    'human',
+    'service',
+    'shared',
+    'emergency',
+    'vendor',
+    'workload',
+    'machine',
+    'unknown',
+)
+
+PLATFORM_NATIVE_ID_TYPES = {
+    'windows': {'windows_sid'},
+    'linux': {'linux_uid', 'linux_directory_user_id'},
+    'github': {'github_user_id'},
+}
+
+
 class Account(Base):
     __tablename__ = 'accounts'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -68,12 +86,26 @@ class Account(Base):
     # V10: stable platform-native identifier (SID, UID, GitHub numeric ID)
     native_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     native_id_type: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # V11: explicit account type and native identifier namespace
+    account_type: Mapped[str] = mapped_column(String(24), default='unknown', nullable=False)
+    native_id_namespace: Mapped[str | None] = mapped_column(String(255), nullable=True)
     identity: Mapped[Identity | None] = relationship(back_populates='accounts')
     system: Mapped[System] = relationship()
     grants: Mapped[list[AccessGrant]] = relationship(back_populates='account')
     __table_args__ = (
         UniqueConstraint('system_id', 'external_account_id', name='uq_account_system_external_id'),
         CheckConstraint("status IN ('Active','Disabled')", name='account_status_valid'),
+        CheckConstraint(
+            "account_type IN ('human','service','shared','emergency','vendor','workload','machine','unknown')",
+            name='account_type_valid'
+        ),
+        Index(
+            'uq_account_system_native_tuple',
+            'system_id', 'native_id_type', 'native_id_namespace', 'native_id',
+            unique=True,
+            postgresql_where=text("native_id IS NOT NULL AND native_id_type IS NOT NULL AND native_id_namespace IS NOT NULL"),
+            sqlite_where=text("native_id IS NOT NULL AND native_id_type IS NOT NULL AND native_id_namespace IS NOT NULL"),
+        ),
     )
 
 

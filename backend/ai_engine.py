@@ -164,7 +164,7 @@ def rank_anomalies(rows: list[dict]) -> dict:
         },
         'metric_note': (
             'Percentiles measure unusualness within this synthetic cohort ONLY. '
-            'They are NOT attack probabilities, NOT ground-truth validated, '
+            'They are NOT attack probabilities (probability of compromise), NOT ground-truth validated, '
             'and NOT grounds for automatic revocation.'
         ),
         'findings': findings,

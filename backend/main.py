@@ -24,6 +24,7 @@ from models import (
     QuarterlyReviewCycle, QuarterlyAccountReview,
     ReviewOutcomeImportBatch, ReviewOutcomeImportRow,
     QuarterlyReviewOutcome, MLTrainingRun,
+    ACCOUNT_TYPES, PLATFORM_NATIVE_ID_TYPES,
 )
 from risk import access_dict, risk_level
 
@@ -87,6 +88,10 @@ def account_data(db: Session, env: str = 'production') -> list[dict]:
         'system_name': s.name,
         'username': a.username,
         'external_account_id': a.external_account_id,
+        'account_type': a.account_type,
+        'native_id': a.native_id,
+        'native_id_type': a.native_id_type,
+        'native_id_namespace': a.native_id_namespace,
         'account_email': a.account_email,
         'status': a.status,
         'source': a.source,
@@ -243,6 +248,10 @@ class ConnectDeviceBody(BaseModel):
     system_id: str = Field(min_length=2, max_length=32)
     username: str = Field(min_length=1, max_length=255)
     external_account_id: str | None = None
+    account_type: str = Field(default='human', max_length=24)
+    native_id: str | None = None
+    native_id_type: str | None = None
+    native_id_namespace: str | None = None
     account_email: str | None = None
     permission: str = Field(default='User', max_length=80)
     resource: str = Field(default='Standard Workspace', max_length=255)
@@ -258,14 +267,45 @@ def connect_device(identity_id: str, body: ConnectDeviceBody, db: Session = Depe
     system = db.get(System, body.system_id)
     if not system:
         raise HTTPException(404, f'System {body.system_id} does not exist')
-    
-    ext_id = body.external_account_id or f"{body.system_id.lower()}-{body.username}"
+
+    act_type = (body.account_type or 'human').strip().lower()
+    if act_type not in ACCOUNT_TYPES:
+        raise HTTPException(422, f"Invalid account_type '{body.account_type}'. Must be one of {ACCOUNT_TYPES}")
+
+    # Stable identifier validation: Never derive external ID from username/email!
+    ext_id = (body.external_account_id or '').strip() or None
+    native_id = (body.native_id or '').strip() or None
+    native_id_type = (body.native_id_type or '').strip() or None
+    native_id_namespace = (body.native_id_namespace or '').strip() or None
+
+    has_any_native = any((native_id, native_id_type, native_id_namespace))
+    has_full_native = all((native_id, native_id_type, native_id_namespace))
+
+    if has_any_native and not has_full_native:
+        raise HTTPException(422, 'Incomplete native ID tuple: native_id, native_id_type, and native_id_namespace are all required')
+
+    if not ext_id:
+        if has_full_native:
+            ext_id = f"{native_id_type}:{native_id_namespace}:{native_id}"
+        else:
+            raise HTTPException(422, 'Must supply external_account_id or complete native ID tuple. Derivation from username/email is not permitted.')
+
+    # Validate native_id_type against platform if system platform is defined
+    if native_id_type and system.platform:
+        allowed_types = PLATFORM_NATIVE_ID_TYPES.get(system.platform.lower().strip())
+        if allowed_types and native_id_type not in allowed_types:
+            raise HTTPException(422, f"native_id_type '{native_id_type}' is not valid for platform '{system.platform}'. Allowed: {sorted(allowed_types)}")
+
     account = Account(
         identity_id=person.id,
         system_id=system.id,
         external_account_id=ext_id,
         username=body.username.strip(),
         account_email=body.account_email or person.email,
+        account_type=act_type,
+        native_id=native_id,
+        native_id_type=native_id_type,
+        native_id_namespace=native_id_namespace,
         status='Active',
         source='ManualRegistration',
         mapping_method='DirectDeviceConnection',
@@ -288,6 +328,8 @@ def connect_device(identity_id: str, body: ConnectDeviceBody, db: Session = Depe
 
     _log(db, 'Security Administrator', 'DEVICE_ACCOUNT_CONNECTED', f'Account #{account.id}',
          f'Connected device/account {account.username} on {system.name} for employee {person.name} ({person.id})')
+    db.commit()
+    return {'ok': True, 'account_id': account.id, 'external_account_id': ext_id, 'account_type': act_type}
     db.commit()
 
     # Stream event to Sentinel Cloud Ingestion API
@@ -485,19 +527,48 @@ def suggestions(db: Session = Depends(get_session)):
 class AccountCreate(BaseModel):
     system_id: str = Field(min_length=1, max_length=32)
     external_account_id: str = Field(min_length=2, max_length=255)
-    username: str = Field(min_length=2, max_length=255)
+    username: str = Field(min_length=1, max_length=255)
+    account_type: str = Field(default='unknown', max_length=24)
     account_email: str | None = Field(default=None, max_length=255)
+    native_id: str | None = None
+    native_id_type: str | None = None
+    native_id_namespace: str | None = None
 
 
 @app.post('/api/accounts', status_code=201)
 def create_account(body: AccountCreate, db: Session = Depends(get_session)):
-    if not db.get(System, body.system_id):
+    system = db.get(System, body.system_id)
+    if not system:
         raise HTTPException(404, 'System not found')
+
+    act_type = (body.account_type or 'unknown').strip().lower()
+    if act_type not in ACCOUNT_TYPES:
+        raise HTTPException(422, f"Invalid account_type '{body.account_type}'. Must be one of {ACCOUNT_TYPES}")
+
+    native_id = (body.native_id or '').strip() or None
+    native_id_type = (body.native_id_type or '').strip() or None
+    native_id_namespace = (body.native_id_namespace or '').strip() or None
+
+    has_any_native = any((native_id, native_id_type, native_id_namespace))
+    has_full_native = all((native_id, native_id_type, native_id_namespace))
+
+    if has_any_native and not has_full_native:
+        raise HTTPException(422, 'Incomplete native ID tuple: native_id, native_id_type, and native_id_namespace are all required')
+
+    if native_id_type and system.platform:
+        allowed_types = PLATFORM_NATIVE_ID_TYPES.get(system.platform.lower().strip())
+        if allowed_types and native_id_type not in allowed_types:
+            raise HTTPException(422, f"native_id_type '{native_id_type}' is not valid for platform '{system.platform}'. Allowed: {sorted(allowed_types)}")
+
     a = Account(
         system_id=body.system_id,
-        external_account_id=body.external_account_id,
-        username=body.username,
-        account_email=body.account_email,
+        external_account_id=body.external_account_id.strip(),
+        username=body.username.strip(),
+        account_email=body.account_email.strip() if body.account_email else None,
+        account_type=act_type,
+        native_id=native_id,
+        native_id_type=native_id_type,
+        native_id_namespace=native_id_namespace,
         identity_id=None,
         status='Active',
         source='DemoManual',
@@ -512,8 +583,8 @@ def create_account(body: AccountCreate, db: Session = Depends(get_session)):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(409, 'External account identifier already exists in this system')
-    return {'ok': True, 'account_id': a.id, 'mapping_status': 'Unlinked'}
+        raise HTTPException(409, 'External account identifier or native ID tuple already exists in this system')
+    return {'ok': True, 'account_id': a.id, 'mapping_status': 'Unlinked', 'account_type': act_type}
 
 
 class LinkBody(BaseModel):
@@ -1291,6 +1362,10 @@ def list_cycle_accounts(
             'account_id': acc.id,
             'external_account_id': acc.external_account_id,
             'username': acc.username,
+            'account_type': acc.account_type,
+            'native_id': acc.native_id,
+            'native_id_type': acc.native_id_type,
+            'native_id_namespace': acc.native_id_namespace,
             'identity_id': ident.id if ident else None,
             'identity_name': ident.name if ident else '[Unlinked Account]',
             'department': ident.department if ident else 'Unmapped',

@@ -43,6 +43,7 @@ def run(filename: Path):
                 account=Account(identity_id=g['identity_id'], system_id=g['system_id'],
                     external_account_id=f'phase1:{g["system_id"].lower()}:{g["identity_id"].lower()}',
                     username=f'{g["identity_id"].lower()}_{g["system_id"].lower()}',
+                    account_type='unknown', native_id_namespace=None,
                     account_email=ident['email'],status='Active',source='Phase1Import',
                     mapping_method='HistoricalPhase1',last_seen_at=None,created_at=now_utc())
                 session.add(account)

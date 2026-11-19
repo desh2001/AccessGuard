@@ -250,18 +250,24 @@ def get_accesslog_events(limit: int = 100, device: str = '', event_type: str = '
                                 
                                 formatted.append({
                                     "id": e.get('id') or e.get('_id'),
-                                    "device_id": dev_id,
-                                    "hostname": e.get('hostname') or dev_id,
-                                    "user_id": user,
-                                    "username": user,
+                                    "device_id": e.get('device_id') or e.get('hostname'),
+                                    "hostname": e.get('hostname') or e.get('device_id'),
+                                    "user_id": e.get('user_id') or e.get('username'),
+                                    "username": e.get('username') or e.get('user_id'),
+                                    "system_id": e.get('system_id'),
+                                    "native_id": e.get('native_id') or e.get('sid') or e.get('user_sid') or e.get('uid') or e.get('github_user_id'),
+                                    "native_id_type": e.get('native_id_type'),
+                                    "native_id_namespace": e.get('native_id_namespace'),
+                                    "external_account_id": e.get('external_account_id'),
                                     "event_type": ev_type,
                                     "action": action,
                                     "source": e.get('source') or 'syslog',
                                     "source_ip": ip,
                                     "severity": sev,
                                     "raw_message": msg,
-                                    "occurred_at": occurred,
-                                    "os": 'Windows' if 'win' in dev_id.lower() or 'desktop' in dev_id.lower() else 'Linux',
+                                    "occurred_at": e.get('occurred_at') or e.get('received_at') or e.get('created_at'),
+                                    "os": e.get('os') or e.get('platform'),
+                                    "platform": e.get('platform') or e.get('os'),
                                 })
                             return formatted
             except Exception:
@@ -321,75 +327,133 @@ def resolve_event_account(
     db,
     ev: dict[str, Any],
 ) -> tuple[str, Account | None, str | None]:
-    """Deterministically resolve an event to a technical Account.
+    """Deterministically resolve an event to a technical Account using stable identifiers only.
 
-    Priority:
-    1. Stable native identifier (SID, UID scoped to host/system, GitHub numeric ID)
-    2. external_account_id match (scoped by system/host)
-    3. Email/username match (secondary corroboration only).
-       If ambiguous across systems or multiple accounts, flagged as 'ambiguous'.
+    Requirements (Section 3.4):
+    - Must never query Account.username or Account.account_email to decide ownership.
+    - system_id must be supplied and exist in System table.
+    - System.platform must be consistent with event platform (if event provides platform).
+    - If native identifier is supplied, require full scoped tuple:
+      (system_id, native_id_type, native_id_namespace, native_id)
+    - If external_account_id is supplied, resolve via (system_id, external_account_id).
+    - If both supplied and resolve to different accounts: ('ambiguous', None, 'stable_identifier_conflict')
+    - If no stable identifier: ('invalid', None, 'missing_stable_identifier')
+    - If username differs from inventory on matched account, event stays matched to account
+      and a data-quality warning is recorded ('observed_username_differs_from_inventory').
 
     Outcomes: exactly one of ('matched', 'unmatched', 'ambiguous', 'invalid')
     """
-    user_id = ev.get('username') or ev.get('user_id')
-    if not user_id and ev.get('raw_message'):
-        m = USER_RE.search(ev['raw_message'])
-        if m:
-            user_id = m.group(1)
+    # 1. Require system_id
+    system_id = ev.get('system_id')
+    if not system_id or not str(system_id).strip():
+        return 'invalid', None, 'missing_system_id'
+    system_id = str(system_id).strip()
 
+    system = db.get(System, system_id)
+    if not system:
+        return 'invalid', None, f"unknown_system_id:{system_id}"
+
+    # Verify platform consistency if platform is provided
+    ev_platform = ev.get('platform') or ev.get('os')
+    if ev_platform:
+        ev_plat_clean = str(ev_platform).strip().lower()
+        sys_plat_clean = (system.platform or '').strip().lower()
+        plat_aliases = {
+            'win': 'windows', 'windows': 'windows', 'windows ad': 'windows', 'active directory': 'windows',
+            'lin': 'linux', 'linux': 'linux', 'ubuntu': 'linux', 'rhel': 'linux', 'debian': 'linux', 'centos': 'linux',
+            'gh': 'github', 'github': 'github', 'github enterprise': 'github',
+        }
+        ev_canon = plat_aliases.get(ev_plat_clean, ev_plat_clean)
+        sys_canon = plat_aliases.get(sys_plat_clean, sys_plat_clean)
+        if sys_canon and ev_canon and ev_canon != sys_canon:
+            return 'invalid', None, f"platform_system_mismatch:event_{ev_canon}_system_{sys_canon}"
+
+    # Extract stable identifiers
     native_id = ev.get('native_id') or ev.get('sid') or ev.get('user_sid') or ev.get('uid') or ev.get('github_user_id') or ev.get('github_id')
-    platform = ev.get('platform') or ev.get('os')
-    if platform:
-        platform_clean = str(platform).strip().lower()
-        valid_platforms = {'windows', 'windows ad', 'linux', 'github', 'active directory', 'ubuntu', 'rhel', 'debian', 'centos'}
-        if platform_clean not in valid_platforms:
-            return 'invalid', None, f"invalid_platform:{platform}"
+    native_id = str(native_id).strip() if native_id is not None and str(native_id).strip() else None
 
-    if not user_id and not native_id:
-        return 'invalid', None, 'missing_user_identifier'
+    native_id_type = ev.get('native_id_type')
+    native_id_type = str(native_id_type).strip() if native_id_type is not None and str(native_id_type).strip() else None
 
-    # Priority 1: Native identifier match (SID, UID, GitHub numeric ID)
-    if native_id:
-        native_matches = db.scalars(
-            select(Account).where(Account.native_id == str(native_id).strip())
-        ).all()
-        if len(native_matches) == 1:
-            return 'matched', native_matches[0], None
-        elif len(native_matches) > 1:
-            return 'ambiguous', None, f"multiple_accounts_for_native_id:{native_id}"
+    native_id_namespace = ev.get('native_id_namespace')
+    native_id_namespace = str(native_id_namespace).strip() if native_id_namespace is not None and str(native_id_namespace).strip() else None
 
-    # Priority 2: external_account_id match
     ext_id = ev.get('external_account_id')
+    ext_id = str(ext_id).strip() if ext_id is not None and str(ext_id).strip() else None
+
+    # Check for partial native identifier tuple
+    has_any_native = (native_id is not None) or (native_id_type is not None) or (native_id_namespace is not None)
+    has_full_native = (native_id is not None) and (native_id_type is not None) and (native_id_namespace is not None)
+
+    if has_any_native and not has_full_native:
+        return 'invalid', None, 'partial_native_id_tuple'
+
+    if not has_full_native and not ext_id:
+        return 'invalid', None, 'missing_stable_identifier'
+
+    native_matched_acc = None
+    native_match_count = 0
+    if has_full_native:
+        native_matches = db.scalars(
+            select(Account).where(
+                Account.system_id == system_id,
+                Account.native_id_type == native_id_type,
+                Account.native_id_namespace == native_id_namespace,
+                Account.native_id == native_id,
+            )
+        ).all()
+        native_match_count = len(native_matches)
+        if native_match_count > 1:
+            return 'ambiguous', None, f"multiple_accounts_for_native_tuple:{native_id_type}:{native_id_namespace}:{native_id}"
+        elif native_match_count == 1:
+            native_matched_acc = native_matches[0]
+
+    ext_matched_acc = None
+    ext_match_count = 0
     if ext_id:
         ext_matches = db.scalars(
-            select(Account).where(Account.external_account_id == str(ext_id).strip())
+            select(Account).where(
+                Account.system_id == system_id,
+                Account.external_account_id == ext_id,
+            )
         ).all()
-        if len(ext_matches) == 1:
-            return 'matched', ext_matches[0], None
-        elif len(ext_matches) > 1:
+        ext_match_count = len(ext_matches)
+        if ext_match_count > 1:
             return 'ambiguous', None, f"multiple_accounts_for_external_id:{ext_id}"
+        elif ext_match_count == 1:
+            ext_matched_acc = ext_matches[0]
 
-    # Priority 3: Secondary username/email match with scope
-    clean_user = str(user_id).strip().lower()
-    candidate_query = select(Account).where(
-        or_(
-            Account.username.ilike(clean_user),
-            Account.account_email.ilike(clean_user)
-        )
-    )
-    
-    # Scope by system if known
-    system_id = ev.get('system_id')
-    if system_id:
-        candidate_query = candidate_query.where(Account.system_id == system_id)
+    # Cross-match resolution
+    if has_full_native and ext_id:
+        if native_matched_acc and ext_matched_acc:
+            if native_matched_acc.id != ext_matched_acc.id:
+                return 'ambiguous', None, 'stable_identifier_conflict'
+            matched_acc = native_matched_acc
+        elif native_match_count == 0 and ext_match_count == 0:
+            return 'unmatched', None, 'no_matching_account_for_identifiers'
+        elif native_matched_acc and ext_match_count == 0:
+            matched_acc = native_matched_acc
+        elif ext_matched_acc and native_match_count == 0:
+            matched_acc = ext_matched_acc
+        else:
+            return 'unmatched', None, 'unmatched_identifiers'
+    elif has_full_native:
+        if native_match_count == 0:
+            return 'unmatched', None, f"no_matching_account_for_native_tuple:{native_id}"
+        matched_acc = native_matched_acc
+    else:  # only ext_id
+        if ext_match_count == 0:
+            return 'unmatched', None, f"no_matching_account_for_external_id:{ext_id}"
+        matched_acc = ext_matched_acc
 
-    candidates = db.scalars(candidate_query).all()
-    if len(candidates) == 1:
-        return 'matched', candidates[0], None
-    elif len(candidates) > 1:
-        return 'ambiguous', None, f"ambiguous_username_multiple_accounts:{clean_user}"
+    # Verify display username (for non-blocking data quality audit warning only; NEVER re-route!)
+    ev_user = ev.get('username') or ev.get('user_id')
+    warning = None
+    if ev_user and matched_acc.username:
+        if str(ev_user).strip().casefold() != str(matched_acc.username).strip().casefold():
+            warning = 'observed_username_differs_from_inventory'
 
-    return 'unmatched', None, f"no_matching_account:{clean_user}"
+    return 'matched', matched_acc, warning
 
 
 def sync_accesslog_to_activity(db) -> dict[str, Any]:
@@ -431,18 +495,27 @@ def sync_accesslog_to_activity(db) -> dict[str, Any]:
                 skipped_duplicate += 1
                 continue
 
-        status, matched_account, reason = resolve_event_account(db, ev)
+        # Check timestamp
+        raw_occurred = ev.get('occurred_at')
+        if not raw_occurred:
+            status = 'invalid'
+            matched_account = None
+            reason = 'missing_timestamp'
+            occurred_at = now_utc()
+        else:
+            try:
+                occurred_at = datetime.fromisoformat(str(raw_occurred).replace('Z', '+00:00'))
+                if occurred_at.tzinfo is None:
+                    occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+                status, matched_account, reason = resolve_event_account(db, ev)
+            except Exception:
+                status = 'invalid'
+                matched_account = None
+                reason = 'invalid_timestamp_format'
+                occurred_at = now_utc()
 
         action = ev.get('action') or ev.get('event_type') or 'OBSERVED'
         outcome = 'Failure' if 'failed' in action.lower() or ev.get('severity') == 'warning' else 'Success'
-
-        try:
-            occurred_at = datetime.fromisoformat(ev['occurred_at'])
-            if occurred_at.tzinfo is None:
-                occurred_at = occurred_at.replace(tzinfo=timezone.utc)
-        except Exception:
-            # Preserve event time and do not turn parse errors into current time for historical data
-            occurred_at = now_utc()
 
         if status == 'matched' and matched_account is not None:
             db.add(ActivityEvent(
@@ -465,10 +538,11 @@ def sync_accesslog_to_activity(db) -> dict[str, Any]:
             imported += 1
         else:
             # Quarantine unmatched, ambiguous, or invalid events for audit & manual mapping
+            stable_actor = str(ev.get('native_id') or ev.get('external_account_id') or '')
             db.add(ActivityQuarantine(
                 source=source_name,
                 source_event_id=source_event_id or None,
-                native_actor_id=str(ev.get('username') or ev.get('user_id') or ''),
+                native_actor_id=stable_actor,
                 platform=ev.get('os') or ev.get('platform'),
                 reason=reason or status,
                 received_at=now_utc(),

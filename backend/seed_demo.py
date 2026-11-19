@@ -158,27 +158,34 @@ def seed_demo(session: Session) -> bool:
 
             native_id = None
             native_id_type = None
+            native_id_namespace = None
+            acct_type = 'human'
             if plat == 'windows':
                 native_id = f"S-1-5-21-3623811015-3361044348-30300820-1{emp_num:03d}"
                 native_id_type = 'windows_sid'
+                native_id_namespace = 'corp.dialog.lk'
             elif plat == 'linux':
-                native_id = f"uid:10{emp_num:02d}@prod-lin"
+                native_id = f"10{emp_num:02d}"
                 native_id_type = 'linux_uid'
+                native_id_namespace = 'prod-lin'
             elif plat == 'github':
-                native_id = f"gh-usr-{emp_num:05d}"
-                native_id_type = 'github_numeric_id'
+                native_id = f"{emp_num:05d}"
+                native_id_type = 'github_user_id'
+                native_id_namespace = 'github.com'
 
             account = Account(
                 identity_id=identity.id,
                 system_id=sys_id,
                 external_account_id=f'demo:{sys_id.lower()}:{identity.id.lower()}',
                 username=f'{identity.id.lower()}_{sys_id.lower()}',
+                account_type=acct_type,
                 account_email=identity.email,
                 status='Active',
                 source='DemoSeed',
                 mapping_method='DemoSeed',
                 native_id=native_id,
                 native_id_type=native_id_type,
+                native_id_namespace=native_id_namespace,
                 last_seen_at=now_utc() - timedelta(days=rng.randrange(1, 50)),
             )
             session.add(account)
@@ -227,6 +234,10 @@ def seed_demo(session: Session) -> bool:
             system_id=sys_id,
             external_account_id=f'unknown:{sys_id}:{idx}',
             username=f'unmapped_{idx:02d}',
+            account_type='unknown',
+            native_id=None,
+            native_id_type=None,
+            native_id_namespace=None,
             account_email=email,
             status='Active',
             source='DemoSeed',
