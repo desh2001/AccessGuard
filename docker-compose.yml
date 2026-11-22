@@ -30,7 +30,7 @@ services:
       AEGIS_PLATFORM_MODEL_DIR: /app/ml_artifacts/platforms
       MIN_MODEL_COVERAGE_FRACTION: "0.995"
     volumes:
-      - ./ml/backend/ml_artifacts:/app/ml_artifacts:ro
+      - ./ml/backend/ml_artifacts:/app/ml_artifacts
     ports:
       - '127.0.0.1:${ML_PORT:-8201}:8001'
     networks:

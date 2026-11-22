@@ -90,6 +90,7 @@ def build_model_status(registry: dict[str, dict], errors: dict[str, str]) -> dic
             "algorithm": metadata.get("algorithm", "IsolationForest"),
             "trees": metadata.get("trees"),
             "feature_count": len(metadata.get("features", [])),
+            "features": metadata.get("features", []),
             "trained_utc": metadata.get("trained_utc"),
             "evaluation": metadata.get("evaluation", {}),
             "evaluation_provenance": metadata.get("evaluation", {}).get(

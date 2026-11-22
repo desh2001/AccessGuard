@@ -201,6 +201,18 @@ def control(cid:int,action:str):
   elif action in ('start','resume','pause','stop'):c.execute('UPDATE companies SET state=? WHERE id=?',({'start':'running','resume':'running','pause':'paused','stop':'stopped'}[action],cid))
   else:raise HTTPException(400,'Invalid control')
   return {'ok':True}
+class EventItemIn(BaseModel):
+ platform:str='linux';action:str='ssh.login';resource:str='linux-server-1';actor:str='Alex Silva';result:str='failure';ip:str='185.220.101.4';employee_id:int|None=None;details:dict|None=None
+class EventInjectIn(BaseModel):
+ events:list[EventItemIn]
+@app.post('/api/companies/{cid}/events/inject')
+def inject_events(cid:int,x:EventInjectIn):
+ with db() as c:
+  co=company(c,cid)
+  for ev in x.events:
+   emp={'id':ev.employee_id,'name':ev.actor} if ev.employee_id else None
+   event(c,co,ev.platform,ev.action,ev.resource,emp,ev.result,ev.ip,details=ev.details)
+  return {'ok':True,'count':len(x.events)}
 @app.get('/api/companies/{cid}/stream/events')
 async def stream(cid:int,request:Request,after:int=0):
  with db() as c:company(c,cid)
