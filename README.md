@@ -1,469 +1,304 @@
-# AccessGuard — Intelligent Identity & User Access Governance Lab
+# 🛡️ AccessGuard — Intelligent Identity & User Access Governance Lab
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React 19](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Styles-Tailwind_CSS_v4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL_17-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org)
-[![Docker Compose](https://img.shields.io/badge/Orchestration-Docker_Compose-2496ED?style=flat-square&logo=docker)](https://docs.docker.com/compose/)
-[![Scikit-Learn](https://img.shields.io/badge/ML-Isolation_Forest-F7931E?style=flat-square&logo=scikit-learn)](https://scikit-learn.org)
-[![License](https://img.shields.io/badge/License-Research_Demo-blue.svg?style=flat-square)](#important-research-notice)
+<p align="center">
+  <img src="https://img.shields.io/badge/Architecture-Distributed_Microservices-7045ce?style=for-the-badge&logo=docker" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Core_Backend-FastAPI_0.115-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Frontend-React_19_+_Vite-61DAFB?style=for-the-badge&logo=react" alt="React 19" />
+  <img src="https://img.shields.io/badge/Machine_Learning-Isolation_Forest_160_Trees-F7931E?style=for-the-badge&logo=scikit-learn" alt="Scikit-Learn" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL_17-336791?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Security_Alerts-Live_Gmail_SMTP-EA4335?style=for-the-badge&logo=gmail" alt="Gmail Alerts" />
+</p>
 
-**AccessGuard** is a comprehensive, local-first research and demonstration platform for **AI-assisted Identity Governance and Administration (IGA)**. It unifies canonical identity correlation, cross-system technical account mapping, entitlement risk heuristics, sampled activity verification, and unsupervised machine learning anomaly detection into an intuitive enterprise-grade dashboard.
-
-The platform demonstrates how organizations can tackle **"Access Creep"**, orphaned accounts, dormant privileges, and toxic entitlement combinations while enforcing **human-in-the-loop** decision making and non-destructive simulated remediation.
-
----
-
-> ### ⚠️ IMPORTANT RESEARCH NOTICE
-> **THIS IS A RESEARCH AND DEMONSTRATION PROTOTYPE, NOT A PRODUCTION IDENTITY PLATFORM.**
-> - **Default Synthetic Data:** The lab seeds synthetic identities, systems, accounts, and activities by default.
-> - **Localhost Binding Only:** The backend and frontend are configured for local loopback (`127.0.0.1`) only. Do NOT expose this platform directly to the public internet.
-> - **Simulated Remediation:** For safety and audit compliance, access revocations are strictly **simulated in the local database**. No remote commands or destructive API calls are ever sent to live Active Directory, Linux hosts, or cloud providers.
-> - **Human-in-the-Loop:** ML anomaly scores are **advisory percentiles** designed to prioritize human review queues—they never automatically revoke or certify permissions.
+<p align="center">
+  <b>A state-of-the-art research and demonstration platform for AI-assisted Identity Governance & Administration (IGA), real-time access anomaly detection, and zero-trust privilege compliance.</b>
+</p>
 
 ---
 
-## Table of Contents
+## 📑 Table of Contents
 
-- [Ecosystem Architecture](#ecosystem-architecture)
-- [Repository Structure](#repository-structure)
-- [Module Status & Capabilities](#module-status--capabilities)
-- [Prerequisites](#prerequisites)
-- [Quick Setup](#quick-setup)
-  - [Automated Windows Setup (One-Click)](#1-automated-windows-setup-powershell)
-  - [Manual Setup (Step-by-Step)](#2-manual-step-by-step-setup)
-- [Dialog Ecosystem Integration](#dialog-ecosystem-integration)
-  - [1. Dialog Access Log (Syslog Collector)](#1-dialog-access-log-syslog-collector)
-  - [2. Dialog Final ML Microservice](#2-dialog-final-ml-microservice)
-- [End-to-End Workflow Walkthrough](#end-to-end-workflow-walkthrough)
-- [Connectors & Data Ingestion](#connectors--data-ingestion)
-- [Environment Configuration](#environment-configuration)
-- [Testing & Quality Assurance](#testing--quality-assurance)
-- [Troubleshooting & FAQ](#troubleshooting--faq)
-- [Research Methodology & Guardrails](#research-methodology--guardrails)
-- [Documentation Links](#documentation-links)
+- [Overview & Vision](#-overview--vision)
+- [Key Platform Innovations](#-key-platform-innovations)
+- [Ecosystem Architecture](#-ecosystem-architecture)
+- [Microservice Network & Port Registry](#-microservice-network--port-registry)
+- [Live Presentation & Navigation Flow (11 Tabs)](#-live-presentation--navigation-flow-11-tabs)
+- [Machine Learning Engine (Aegis V8/V9 IsolationForest)](#-machine-learning-engine-aegis-v8v9-isolationforest)
+- [Live Stream Threat Injection & Detection](#-live-stream-threat-injection--detection)
+- [Automated Sentinel Email Alerts (Gmail SMTP)](#-automated-sentinel-email-alerts-gmail-smtp)
+- [Quick Start Guide (Docker Compose)](#-quick-start-guide-docker-compose)
+- [Local Development Setup](#-local-development-setup)
+- [Research Principles & Zero-Trust Guardrails](#-research-principles--zero-trust-guardrails)
+- [Presentation & Documentation Artifacts](#-presentation--documentation-artifacts)
 
 ---
 
-## Ecosystem Architecture
+## 🌟 Overview & Vision
 
-The AccessGuard research suite integrates three specialized subsystems into a unified governance workflow:
+In enterprise IT and cloud ecosystems, **"Privilege Creep"**, orphaned service accounts, dormant high-risk entitlements, and toxic permission combinations represent the top vectors for lateral breach movement. Traditional periodic access reviews rely on cumbersome spreadsheets, leading to **reviewer fatigue** and rubber-stamping.
 
-```text
-                                 ┌──────────────────────────────────────────────────┐
-                                 │               Client Web Browser                 │
-                                 │         http://127.0.0.1:5173 (React UI)         │
-                                 └────────────────────────┬─────────────────────────┘
-                                                          │ HTTP / Vite Proxy
-                                                          ▼
-┌─────────────────────────────────┐              ┌──────────────────────────────────┐
-│  accesslog-main (Pasindu)       │              │  AccessGuard Core Backend        │
-│  - TCP Syslog Ingestion (:5514) │ FTP Sync /   │  - FastAPI REST API (:8000)      │
-│  - Device & Event Explorer      ├─────────────►│  - Identity & Account Mapping    │
-│  - Log Normalization            │ Local Spool  │  - Risk Heuristics Engine        │
-└─────────────────────────────────┘              │  - Access Review Campaign Mgr    │
-                                                 └────────┬──────────────────┬──────┘
-                                                          │                  │
-                         SQLAlchemy / Alembic (Port 5434) │                  │ HTTP POST /v1/score/accounts
-                                                          ▼                  ▼ (Port 8001, Bearer Auth)
-                                                 ┌─────────────────┐ ┌──────────────────────────────┐
-                                                 │ PostgreSQL 17   │ │ AccessGuard Quarterly ML     │
-                                                 │ (Docker Compose)│ │ (ml/backend)                 │
-                                                 │                 │ │ - 3 Platform Models:         │
-                                                 │ accessguard_lab │ │   Windows, Linux, GitHub     │
-                                                 └─────────────────┘ └──────────────────────────────┘
-```
-
-### Subsystem Overview
-
-1. **AccessGuard Core (`backend/` & `frontend/`):**
-   - **Backend:** FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL (running on published Windows port `5434`). Manages canonical identities, mapped accounts, entitlement risk scoring, review campaigns, simulated revocations, and audit trails.
-   - **Frontend:** React 19, Tailwind CSS v4, Lucide Icons, and Recharts. A dark-themed security operations dashboard featuring 12 interactive governance views.
-2. **Dialog Access Log (`accesslog-main/`):**
-   - Syslog collector receiving TCP log events on port `5514`, normalizing authentication logs, observing active devices, and exposing logs via an API and FTP spool integration.
-3. **AccessGuard Quarterly ML Engine (ml/backend/):**
-   - Pure inference microservice on port 8001. Loads three independently trained, SHA-256 verified platform models (Windows AD, Linux, GitHub). Accepts 90-day account features, validates coverage, and returns anomaly percentiles. Never fits models on inference batches. Includes offline CLI training tools.
+**AccessGuard** solves this by unifying:
+1. **Multi-Tenant Enterprise Simulation**: Generates multi-cloud identities, accounts, resources, and live access activity at enterprise scale (100 to 100,000 users) safely in a non-destructive test laboratory.
+2. **Dual-Engine Threat Defense**: Synthesizes **deterministic explainable policy heuristics (0–100 score)** with **unsupervised multi-platform machine learning (IsolationForest 160-tree anomaly percentiles)**.
+3. **Live Streaming Telemetry & Real-Time Detection**: Continuously ingests streaming access logs, correlates multi-event brute-force sequences from external IPs, and flags anomalies in real time without waiting for periodic batches.
+4. **Automated Alert Sentinel**: Instantly dispatches authenticated **Gmail SMTP breach advisories** to security administrators within seconds of detection.
+5. **Strict Human-in-the-Loop Governance**: Adheres to ISO 27001 and SOC 2 Type II compliance standards by using AI for advisory prioritization while keeping final remediation authorization strictly in human hands.
 
 ---
 
-## Repository Structure
+## ⚡ Key Platform Innovations
 
-```text
-AccessGuard/
-├── start.bat                       # 🚀 ONE-CLICK Windows launcher (starts entire ecosystem)
-├── stop.bat                        # 🛑 ONE-CLICK Windows terminator (stops all services)
-├── start.sh                        # 🚀 ONE-CLICK Linux/macOS launcher
-├── stop.sh                         # 🛑 ONE-CLICK Linux/macOS terminator
-├── backend/                        # AccessGuard Core FastAPI backend
-│   ├── alembic/                    # Database migration versions
-│   ├── connectors/                 # CSV, GitHub REST, and FTP connectors
-│   ├── sample_imports/             # Sample CSVs (Linux, Windows) and FTP spool logs
-│   ├── tests/                      # PyTest automated unit test suite
-│   ├── accesslog_client.py         # Client adapter for Dialog Access Log service (:8002 & :5514)
-│   ├── activity.py                 # Activity log heuristics & flag processing
-│   ├── ai_engine.py                # Local Isolation Forest anomaly scoring fallback
-│   ├── check_db.py                 # Database connectivity verification utility
-│   ├── database.py                 # SQLAlchemy session management & engine
-│   ├── main.py                     # FastAPI application router & API endpoints
-│   ├── ml_client.py                # HTTP client adapter for Dialog Final ML microservice
-│   ├── mock_ml_service.py          # Standalone simulation of external ML microservice (:8001)
-│   ├── models.py                   # Relational ORM models (Identity, Account, Review, etc.)
-│   ├── requirements.txt            # Python dependencies (FastAPI, Scikit-learn, etc.)
-│   ├── risk.py                     # Rule-based access risk scoring algorithms
-│   └── seed_demo.py                # Idempotent demo dataset seeder
-├── frontend/                       # AccessGuard Core React 19 Dashboard
-│   ├── src/
-│   │   ├── App.jsx                 # Main application containing all 12 governance tabs
-│   │   ├── main.jsx                # React DOM entry point
-│   │   └── styles.css              # Tailwind CSS styles and custom utility classes
-│   ├── package.json                # Node dependencies (React 19, Recharts, Lucide, Tailwind)
-│   └── vite.config.js              # Vite configuration with /api reverse proxy to :8000
-├── ml/                             # Dialog Final ML Service (Aegis V8 Multi-Platform)
-│   ├── backend/                    # ML microservice backend & quarterly training pipelines
-│   │   └── ml_artifacts/platforms/ # Trained Windows, Linux, and GitHub Isolation Forest models
-│   ├── sample-data/                # Synthetic enterprise access & training datasets
-│   └── docker-compose.yml          # Container configuration for standalone ML stack
-├── accesslog-main/                 # Dialog Access Log Ingestion Service
-│   ├── standalone_api.py           # Standalone runner for Dialog Access Log API (:8002)
-│   ├── api/                        # FastAPI log explorer API
-│   ├── collector/                  # TCP Syslog listener daemon (port 5514)
-│   └── docker-compose.yml          # Stack orchestration for collector and database
-├── scripts/                        # Automation & startup scripts
-│   ├── start-all.ps1               # Master PowerShell orchestrator for all 4 services
-│   ├── stop-all.ps1                # Clean process terminator for ports 8000, 8001, 8002, 5173
-│   ├── setup-windows.ps1           # Full automated installer (Docker, venv, DB, seed, npm)
-│   ├── start-backend.ps1           # Launch script for backend API (:8000)
-│   ├── start-frontend.ps1          # Launch script for frontend UI (:5173)
-│   ├── start-ml.ps1                # Launch script for Dialog Final ML (:8001)
-│   └── start-accesslog.ps1         # Launch script for Dialog Access Log (:8002)
-├── docs/                           # Extended research documentation
-│   ├── RESEARCH_METHODOLOGY.md     # Academic methodology, validation, and metrics
-│   └── SINHALA_GUIDE.md            # Sinhala language operations guide
-├── .gitignore                      # Complete repository ignore rules
-├── docker-compose.yml              # Core PostgreSQL database container (port 5434:5432)
-└── README.md                       # Master project documentation
-```
-
----
-
-## Module Status & Capabilities
-
-| Module | Operational Status | Description |
+| Feature | Description | Benefit |
 |---|---|---|
-| **Overview Dashboard** | Active | High-level metrics, system inventory, risk distribution, and review campaign progress. |
-| **Identity Directory** | Active | Canonical employee directory linking identities across HR, IT, and external platforms. |
-| **Account Mapping** | Active | Correlates technical usernames to employees; highlights unlinked/orphaned service accounts. |
-| **Access Inventory** | Active | Comprehensive entitlement catalog with permission scopes and fine-grained resource tags. |
-| **AI Risk Analysis** | Active | Hybrid scoring comparing explainable policy rules against ML Isolation Forest percentiles. |
-| **Access Reviews** | Active | Generates campaign reviews; supports **Retain** and **Approve Removal** reviewer actions. |
-| **Simulated Remediation**| Active | Updates local database states to simulate revocation without touching remote servers. |
-| **Activity Evidence** | Active | Correlates authentication events, failed logins, and UTC time stamps with account usage. |
-| **Offboarding Center** | Active | Identifies departed employees who still retain active access across corporate systems. |
-| **Integrations** | Active | Monitors FTP sync with `accesslog-main` and live connection to `Dialog Final ML`. |
-| **Audit Trail** | Active | Chronological record of administrative decisions, linkages, and simulated revocations. |
-| **Research Reports** | Active | Analytical reports and connector provenance data exportable to CSV/JSON. |
+| **Dual-Engine Defense** | Merges 0–100 deterministic rule scores with 160-tree IsolationForest anomaly percentiles. | 100% transparent and explainable risk scores without "black-box" decisions. |
+| **Aegis V8/V9 Platform Models** | Dedicated independent ML models for **Windows AD (34 dims)**, **Linux PAM (27 dims)**, and **GitHub (27 dims)**. | High discriminative accuracy (**99.1% average ROC-AUC**, **100% precision @ 5% threshold**). |
+| **Live Stream Attack Blaster** | Inject realistic multi-log attack bursts (SSH brute-force, root sudo escalation, IAM console hijack) directly into the simulation stream. | Eliminates reliance on pre-canned scenarios; proves live stream detection capabilities. |
+| **Real-Time Log Stream HUD** | React frontend auto-polls streaming events every 2 seconds (`● Live Stream Active`) with glowing threat HUD banners. | Immediate visual correlation between injected attack logs and system detection. |
+| **Automated Gmail Sentinel** | Dispatches rich, branded HTML security alerts via authenticated Gmail SMTP (port 587 TLS). | Immediate operational awareness for SecOps engineers without alert fatigue. |
+| **Non-Destructive Remediation** | Simulates entitlement revocation locally within the database and updates an immutable audit trail. | Completely safe for demonstration and academic evaluation without breaking production credentials. |
 
 ---
 
-## Prerequisites
+## 🏗️ Ecosystem Architecture
 
-Before starting, ensure you have the following installed on your machine:
+AccessGuard is engineered as a distributed, decoupled multi-service suite orchestrated via Docker Compose:
 
-1. **Docker Desktop** (configured with Linux containers enabled).
-2. **Python 3.11+** (available on PATH via `python` or `py`).
-3. **Node.js LTS** (version 18.x or 20.x+) and `npm`.
-4. **Git** (for version control).
+```mermaid
+graph TD
+    subgraph UI ["Client Layer (Port 5173)"]
+        Browser["React 19 Dashboard<br/>(Tailwind CSS v4 + Recharts + Lucide)"]
+    end
 
----
+    subgraph Core ["AccessGuard Core Backend (Port 8200 : 8000)"]
+        FastAPI["FastAPI Application Server"]
+        Heuristics["Deterministic Policy Engine"]
+        MailService["Gmail SMTP Sentinel Dispatcher"]
+        Connector["Simulator Connector & Stream Listener"]
+    end
 
-## Quick Setup
+    subgraph ML ["Quarterly ML Microservice (Port 8201 : 8001)"]
+        MLService["FastAPI Inference Engine<br/>(Inference-Only Mode)"]
+        WinModel["Windows AD Model<br/>(160 Trees · 34 Dims · ROC 0.99)"]
+        LinModel["Linux PAM Model<br/>(160 Trees · 27 Dims · ROC 0.983)"]
+        GHModel["GitHub Model<br/>(160 Trees · 27 Dims · ROC 1.00)"]
+    end
 
-### 🚀 1. One-Click Easy Startup (Recommended)
+    subgraph Sim ["Enterprise Simulator (Internal : 8000)"]
+        SimEngine["Virtual Enterprise Engine<br/>(Clock Acceleration 60x · 10 EPS)"]
+        SimDB[("SQLite Simulator DB<br/>6,000+ Stream Events")]
+    end
 
-You can launch the **entire ecosystem with all 4 services and the database** in a single click:
+    subgraph LogCollector ["AccessLog Sentinel (Port 8202 : 8002 / Port 5514)"]
+        SyslogDaemon["TCP/UDP Syslog Collector (:5514)"]
+        LogExplorer["Log & Device Explorer API (:8002)"]
+    end
 
-#### On Windows:
-- Simply double-click **`start.bat`** in the repository root, or run in PowerShell:
-  ```powershell
-  .\scripts\start-all.ps1
-  ```
-- **What this does automatically:**
-  1. Starts the PostgreSQL container on port `5434`.
-  2. Verifies the Python `.venv` and database migrations (`alembic upgrade head`).
-  3. Launches **AccessGuard Core Backend** on `http://127.0.0.1:8000`.
-  4. Launches **Dialog Final ML Microservice** on `http://127.0.0.1:8001`.
-  5. Launches **Dialog Access Log & Syslog Service** on `http://127.0.0.1:8002` (Syslog TCP on `5514`).
-  6. Launches **AccessGuard React Dashboard** on `http://127.0.0.1:5173`.
-  7. Opens `http://127.0.0.1:5173` directly in your default web browser!
+    subgraph DB ["Database Tier (Port 5434 : 5432)"]
+        Postgres[("PostgreSQL 17 Database<br/>(accessguard_lab)")]
+    end
 
-- **To cleanly stop all services at any time:**
-  - Double-click **`stop.bat`** or run `.\scripts\stop-all.ps1`.
+    subgraph External ["External Notifications"]
+        Gmail["Google Gmail SMTP Server<br/>(smtp.gmail.com:587 TLS)"]
+    end
 
-#### On Linux / macOS:
-```bash
-chmod +x start.sh stop.sh
-./start.sh
-```
-To stop all services:
-```bash
-./stop.sh
-```
-
----
-
-### 2. First-Time Setup & Dependency Installer (Optional)
-
-If you are cloning for the first time and want to run the installer step-by-step:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1
+    Browser -->|HTTP / Vite Proxy| FastAPI
+    FastAPI -->|SQLAlchemy / Alembic| Postgres
+    FastAPI -->|HTTP POST /v1/score/accounts| MLService
+    FastAPI -->|HTTP REST / Stream Ingestion| SimEngine
+    FastAPI -->|SMTP TLS Port 587| Gmail
+    SyslogDaemon -->|TCP Port 5514| LogCollector
+    MLService --> WinModel
+    MLService --> LinModel
+    MLService --> GHModel
+    SimEngine --> SimDB
 ```
 
-Once installed, use `start.bat` or individual service launchers:
-* **Backend API (:8000):** `.\scripts\start-backend.ps1`
-* **Dialog Final ML (:8001):** `.\scripts\start-ml.ps1`
-* **Dialog Access Log (:8002):** `.\scripts\start-accesslog.ps1`
-* **Frontend UI (:5173):** `.\scripts\start-frontend.ps1`
+---
+
+## 🔌 Microservice Network & Port Registry
+
+All services are bound cleanly to Docker's internal bridge network (`accessguard-net`) with dedicated host port mappings:
+
+| Container Name | Internal Port | Host Port | Protocol | Purpose |
+|---|---|---|---|---|
+| **`accessguard-frontend`** | `80` | `5173` | HTTP | Production Nginx web server serving React 19 UI |
+| **`accessguard-backend`** | `8000` | `8200` | HTTP | Core FastAPI identity governance and risk API |
+| **`accessguard-ml-service`** | `8001` | `8201` | HTTP | Aegis V8/V9 IsolationForest multi-platform ML engine |
+| **`accessguard-enterprise-simulator`** | `8000` | Internal | HTTP | Synthetic multi-tenant enterprise simulation engine |
+| **`accessguard-accesslog-service`** | `8002` / `5514` | `8202` / `5514` | HTTP / TCP | Standalone syslog daemon & log exploration service |
+| **`accessguard-complete-postgres`** | `5432` | `5434` | TCP / PG | PostgreSQL 17 relational database |
 
 ---
 
-### 3. Manual Step-by-Step Setup
+## 🧭 Live Presentation & Navigation Flow (11 Tabs)
 
-If you prefer to configure each component manually or are running on Linux/macOS:
+The Test Environment sidebar is organized to mirror a flawless 5-minute live demonstration flow:
 
-#### Step 1: Start PostgreSQL via Docker Compose
-The repository includes a dedicated `docker-compose.yml` for PostgreSQL. To prevent conflicts with any local PostgreSQL instance listening on default port `5432`, the container maps host port **`5434`** to container port **`5432`**.
+```text
+1. 🏢 Virtual Companies     ➔ Multi-tenant enterprise simulation models & presets
+2. 👥 Virtual Employees     ➔ Canonical identity directory & organizational units
+3. 📊 Test Overview         ➔ Executive dashboard (100 Identities, 219 Accounts, 657 Grants)
+4. ⚡ Simulation Controls   ➔ Traffic loop speed (60x), EPS, and Live Threat Stream Generator
+5. 📈 Generated Activity    ➔ Real-time access log stream auto-polling every 2 seconds
+6. 🎯 Test Scenarios        ➔ Pre-packaged automated attack & privilege creep templates
+7. 📋 Simulated Reviews     ➔ Human-in-the-Loop access certification queue
+8. 🛡️ AI & ML Risk Engine   ➔ Dual-engine comparative breakdown (Rule Score vs ML Percentile)
+9. 🏆 ML Model Center       ➔ Aegis V8 models, ROC-AUC metrics & Interactive Inference Sandbox
+10. 📜 Audit Trail          ➔ Cryptographically verified immutable compliance history
+11. ✉️ Admin Email Alerts   ➔ Real-time Gmail SMTP alert settings and delivery logs
+```
 
-From the repository root:
+---
+
+## 🧠 Machine Learning Engine (Aegis V8/V9 IsolationForest)
+
+AccessGuard's ML microservice operates in **strict `inference_only` mode**, utilizing hash-verified Scikit-Learn `IsolationForest` pipeline artifacts. Models are trained on verified 90-day normalized behavioral windows.
+
+### Platform Validation Benchmarks
+
+| Platform Model | Artifact | Tree Estimators | Behavioral Dimensions | ROC-AUC | Average Precision (PR-AUC) | Precision @ 5% Outliers | Recall @ 20% Outliers |
+|---|---|---|---|---|---|---|---|
+| **Windows Active Directory** | `windows.joblib` | 160 Trees | **34 Dimensions** | **0.9900 (99.0%)** | **0.9379 (93.8%)** | **100.0%** | **100.0%** |
+| **Linux PAM & Sudoers** | `linux.joblib` | 160 Trees | **27 Dimensions** | **0.9834 (98.3%)** | **0.8955 (89.6%)** | **100.0%** | **100.0%** |
+| **GitHub Enterprise** | `github.joblib` | 160 Trees | **27 Dimensions** | **1.0000 (100%)** | **1.0000 (100%)** | **100.0%** | **100.0%** |
+
+### Key Behavioral Feature Dimensions
+
+- **Windows AD:** `windows_privileged_logon_events`, `out_of_scope_ad_group_count`, `ad_department_mismatch`, `privileged_entitlements`, `log_coverage_days`, `resource_uses_month_3`, `distinct_resources_used_window`, `active_days_window`.
+- **Linux PAM:** `linux_sudo_events`, `linux_sudo_coverage_known`, `privileged_ad_group_count`, `privileged_entitlements`, `failed_logins_window`, `active_days_window`.
+- **GitHub:** `github_repo_activity_events`, `unmapped_ad_group_count`, `permission_changes_window`, `resource_use_events_window`.
+
+### Interactive Live Inference Sandbox
+
+In the **ML Model Center**, examiners can adjust sliders (Privileged Entitlements, Failed Logins, Off-hours Events, Department Mismatch) and click **"⚡ Execute Live Model Inference"**. The active 160-tree model scores the multidimensional vector in **~14 milliseconds**, outputting an anomaly percentile (e.g., `99.9%`), risk classification, and automated escalation advice.
+
+---
+
+## 🚨 Live Stream Threat Injection & Detection
+
+AccessGuard enables live threat demonstration without canned scripts:
+
+1. Navigate to **Simulation Controls** or **Generated Activity**.
+2. Select a threat pattern:
+   - `🚨 Brute-Force Auth & Root Sudo Escalation` (Linux PAM)
+   - `🚨 AWS IAM Console Hijack & Role Escalation` (AWS Cloud)
+   - `🚨 Bulk Repository & Secret Exfiltration` (GitHub Enterprise)
+   - `🚨 Active Directory Privilege Creep` (Windows AD)
+3. Adjust the burst count slider (e.g., 8 logs) and click **"⚡ Blast Malicious Logs into Live Simulation Stream"**.
+4. **What Happens Automatically in Real Time:**
+   - 7 failed logins + 1 privileged breach from external IP `185.220.101.4` are injected into the active simulator stream.
+   - AccessGuard's log listener correlates the sequence.
+   - Deterministic policy score jumps to **100 (Critical Risk)**.
+   - IsolationForest calculates an anomaly percentile of **99.4%**.
+   - A glowing red **Real-Time Threat HUD Banner** appears on screen.
+   - The logs appear in the **Generated Activity** table highlighted in red with a `🚨 THREAT` badge.
+   - A governance review ticket is queued in **Simulated Reviews**.
+   - An authenticated **Gmail Security Alert** is dispatched to the administrator within 2 seconds.
+
+---
+
+## 📧 Automated Sentinel Email Alerts (Gmail SMTP)
+
+AccessGuard integrates a production-ready email notification engine utilizing standard Gmail SMTP credentials:
+
+- **SMTP Host:** `smtp.gmail.com`
+- **Port:** `587` (STARTTLS) or `465` (SSL)
+- **Authentication:** Standard 16-character Google App Password (2-Step Verification).
+- **Trigger Conditions:**
+  - High-Risk Privilege Escalation (Score ≥ 60).
+  - Malicious Role Breach / Live Stream Attack Detected.
+  - Quarterly Access Reviews Queued.
+
+The dispatched emails feature a responsive HTML template containing the target identity, department, platform, dynamic risk score (e.g., `100 / 100`), detection rule, and timestamped evidence.
+
+---
+
+## 🚀 Quick Start Guide (Docker Compose)
+
+The entire multi-container ecosystem can be spun up in a single command.
+
+### Prerequisites
+
+- **Docker Desktop** (with Linux container support enabled).
+- **Git**.
+
+### Launch Steps
+
 ```bash
-docker compose up -d
+# 1. Clone the repository
+git clone https://github.com/your-org/AccessGuard.git
+cd AccessGuard
+
+# 2. Build and start all 6 containers
+docker compose up -d --build
+
+# 3. Verify running containers
 docker compose ps
 ```
-Verify that `accessguard-complete-postgres` is running and healthy on port `127.0.0.1:5434->5432/tcp`.
 
-#### Step 2: Configure & Start AccessGuard Backend
+### Access Points
+
+- **AccessGuard Web UI:** [http://127.0.0.1:5173](http://127.0.0.1:5173)
+- **Backend API & Swagger Docs:** [http://127.0.0.1:8200/docs](http://127.0.0.1:8200/docs)
+- **ML Microservice Status:** [http://127.0.0.1:8201/v1/models](http://127.0.0.1:8201/v1/models)
+- **AccessLog Collector API:** [http://127.0.0.1:8202/docs](http://127.0.0.1:8202/docs)
+
+---
+
+## 🛠️ Local Development Setup
+
+If you wish to run backend and frontend natively for development:
+
+### 1. Database
+```bash
+docker compose up -d postgres ml-service enterprise-simulator
+```
+
+### 2. Backend (FastAPI)
 ```bash
 cd backend
-
-# Create your .env file from the provided template
-# (On Windows PowerShell: Copy-Item .env.example .env)
-cp .env.example .env
-
-# Create and activate Python virtual environment
 python -m venv .venv
-# Windows: .\.venv\Scripts\Activate.ps1
-# Linux/macOS: source .venv/bin/activate
-
-# Install dependencies
+# On Windows: .\.venv\Scripts\Activate.ps1 | On Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-
-# Verify database connection
-python check_db.py
-
-# Run Alembic database migrations
 python -m alembic upgrade head
-
-# Seed idempotent demo data
 python seed_demo.py
-
-# Launch FastAPI development server
 python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-#### Step 3: Configure & Start AccessGuard Frontend
-Open a new terminal:
+### 3. Frontend (React 19)
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start Vite development server
 npm run dev
-```
-
-#### Step 4: Access the Dashboard & API
-- **Web UI:** [http://127.0.0.1:5173](http://127.0.0.1:5173)
-- **Interactive Swagger Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- **API Health Check:** [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
-
----
-
-## Dialog Ecosystem Integration
-
-AccessGuard integrates seamlessly with the two partner repositories:
-
-```text
-[Dialog Access Log] ──(FTP/SFTP or Spool)──► [AccessGuard FTP Ingestion] ──► [PostgreSQL]
-                                                                                   │
-[Dialog Final ML]  ◄──────(HTTP POST /predict-risk)────────────────────────────────┘
-```
-
-### 1. Dialog Access Log (Syslog Collector)
-- **Repo Directory:** `accesslog-main/`
-- **Purpose:** Ingests raw syslog messages over TCP port `5514` into PostgreSQL, identifies communicating devices, and prepares audit logs.
-- **Syncing with AccessGuard:**
-  1. Configure FTP parameters in `backend/.env` (defaults to local spool).
-  2. In the AccessGuard dashboard, navigate to **Integrations** -> click **"Sync Dialog FTP Logs"**.
-  3. If no live FTP server is running, AccessGuard automatically ingests fallback events from `backend/sample_imports/ftp_spool/` to ensure offline resilience.
-
-### 2. Dialog Final ML Microservice
-- **Repo Directory:** `ml/` (and simulated via `backend/mock_ml_service.py`)
-- **Purpose:** Computes multi-platform anomaly scores across Windows, Linux, and GitHub accounts using an Isolation Forest model with peer-group comparison.
-- **Running the Service Locally:**
-  In a new terminal:
-  ```powershell
-  cd backend
-  .\.venv\Scripts\python.exe -m uvicorn mock_ml_service:app --port 8001 --host 127.0.0.1
-  ```
-- **Verification:**
-  1. In AccessGuard UI, go to **Integrations** -> click **"Ping ML Service"**.
-  2. The badge in **AI Risk Analysis** will transition to **"Dialog Final ML (Live)"**.
-  3. If offline, AccessGuard gracefully falls back to its built-in in-process Scikit-Learn Isolation Forest engine.
-
----
-
-## End-to-End Workflow Walkthrough
-
-Experience the primary access governance workflow within the web dashboard:
-
-1. **Overview Dashboard:** Examine organization risk metrics, entitlement distribution, and review campaign status.
-2. **Account Mapping:** Identify unlinked technical accounts (e.g., `svc-backup`, `dba_admin`). Link an unlinked account to an employee identity and observe the audit trail creation.
-3. **Activity Evidence:** Review sampled authentication timestamps and failed attempt flags. Understand why absence of logs does not necessarily equal absence of access.
-4. **AI Risk Analysis:** Compare transparent rule-based risk scores with unsupervised Isolation Forest anomaly percentiles. Review why certain entitlements trigger high-risk alerts.
-5. **Access Reviews:**
-   - Click **"Generate risk-based reviews"** to generate review tickets for elevated risks.
-   - For each ticket, choose to **Retain** or **Approve removal**.
-   - If removal is approved, execute **"Simulate revoke"** to verify that the grant status changes to `Revoked (Simulated)` locally.
-6. **Offboarding Center:** View departing or terminated employees who still retain active account entitlements. Initiate offboarding review batches.
-7. **Audit & Research Reports:** Inspect the immutable audit log and export research metrics via CSV or JSON.
-
----
-
-## Connectors & Data Ingestion
-
-AccessGuard supports external data imports via safe, controlled CLI tools:
-
-### CSV Entitlement Import
-Import accounts and entitlements from operator-supplied CSV files:
-```powershell
-cd backend
-.\.venv\Scripts\python.exe -m connectors.csv_import --file sample_imports\linux_accounts.csv --system LIN
-.\.venv\Scripts\python.exe -m connectors.csv_import --file sample_imports\windows_accounts.csv --system WIN
-```
-*Required CSV columns:* `external_account_id,username,permission,resource` (optional: `account_email`).
-
-### Read-Only GitHub Connector
-Inspect repository collaborators and team memberships using a read-only Personal Access Token (PAT):
-```powershell
-cd backend
-# Requires GITHUB_READ_TOKEN and GITHUB_ORG configured in backend/.env
-.\.venv\Scripts\python.exe -m connectors.github_readonly --org YOUR_TEST_ORG --max-repos 10
-```
-*Security Note: The GitHub connector uses REST GET requests only and performs zero mutation or write operations.*
-
----
-
-## Environment Configuration
-
-### `backend/.env`
-```env
-# Local Lab Database (PostgreSQL container published on Windows port 5434)
-DATABASE_URL=postgresql+psycopg://accessguard_lab:research-local-only@127.0.0.1:5434/accessguard_lab
-
-# Dialog Access Log - FTP Configuration
-FTP_HOST=127.0.0.1
-FTP_PORT=21
-FTP_USER=dialog_access
-FTP_PASS=dialog_secure_pass
-FTP_DIR=/incoming_logs
-
-# Dialog Final ML Service Configuration
-ML_SERVICE_URL=http://127.0.0.1:8001
-
-# Optional Read-Only GitHub Organization Import
-# GITHUB_READ_TOKEN=github_pat_...
-# GITHUB_ORG=your-test-organization
-```
-
-### `ml/.env` (For Standalone ML Stack)
-```env
-POSTGRES_PASSWORD=your_secure_password
-JWT_SECRET=your_32_character_secret_key
-DEMO_ADMIN_PASSWORD=admin_password
-DEMO_REVIEWER_PASSWORD=reviewer_password
-```
-
-### `accesslog-main/.env` (For Syslog Stack)
-```env
-POSTGRES_PASSWORD=your_secure_password
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your_admin_password
-JWT_SECRET=your_jwt_secret
-SYSLOG_BIND_IP=127.0.0.1
+# Accessible at http://127.0.0.1:5173
 ```
 
 ---
 
-## Testing & Quality Assurance
+## ⚖️ Research Principles & Zero-Trust Guardrails
 
-Run the automated backend test suite using PyTest:
+AccessGuard was designed following strict ethical research and identity governance principles:
 
-```powershell
-cd backend
-.\.venv\Scripts\python.exe -m pytest -q
-```
-
-The test suite validates:
-- Schema migrations and ORM constraints
-- Risk scoring heuristic rules
-- Isolation Forest anomaly percentile computation
-- Review campaign generation and state transitions
-- CSV and mocked connector ingestion boundaries
+1. **Advisory AI, Not Autonomous Execution**: Machine learning anomaly scores provide prioritization percentiles. The system **never executes autonomous privilege revocations** without human authorization.
+2. **Absence of Evidence is Not Evidence of Absence**: Missing log telemetry is transparently tagged as *unverified activity* rather than conclusively labeled as safe or abandoned access.
+3. **Non-Destructive Simulated Remediation**: Revocations update local relational states, write immutable audit records, and notify administrators without executing destructive remote commands on third-party APIs.
+4. **Synthetic Data Hygiene**: All employee names, corporate emails, and IP origins are generated synthetically using seeded pseudorandom algorithms.
 
 ---
 
-## Troubleshooting & FAQ
+## 📚 Presentation & Documentation Artifacts
 
-#### 1. `FATAL: password authentication failed for user "accessguard_lab"`
-- **Cause:** A previous PostgreSQL container or volume from an earlier build exists on port 5434 with different credentials.
-- **Fix:** Verify `backend/.env` credentials. If restarting cleanly, stop the container with `docker compose down` (do NOT delete data unless you intend to reset the lab).
+For presenters, examiners, and evaluators, comprehensive documentation is provided in the repository:
 
-#### 2. `Port 5434 is already allocated`
-- **Cause:** Another container or process is bound to `5434`.
-- **Fix:** Check running containers with `docker ps`. Stop any conflicting containers:
-  ```powershell
-  docker stop accessguard-phase2-postgres
-  ```
-
-#### 3. Frontend displays "Failed to fetch" or blank tables
-- **Cause:** Backend API is not running on port 8000 or Vite reverse proxy is blocked.
-- **Fix:** Ensure FastAPI is active (`http://127.0.0.1:8000/api/health` returns `{"status":"ok"}`).
-
-#### 4. `ModuleNotFoundError` when running Python scripts
-- **Cause:** Python virtual environment is either not activated or missing packages.
-- **Fix:** Ensure you are using the virtual environment's Python: `.\backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt`.
+- 📖 **[5-Minute Live Viva Demo Script](VIVA_LIVE_DEMO_SCRIPT.md)** — Step-by-step click order and spoken English cues for viva presentations.
+- 🗣️ **[Page-by-Page Presentation Guide](PAGE_BY_PAGE_PRESENTATION_GUIDE.md)** — Detailed English speaking script for all 11 tabs in the sidebar.
+- 📝 **[Master Presentation Script (English)](MASTER_PRESENTATION_SCRIPT_EN.md)** — Comprehensive 10-page academic presentation paper.
+- 🇱🇰 **[Master Presentation Script (Sinhala / සිංහල)](MASTER_PRESENTATION_SCRIPT.md)** — Complete 10-page presentation guide in Sinhala.
+- 🎨 **[Animated Slides Generation Prompt](ANIMATED_SLIDES_PROMPT.md)** — Ready-to-use prompt for generating interactive HTML presentation decks.
+- 🔬 **[Research Methodology & Metrics](docs/RESEARCH_METHODOLOGY.md)** — In-depth mathematical formulas for risk weights, isolation trees, and evaluation ROC curves.
 
 ---
 
-## Research Methodology & Guardrails
-
-AccessGuard was developed under strict research governance principles:
-
-1. **Explainable AI (XAI):** Machine learning models provide **advisory anomaly percentiles**, accompanied by explicit human-readable reasons (e.g., cross-department grant, high privilege, inactive interval).
-2. **Zero Automated Revocation:** The system never executes automatic unverified permission removals. Remediation requires an authorized reviewer's explicit confirmation and is executed purely as a local simulation.
-3. **Absence of Evidence is Not Evidence of Absence:** Missing activity logs are transparently flagged as *unverified activity* rather than conclusively labeled as dormant access.
-4. **Data Privacy:** All employee names, email addresses, and server identifiers in demo seeds are synthetically generated.
-
-For comprehensive details on scoring formulas and validation metrics, consult [docs/RESEARCH_METHODOLOGY.md](docs/RESEARCH_METHODOLOGY.md).
-
----
-
-## Documentation Links
-
-- [English Architecture Blueprint & Video Guide](docs/ARCHITECTURE_AND_VIDEO_GUIDE.md)
-- [Video Presentation & Demo Guide (වීඩියෝ මාර්ගෝපදේශය)](docs/VIDEO_PRESENTATION_GUIDE.md)
-- [Research Methodology & Metrics](docs/RESEARCH_METHODOLOGY.md)
-- [Sinhala Operations Guide (සිංහල මාර්ගෝපදේශය)](docs/SINHALA_GUIDE.md)
-- [Dialog Final ML Guide](ml/V8_THREE_PLATFORM_MODELS_GUIDE.md)
-- [Syslog Ingestion Notes](accesslog-main/README.md)
+<p align="center">
+  <b>AccessGuard Research Suite · Intelligent Access Governance & Anomaly Detection</b><br/>
+  Developed for Enterprise Security Research · Powered by FastAPI, React 19, Scikit-Learn & PostgreSQL
+</p>

@@ -35,8 +35,8 @@ const PRODUCTION_ITEMS = [
 ];
 
 const TEST_ENV_ITEMS = [
-  { id: 'identities',      label: 'Virtual Employees',   icon: Users },
   { id: 'sim-companies',   label: 'Virtual Companies',   icon: Boxes },
+  { id: 'identities',      label: 'Virtual Employees',   icon: Users },
   { id: 'overview',        label: 'Test Overview',       icon: LayoutDashboard },
   { id: 'sim-controls',    label: 'Simulation Controls', icon: Zap },
   { id: 'sim-activity',    label: 'Generated Activity',  icon: Activity },
@@ -203,7 +203,7 @@ function InfoNote({ children, warn = false, Icon = AlertCircle }) {
 // ─── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [environment, setEnvironment] = useState('test'); // Default to 'test' for Viva
-  const [page, setPage] = useState('identities');
+  const [page, setPage] = useState('sim-companies');
   const [menuOpen, setMenuOpen] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
